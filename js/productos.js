@@ -35,6 +35,7 @@ const LINEAS = {
   corteiz: "Corteiz",
   syna: "Syna World",
   bape: "Bape",
+  guess: "Guess",
 };
 
 const PRODUCTOS = [
@@ -48,4 +49,5 @@ const PRODUCTOS = [
   { id: "corteiz-alcatraz", nombre: "Conjunto Corteiz Alcatraz", categoria: "corteiz", detalle: "Remera + short", precio: 29999, talles: TALLES, imagen: "img/corteiz-alcatraz.jpg", drop: false, etiqueta: "NUEVO", descripcion: "Conjunto negro con el logo Alcatraz de Corteiz en blanco en la remera y en el short." },
   { id: "syna-negro", nombre: "Conjunto Syna World", categoria: "syna", detalle: "Remera + short", precio: 29999, talles: TALLES, imagen: "img/syna-negro.jpg", drop: false, etiqueta: "NUEVO", descripcion: "Conjunto negro con el logo Syna estilo graffiti en blanco en la remera y en el short." },
   { id: "bape-ape-head", nombre: "Conjunto Bape Ape Head", categoria: "bape", detalle: "Remera + short", precio: 29999, talles: TALLES, imagen: "img/bape-ape-head.jpg", drop: false, etiqueta: "NUEVO", descripcion: "Conjunto negro con la cabeza de mono camuflada en blanco en la remera y en el short." },
+  { id: "guess-negro", nombre: "Conjunto Guess Los Angeles", categoria: "guess", detalle: "Remera + short", precio: 29999, talles: TALLES, imagen: "img/guess-negro.jpg", drop: false, etiqueta: "NUEVO", descripcion: "Conjunto negro con el triángulo Guess en rojo y blanco en la remera, y estampa Guess Los Angeles al costado del short." },
 ];
