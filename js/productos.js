@@ -14,24 +14,22 @@ const CONFIG = {
   Cada producto:
   - id:        identificador único
   - nombre:    nombre que se muestra
-  - categoria: remeras | buzos | pantalones | accesorios
+  - categoria: línea del producto (jordan | trapstar | sp5der). Se usa en los filtros.
+  - detalle:   texto chico debajo del nombre (ej: "Remera + short")
   - precio:    número sin puntos
   - talles:    lista de talles disponibles
-  - imagen:    ruta a la foto (ej: "img/remera-logo.jpg"). Si lo dejás vacío
-               se muestra un diseño gráfico automático.
-  - tipo:      dibujo que se usa cuando no hay foto: remera | buzo | pantalon | gorra | bolso
-  - tono:      "negro" o "blanco" (color de la prenda en el dibujo)
-  - drop:      true para que aparezca en la sección "El Drop"
+  - imagen:    ruta a la foto (ej: "img/jordan-negro.jpg"). Si lo dejás vacío
+               se muestra un dibujo automático de la prenda.
+  - tipo/tono: dibujo que se usa cuando no hay foto (remera | buzo | pantalon | gorra | bolso / negro | blanco)
+  - drop:      true para que aparezca en la sección "El Drop" (se muestran los primeros 3)
   - etiqueta:  texto opcional sobre la foto (ej: "NUEVO", "ÚLTIMOS")
 */
+const TALLES = ["S", "M", "L", "XL"];
+
 const PRODUCTOS = [
-  { id: "r1", nombre: "Remera Oversize Logo", categoria: "remeras", precio: 24990, talles: ["S", "M", "L", "XL"], imagen: "", tipo: "remera", tono: "negro", drop: true, etiqueta: "NUEVO", descripcion: "Remera oversize de algodón peinado 24/1 con logo POWER UP estampado en serigrafía." },
-  { id: "r2", nombre: "Remera Boxy Blank", categoria: "remeras", precio: 21990, talles: ["S", "M", "L", "XL"], imagen: "", tipo: "remera", tono: "blanco", drop: false, etiqueta: "", descripcion: "Corte boxy, cuello reforzado, algodón pesado. La base de todo outfit." },
-  { id: "r3", nombre: "Remera Level Up", categoria: "remeras", precio: 25990, talles: ["M", "L", "XL"], imagen: "", tipo: "remera", tono: "negro", drop: false, etiqueta: "ÚLTIMOS", descripcion: "Estampa frente y espalda. Calce oversize." },
-  { id: "b1", nombre: "Hoodie Power Heavy", categoria: "buzos", precio: 49990, talles: ["S", "M", "L", "XL"], imagen: "", tipo: "buzo", tono: "negro", drop: true, etiqueta: "DROP", descripcion: "Buzo canguro de frisa pesada, capucha doble y bordado en el pecho." },
-  { id: "b2", nombre: "Hoodie Snow", categoria: "buzos", precio: 49990, talles: ["S", "M", "L"], imagen: "", tipo: "buzo", tono: "blanco", drop: true, etiqueta: "NUEVO", descripcion: "Mismo calce que el Power Heavy, en blanco hueso." },
-  { id: "p1", nombre: "Cargo Tactical", categoria: "pantalones", precio: 44990, talles: ["38", "40", "42", "44"], imagen: "", tipo: "pantalon", tono: "negro", drop: false, etiqueta: "", descripcion: "Pantalón cargo de gabardina con bolsillos laterales y puño regulable." },
-  { id: "p2", nombre: "Jogger Frisa", categoria: "pantalones", precio: 36990, talles: ["S", "M", "L", "XL"], imagen: "", tipo: "pantalon", tono: "blanco", drop: false, etiqueta: "", descripcion: "Jogger de frisa con puño y cordón. Comodidad total." },
-  { id: "a1", nombre: "Gorra Power Cap", categoria: "accesorios", precio: 17990, talles: ["Único"], imagen: "", tipo: "gorra", tono: "negro", drop: false, etiqueta: "", descripcion: "Gorra de gabardina con logo bordado y regulador metálico." },
-  { id: "a2", nombre: "Tote Bag PU", categoria: "accesorios", precio: 14990, talles: ["Único"], imagen: "", tipo: "bolso", tono: "blanco", drop: false, etiqueta: "", descripcion: "Bolsa de lienzo pesado con estampa POWER UP." },
+  { id: "jordan-negro", nombre: "Conjunto Jordan Negro", categoria: "jordan", detalle: "Remera + short", precio: 29999, talles: TALLES, imagen: "img/jordan-negro.jpg", drop: true, etiqueta: "NUEVO", descripcion: "Conjunto de remera negra con logo Jumpman estampado en blanco y short de básquet negro con paneles laterales blancos." },
+  { id: "sp5der-negro", nombre: "Conjunto Sp5der Negro", categoria: "sp5der", detalle: "Remera + short", precio: 29999, talles: TALLES, imagen: "img/sp5der-negro.jpg", drop: true, etiqueta: "NUEVO", descripcion: "Conjunto negro con estampa de telaraña y logo sp5der en blanco en la remera, y logo sp5der en el short." },
+  { id: "trapstar-shooters", nombre: "Conjunto Trapstar Shooters", categoria: "trapstar", detalle: "Remera + short", precio: 29999, talles: TALLES, imagen: "img/trapstar-shooters.jpg", drop: true, etiqueta: "NUEVO", descripcion: "Conjunto negro con estampa Trapstar London Shooters en la remera y en el short." },
+  { id: "jordan-blanco", nombre: "Conjunto Jordan Blanco", categoria: "jordan", detalle: "Remera + short", precio: 29999, talles: TALLES, imagen: "img/jordan-blanco.jpg", drop: false, etiqueta: "", descripcion: "Conjunto de remera blanca con logo Jumpman estampado en negro y short de básquet negro con paneles laterales blancos." },
+  { id: "jordan-rojo", nombre: "Conjunto Jordan Rojo", categoria: "jordan", detalle: "Remera + short", precio: 29999, talles: TALLES, imagen: "img/jordan-rojo.jpg", drop: false, etiqueta: "", descripcion: "Conjunto de remera roja con logo Jumpman estampado en blanco y short de básquet negro con paneles laterales blancos." },
 ];

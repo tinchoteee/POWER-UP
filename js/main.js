@@ -52,7 +52,7 @@ function cardHTML(p) {
       <div class="card__info">
         <div>
           <h3 class="card__name">${p.nombre}</h3>
-          <p class="card__cat">${p.categoria}</p>
+          <p class="card__cat">${p.detalle || p.categoria}</p>
         </div>
         <span class="card__price">${formatPrice(p.precio)}</span>
       </div>
@@ -74,7 +74,7 @@ $("#filters").addEventListener("click", (e) => {
   const btn = e.target.closest(".filter");
   if (btn) applyFilter(btn.dataset.filter);
 });
-$$(".cat").forEach((c) => c.addEventListener("click", () => applyFilter(c.dataset.cat)));
+$$("a[data-cat]").forEach((c) => c.addEventListener("click", () => applyFilter(c.dataset.cat)));
 
 /* ---------- Modal de producto ---------- */
 const modal = $("#modal");
