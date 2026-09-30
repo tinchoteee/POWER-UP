@@ -63,6 +63,19 @@ function cardHTML(p) {
 $("#dropGrid").innerHTML = PRODUCTOS.filter((p) => p.drop).slice(0, 3).map(cardHTML).join("");
 $("#productGrid").innerHTML = PRODUCTOS.map(cardHTML).join("");
 
+/* ---------- Líneas: categorías, filtros y footer ---------- */
+const lineas = Object.keys(LINEAS).filter((k) => PRODUCTOS.some((p) => p.categoria === k));
+$("#cats").innerHTML = [...lineas, "todos"]
+  .map((k, i) => `
+    <a href="#tienda" class="cat reveal" data-cat="${k}">
+      <span class="cat__num">/${String(i + 1).padStart(2, "0")}</span>
+      <span class="cat__name">${k === "todos" ? "VER TODO" : LINEAS[k].toUpperCase()}</span>
+      <span class="cat__arrow">→</span>
+    </a>`)
+  .join("");
+$("#filters").insertAdjacentHTML("beforeend", lineas.map((k) => `<button class="filter" data-filter="${k}">${LINEAS[k]}</button>`).join(""));
+$("#footerLineas").innerHTML = lineas.map((k) => `<a href="#tienda" data-cat="${k}">${LINEAS[k]}</a>`).join("");
+
 /* ---------- Filtros ---------- */
 function applyFilter(cat) {
   $$(".filter").forEach((b) => b.classList.toggle("is-active", b.dataset.filter === cat));
