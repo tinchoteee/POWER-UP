@@ -93,9 +93,14 @@ function openModal(id) {
   $("#modalSizes").innerHTML = current.talles
     .map((t) => `<button class="size ${t === selectedSize ? "is-active" : ""}" data-size="${t}">${t}</button>`)
     .join("");
+  updateAsk();
   modal.classList.add("is-open");
   modal.setAttribute("aria-hidden", "false");
   document.body.style.overflow = "hidden";
+}
+function updateAsk() {
+  const talle = selectedSize && current.talles.length > 1 ? ` en talle ${selectedSize}` : "";
+  $("#modalAsk").href = whatsappLink(`¡Hola POWER UP! Quiero consultar por ${current.nombre}${talle} (${formatPrice(current.precio)}). ¿Tienen stock?`);
 }
 function closeModal() {
   modal.classList.remove("is-open");
@@ -114,6 +119,7 @@ $("#modalSizes").addEventListener("click", (e) => {
   if (!btn) return;
   selectedSize = btn.dataset.size;
   $$(".size").forEach((s) => s.classList.toggle("is-active", s === btn));
+  updateAsk();
 });
 $("#modalAdd").addEventListener("click", () => {
   if (!selectedSize) {
@@ -289,6 +295,6 @@ if (matchMedia("(hover: hover) and (pointer: fine)").matches) {
 }
 
 /* ---------- Varios ---------- */
-$("#footerWhatsapp").href = whatsappLink("¡Hola POWER UP! Tengo una consulta.");
+$$("[data-wa]").forEach((a) => (a.href = whatsappLink(a.dataset.wa)));
 $("#year").textContent = new Date().getFullYear();
 renderCart();

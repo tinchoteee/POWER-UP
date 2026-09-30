@@ -358,6 +358,26 @@ section { padding: clamp(80px, 12vw, 160px) var(--gutter); }
 .sizes.shake { animation: shake .4s; }
 .modal__info .btn { margin-top: auto; }
 
+/* ---------- WhatsApp ---------- */
+.btn--wa { gap: 10px; }
+.modal__info .btn--wa { margin-top: 10px; }
+.link { color: var(--white); text-decoration: underline; text-underline-offset: 4px; }
+.faq__cta {
+  margin-top: 56px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 24px;
+  border: 2px solid var(--white); padding: 32px;
+}
+.faq__cta p { font-family: var(--display); font-size: clamp(24px, 3vw, 40px); line-height: 1.05; max-width: 640px; }
+.wa-float {
+  position: fixed; right: 20px; bottom: 20px; z-index: 150;
+  display: flex; align-items: center; gap: 0; height: 60px; padding: 0 16px;
+  background: var(--white); color: var(--black); border: 2px solid var(--black);
+  box-shadow: 0 0 0 2px var(--white); font-weight: 700; font-size: 13px; letter-spacing: .12em; text-transform: uppercase;
+  transition: gap .4s var(--ease), background .3s, color .3s;
+}
+.wa-float span { max-width: 0; overflow: hidden; white-space: nowrap; transition: max-width .4s var(--ease); }
+.wa-float:hover { gap: 10px; background: var(--black); color: var(--white); }
+.wa-float:hover span { max-width: 160px; }
+
 /* ---------- Toast ---------- */
 .toast {
   position: fixed; left: 50%; bottom: 28px; z-index: 400;
@@ -401,7 +421,7 @@ section { padding: clamp(80px, 12vw, 160px) var(--gutter); }
   .modal__box { grid-template-columns: 1fr; }
   .modal__media { aspect-ratio: 1; }
   .modal__info { padding: 28px 20px; }
-  .hero__badge { width: 100px; height: 100px; bottom: 20px; }
+  .hero__badge { width: 100px; height: 100px; bottom: 90px; }
   .hero__badge span { font-size: 24px; }
   .card__quick { transform: none; position: static; padding: 12px; }
 }

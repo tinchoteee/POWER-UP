@@ -5,7 +5,7 @@
 
 const CONFIG = {
   // Número de WhatsApp con código de país, sin + ni espacios (ej: 5491112345678)
-  whatsapp: "5491100000000",
+  whatsapp: "5491138196516",
   instagram: "https://www.instagram.com/powerup.store1/",
   moneda: "$",
 };
