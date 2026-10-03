@@ -18,5 +18,6 @@ Tienda online de ropa (conjuntos remera + short) del mismo dueño que Nací Rein
 - Beneficios elegidos por Claude (a confirmar): envío gratis desde $119.000 (4 conjuntos), 10% OFF desde $149.000 (5), 5% OFF con transferencia. Paquete 500 g, 30×25×8 cm.
 - Falta que el dueño cree el proyecto en Vercel y cargue las variables (ver CONFIGURACION.md).
 - Los productos son de marcas ajenas (Jordan, Trapstar, Sp5der, Corteiz, Syna, Bape, Guess): se le avisó al dueño del riesgo de usar esos nombres si no son originales.
+- Mercado Pago: cuenta propia de POWER UP, distinta de la de Nací Reina (pedido del dueño 2026-10-03). Las credenciales van solo en el proyecto de Vercel de POWER UP.
 - Nunca pedir ni pegar claves, alias ni CBU en el chat: se cargan en Vercel.
 - Vercel Hobby: máximo 100 deploys por día. `vercel.json` desactiva deploys de ramas `claude/*`.

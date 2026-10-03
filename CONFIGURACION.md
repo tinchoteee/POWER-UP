@@ -33,7 +33,7 @@ Se crean solas las variables. Podés crear una base nueva o conectar la misma de
 
 ## Paso 3 · Mercado Pago (para cobrar)
 
-1. Entrá a **mercadopago.com.ar/developers** con la cuenta de Mercado Pago **donde querés recibir la plata de POWER UP** → **Tus integraciones → Crear aplicación** (ponele "POWER UP").
+1. POWER UP cobra con **su propia cuenta de Mercado Pago, distinta de la de Nací Reina**. Entrá a **mercadopago.com.ar/developers** con esa cuenta (cerrá antes la sesión de Nací Reina) → **Tus integraciones → Crear aplicación** (ponele "POWER UP").
 2. Tipo de pago: **pagos online** con **Checkout Pro**.
 3. Primero probá con las **credenciales de prueba**; después pasás a las de **producción**.
 4. **Access Token** → en Vercel como `MP_ACCESS_TOKEN`.
