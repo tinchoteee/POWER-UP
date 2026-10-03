@@ -80,6 +80,31 @@ module.exports = async function handler(req, res) {
       });
     }
     if (req.method !== "POST") return res.status(405).json({ error: "Método no permitido" });
+
+    // Email de prueba: manda un aviso a AVISOS_EMAIL y, si falla, explica el motivo (no necesita base de datos)
+    if (body.accion === "probar-email") {
+      if (!process.env.RESEND_API_KEY) return res.status(200).json({ ok: false, error: "Falta cargar RESEND_API_KEY en Vercel (después hacé Redeploy)." });
+      if (!process.env.AVISOS_EMAIL) return res.status(200).json({ ok: false, error: "Falta cargar AVISOS_EMAIL en Vercel (después hacé Redeploy)." });
+      let r, d = {};
+      try {
+        r = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ from: process.env.RESEND_FROM || "POWER UP <onboarding@resend.dev>", to: [process.env.AVISOS_EMAIL],
+            subject: "Prueba de avisos · POWER UP", html: "<h2>¡Funciona!</h2><p>Así te van a llegar los avisos de cada venta de POWER UP.</p>" }),
+          signal: AbortSignal.timeout(10000)
+        });
+        d = await r.json().catch(() => ({}));
+      } catch (e) { return res.status(200).json({ ok: false, error: "No se pudo conectar con Resend. Probá de nuevo en un momento." }); }
+      if (r.ok) return res.status(200).json({ ok: true, para: process.env.AVISOS_EMAIL });
+      const msj = String(d.message || d.error || "");
+      let error = `Resend respondió ${r.status}: ${msj}`;
+      if (/own email|testing emails/i.test(msj)) error = `Con la cuenta gratis de Resend solo se puede mandar al email con el que te registraste en Resend. En Vercel, AVISOS_EMAIL tiene que ser exactamente ese email (ahora dice ${process.env.AVISOS_EMAIL}). (${msj})`;
+      else if (r.status === 401 || (r.status === 403 && /api key/i.test(msj))) error = `La clave RESEND_API_KEY no es válida. Creá una nueva en Resend (API Keys), reemplazala en Vercel y hacé Redeploy. (${msj})`;
+      else if (/domain/i.test(msj) && process.env.RESEND_FROM) error = `El remitente RESEND_FROM usa un dominio que no está verificado en Resend. Borrá RESEND_FROM en Vercel o verificá el dominio. (${msj})`;
+      console.error("Email de prueba falló", r.status, msj);
+      return res.status(200).json({ ok: false, error });
+    }
     if (!db.hayDB()) return res.status(503).json({ error: "Falta conectar la base de datos (Upstash) en Vercel para guardar cambios." });
 
     if (body.accion === "guardar") {

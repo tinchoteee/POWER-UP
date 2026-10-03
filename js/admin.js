@@ -288,8 +288,21 @@ function pintarEstado(cfg) {
     [cfg.emails, "Avisos por email", "Te llega un email con cada venta.", "Falta RESEND_API_KEY y AVISOS_EMAIL: no vas a recibir emails de las ventas."]
   ];
   $("#listaEstado").innerHTML = items.map(([ok, tit, si, no]) => `<div class="check"><span class="ic">${ok ? "✅" : "⚠️"}</span><div><b>${tit}</b><p>${ok ? si : no}</p></div></div>`).join("")
+    + `<div class="check"><span class="ic">✉️</span><div><b>Probar los avisos por email</b><p>Te manda un email de prueba. Si no llega, acá te dice por qué.</p>
+        <button class="btn btn-borde" id="probarEmail" style="width:auto;margin-top:10px">Mandar email de prueba</button>
+        <p id="resEmail" style="margin-top:8px"></p></div></div>`
     + `<p class="ayuda">Los pasos para configurar cada cosa están en el archivo CONFIGURACION.md.</p>`;
 }
+$("#listaEstado").addEventListener("click", async e => {
+  const b = e.target.closest("#probarEmail"); if (!b) return;
+  b.disabled = true; b.textContent = "Mandando…"; $("#resEmail").textContent = "";
+  try {
+    const d = await api("POST", { accion: "probar-email" });
+    $("#resEmail").style.color = d.ok ? "var(--ok)" : "var(--error)";
+    $("#resEmail").textContent = d.ok ? `✓ Enviado a ${d.para}. Si en unos minutos no lo ves, fijate en Spam y marcalo como "No es spam".` : "⚠️ " + d.error;
+  } catch (err) { $("#resEmail").style.color = "var(--error)"; $("#resEmail").textContent = "⚠️ " + err.message; }
+  b.disabled = false; b.textContent = "Mandar email de prueba";
+});
 
 // Si ya había entrado en esta pestaña, entra directo
 if (permiso) cargar().catch(() => salir());
