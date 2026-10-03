@@ -380,7 +380,7 @@ const datos = leer("powerup-datos", {});
   .forEach(([id, k]) => { if (datos[k]) document.getElementById(id).value = datos[k]; });
 $("#ckCP").value = zonaGuardada.cp || ""; $("#ckProv").value = zonaGuardada.provincia || "";
 const val = id => document.getElementById(id).value.trim();
-const opcionLocal = () => ({ id: "local", tipo: "local", nombre: "Retiro en persona", precio: 0, detalle: LOCAL.direccion });
+const opcionLocal = () => ({ id: "local", tipo: "local", nombre: LOCAL.nombre || "Retiro en persona", precio: 0, detalle: LOCAL.direccion });
 
 function mostrarCheckout() {
   if (!carrito.length || hayConsultar() || !cobraOnline) { location.hash = ""; setTimeout(abrirCarrito, 60); return; }   // se abre después del cambio de dirección (que cierra el carrito)
@@ -427,7 +427,7 @@ function pintarCheckout() {
   $("#res1").textContent = [val("ckNombre"), val("ckTel"), val("ckEmail")].filter(Boolean).join(" · ");
   if (ck.opcion) {
     const o = ck.opcion;
-    $("#res2").textContent = o.tipo === "local" ? `Retiro en persona · ${o.detalle || ""}`
+    $("#res2").textContent = o.tipo === "local" ? `${o.nombre} · ${o.detalle || ""}`
       : o.tipo === "sucursal" ? `${o.nombre} · ${ck.sucursal ? ck.sucursal.nombre : ""}`
       : `${o.nombre} · ${val("ckCalle")} ${val("ckNum")}${val("ckPiso") ? " " + val("ckPiso") : ""}, ${val("ckLoc")}`;
   }
@@ -709,6 +709,12 @@ configPublica.then(c => { if (c && c.transferencia && c.transferencia.porcentaje
     $("#pGratis").textContent = `Envíos a todo el país. Gratis en compras desde ${pesos(ENVIO.gratisDesde)}.`;
   }
   $$("[data-gratis]").forEach(el => { el.textContent = ENVIO.gratisDesde > 0 ? `En compras desde ${pesos(ENVIO.gratisDesde)} el envío es gratis.` : ""; });
+  if (LOCAL) {
+    $$("[data-local]").forEach(el => { el.hidden = false; });
+    $$("[data-local-dir]").forEach(el => { el.textContent = LOCAL.direccion; });
+    $$("[data-local-nombre]").forEach(el => { el.textContent = LOCAL.nombre || "Retiro en persona"; });
+    $("#perkEnvio").textContent += ` O retiralo gratis en ${LOCAL.direccion.split(",").pop().trim()}.`;
+  }
   $$("[data-wa]").forEach(a => { a.href = wa(a.dataset.wa); });
   if (!WHATSAPP) $$("[data-wa]").forEach(a => { a.hidden = true; });
   $("#year").textContent = new Date().getFullYear();

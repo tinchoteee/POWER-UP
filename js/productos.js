@@ -13,9 +13,9 @@
   instagram: "https://www.instagram.com/powerup.store1/",
   metaPixel: "",   // Píxel de Meta (opcional; en Vercel META_PIXEL_ID lo reemplaza)
 
-  // Retiro en persona: con dirección aparece la opción "Retiro en persona" (gratis) en el checkout.
-  // Vacío = solo envíos por correo.
-  local: { direccion: "", cp: "" },
+  // Retiro gratis: con dirección aparece la opción en el checkout (nombre = cómo se muestra). Vacío = solo envíos por correo.
+  // Es el local de calzados del mismo dueño (pedido del dueño 2026-10-03: mostrar la dirección exacta).
+  local: { nombre: "Retiro en nuestra sucursal", direccion: "Av. de Mayo 1614, Ramos Mejía", cp: "1704" },
 
   // Descuento por monto: cuando los productos suman "desde" o más, se descuenta "porcentaje" a cada producto.
   // (No se aplica al envío.) desde: 0 = sin descuento.

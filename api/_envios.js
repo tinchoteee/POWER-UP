@@ -123,7 +123,7 @@ async function cotizar({ cp, provincia, localidad, lineas, subtotal }) {
   for (const o of opciones) { o.precioOriginal = o.precio; if (gratis) o.precio = 0; }
   opciones.sort((a, b) => a.precio - b.precio || a.precioOriginal - b.precioOriginal);
 
-  if (CATALOGO.local && CATALOGO.local.direccion) opciones.push({ id: "local", tipo: "local", nombre: "Retiro en persona", transportista: null, precio: 0, precioOriginal: 0,
+  if (CATALOGO.local && CATALOGO.local.direccion) opciones.push({ id: "local", tipo: "local", nombre: CATALOGO.local.nombre || "Retiro en persona", transportista: null, precio: 0, precioOriginal: 0,
     detalle: CATALOGO.local.direccion, dias: { min: null, max: null } });
   return { cp: codigo, provincia, opciones, gratisDesde, gratis };
 }

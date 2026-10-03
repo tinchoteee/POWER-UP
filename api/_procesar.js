@@ -61,7 +61,7 @@ async function mandarEmail({ para, asunto, html, clave }) {
 }
 
 function textoEntrega(e) {
-  if (e.tipo === "local") return `Retiro en persona (${esc((CATALOGO.local || {}).direccion || "")})`;
+  if (e.tipo === "local") return `${esc((CATALOGO.local || {}).nombre || "Retiro en persona")} (${esc((CATALOGO.local || {}).direccion || "")})`;
   if (e.tipo === "sucursal") return `${e.opcion}: <b>${esc(e.sucursal)}</b>`;
   return `${esc(e.opcion)}:<br>${esc(e.calle)} ${esc(e.numero)}${e.piso ? " " + esc(e.piso) : ""}<br>${esc(e.localidad)}, ${esc(e.provincia)} (CP ${esc(e.cp)})`;
 }

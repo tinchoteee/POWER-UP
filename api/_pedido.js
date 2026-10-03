@@ -22,7 +22,7 @@ async function armarPedido(body, base, { transferencia = false } = {}) {
   const e = body.entrega || {};
   const conLocal = Boolean(CATALOGO.local && CATALOGO.local.direccion);
   const cot = e.opcion === "local" && conLocal
-    ? { opciones: [{ id: "local", tipo: "local", nombre: "Retiro en persona", precio: 0 }] }
+    ? { opciones: [{ id: "local", tipo: "local", nombre: CATALOGO.local.nombre || "Retiro en persona", precio: 0 }] }
     : await cotizar({ cp: e.cp, provincia: e.provincia, localidad: texto(e.localidad, 80), lineas, subtotal });
   const opcion = cot.opciones.find(o => o.id === e.opcion);
   if (!opcion) throw new Error("La opción de envío cambió. Volvé a elegir cómo lo recibís.");
