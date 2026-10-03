@@ -351,6 +351,18 @@ $("#vista-producto").addEventListener("click", e => {
   }
 });
 
+// Zoom de la foto grande al pasar el mouse (solo compu): sigue al puntero para ver los estampados de cerca
+if (matchMedia("(hover: hover) and (pointer: fine)").matches) {
+  const fg = $("#fotoGrande");
+  fg.addEventListener("mousemove", e => {
+    const im = fg.querySelector("img"); if (!im) return;
+    const r = fg.getBoundingClientRect();
+    im.style.transformOrigin = `${(e.clientX - r.left) / r.width * 100}% ${(e.clientY - r.top) / r.height * 100}%`;
+    fg.classList.add("zoom");
+  });
+  fg.addEventListener("mouseleave", () => fg.classList.remove("zoom"));
+}
+
 // Calculadora de envío en la página de producto
 const opcionesProv = `<option value="">Provincia</option>` + PROVINCIAS.map(p => `<option>${p}</option>`).join("");
 $("#calcProv").innerHTML = opcionesProv;
