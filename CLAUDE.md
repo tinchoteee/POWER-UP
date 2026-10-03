@@ -14,9 +14,9 @@ Tienda online de ropa (conjuntos remera + short) del mismo dueño que Nací Rein
 - Guía para el dueño: `CONFIGURACION.md`.
 
 ## Estado (2026-10-03)
-- 9 productos, todos $29.999, talles S–XL (a confirmar con el dueño). Conjunto Jordan unifica negro, blanco y rojo (id 1).
+- 9 productos, todos $29.999, talles S–XL (confirmados por el dueño). Conjunto Jordan unifica negro, blanco y rojo (id 1).
 - Beneficios confirmados por el dueño (2026-10-03): envío gratis desde $119.000 (4 conjuntos), 10% OFF desde $149.000 (5), 5% OFF con transferencia. Paquete 500 g, 30×25×8 cm (confirmado).
-- Falta que el dueño cree el proyecto en Vercel y cargue las variables (ver CONFIGURACION.md).
+- Proyecto de Vercel creado y configurado por el dueño. Pendiente: compra de prueba real con envío por correo y cargar unidades por talle en el editor.
 - Los productos son de marcas ajenas (Jordan, Trapstar, Sp5der, Corteiz, Syna, Bape, Guess): se le avisó al dueño del riesgo de usar esos nombres si no son originales.
 - Mercado Pago: cuenta propia de POWER UP, distinta de la de Nací Reina (pedido del dueño 2026-10-03). Las credenciales van solo en el proyecto de Vercel de POWER UP.
 - Cuentas propias de POWER UP (2026-10-03): Mercado Pago, Resend y Zipnova nuevas, separadas de Nací Reina. Zipnova con la misma configuración que Nací Reina (Correo Argentino y OCA de servicio completo) y el mismo origen (el local de Ramos Mejía), pero **despacho en sucursal**: el dueño lleva los paquetes a la sucursal de Correo Argentino u OCA de Ramos Mejía (no retiro a domicilio). Es configuración de la cuenta de Zipnova; el código usa el `logistic_type` que devuelve la cotización. Sin `ZIPNOVA_ORIGIN_ID`. Upstash: Vercel no ofrecía otro plan gratis; se sugirió conectar la base de Nací Reina (prefijo `powerup:`).
