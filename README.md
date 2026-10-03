@@ -1,20 +1,10 @@
 # POWER UP — Store
 
-Tienda online de ropa de [@powerup.store1](https://www.instagram.com/powerup.store1/). Blanco y negro, sin grises.
+Tienda online de [@powerup.store1](https://www.instagram.com/powerup.store1/). Blanco y negro, sin grises.
 
-Es un sitio estático (HTML + CSS + JS), no necesita instalar nada: abrí `index.html` en el navegador.
+Sitio estático + funciones serverless para **Vercel** (carpeta `api/`), con la misma base que la tienda de Nací Reina:
+pago con tarjeta y Mercado Pago, transferencia con descuento, envíos con Zipnova, stock y pedidos en Upstash, editor con contraseña (`/admin.html`) y emails con Resend.
 
-## Qué editar
-
-Todo lo de la tienda está en **`js/productos.js`**:
-
-- **`CONFIG.whatsapp`**: tu número con código de país, sin `+` ni espacios (ej: `5491112345678`). Los pedidos del carrito llegan ahí.
-- **`PRODUCTOS`**: nombre, precio, talles, línea, descripción y etiqueta de cada producto.
-- **`LINEAS`**: las marcas o líneas. Los filtros y categorías se arman solos con las que tienen productos.
-- **Fotos**: subí las fotos a la carpeta `img/` y poné la ruta en `imagen` (ej: `"img/hoodie-negro.jpg"`). Mejor si son verticales (4:5) con fondo blanco. Si no hay foto, se muestra un dibujo de la prenda.
-- **`drop: true`**: el producto aparece en la sección "El Drop" (se muestran los primeros 3).
-
-## Publicar gratis
-
-- **GitHub Pages**: Settings → Pages → Branch `main` / root.
-- **Netlify**: arrastrá la carpeta del proyecto a app.netlify.com/drop.
+- **Poner en marcha (cuentas y claves):** ver [`CONFIGURACION.md`](CONFIGURACION.md).
+- **Productos, precios, envío gratis y descuentos:** `js/productos.js`.
+- **Fotos:** carpeta `img/`, verticales 4:5 con fondo claro.

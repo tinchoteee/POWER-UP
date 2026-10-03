@@ -1,53 +1,96 @@
-/* =========================================================
-   CONFIGURACIÓN DE LA TIENDA
-   Editá este archivo para cambiar productos, precios y contacto.
-   ========================================================= */
-
-const CONFIG = {
-  // Número de WhatsApp con código de país, sin + ni espacios (ej: 5491112345678)
+// Catálogo de POWER UP Store.
+// Lo usan la página (para mostrar los productos) y el servidor (para cobrar el precio correcto).
+// precio: 0 = "Consultar precio" (no se puede pagar online hasta que tenga precio).
+// Un color puede tener su propio precio (precio dentro del color); si no, usa el del modelo.
+// foto: archivo dentro de la carpeta img/. Cada color tiene su propia foto.
+// oculto: true = desactivado (no aparece ni se puede comprar).
+(function (catalogo) {
+  if (typeof module !== "undefined" && module.exports) module.exports = catalogo;
+  else window.CATALOGO = catalogo;
+})({
+  // WhatsApp: 549 + código de área sin 0 + número sin 15
   whatsapp: "5491138196516",
   instagram: "https://www.instagram.com/powerup.store1/",
-  moneda: "$",
-};
+  metaPixel: "",   // Píxel de Meta (opcional; en Vercel META_PIXEL_ID lo reemplaza)
 
-/*
-  Cada producto:
-  - id:        identificador único
-  - nombre:    nombre que se muestra
-  - categoria: línea del producto (una de las claves de LINEAS). Se usa en los filtros.
-  - detalle:   texto chico debajo del nombre (ej: "Remera + short")
-  - precio:    número sin puntos
-  - talles:    lista de talles disponibles
-  - imagen:    ruta a la foto (ej: "img/jordan-negro.jpg"). Si lo dejás vacío
-               se muestra un dibujo automático de la prenda.
-  - tipo/tono: dibujo que se usa cuando no hay foto (remera | buzo | pantalon | gorra | bolso / negro | blanco)
-  - drop:      true para que aparezca en la sección "El Drop" (se muestran los primeros 3)
-  - etiqueta:  texto opcional sobre la foto (ej: "NUEVO", "ÚLTIMOS")
-*/
-const TALLES = ["S", "M", "L", "XL"];
+  // Retiro en persona: con dirección aparece la opción "Retiro en persona" (gratis) en el checkout.
+  // Vacío = solo envíos por correo.
+  local: { direccion: "", cp: "" },
 
-// Líneas / marcas: el orden de acá es el orden de los filtros y categorías.
-// Solo se muestran las que tienen al menos un producto.
-const LINEAS = {
-  jordan: "Jordan",
-  trapstar: "Trapstar",
-  sp5der: "Sp5der",
-  corteiz: "Corteiz",
-  syna: "Syna World",
-  bape: "Bape",
-  guess: "Guess",
-};
+  // Descuento por monto: cuando los productos suman "desde" o más, se descuenta "porcentaje" a cada producto.
+  // (No se aplica al envío.) desde: 0 = sin descuento.
+  descuento: { desde: 149000, porcentaje: 10 },   // 5 conjuntos
+  // Descuento extra por pagar con transferencia bancaria (sobre los productos, después del de monto). 0 = sin transferencia.
+  // Los datos de la cuenta (alias, CBU, titular) se cargan en Vercel: TRANSFERENCIA_ALIAS, TRANSFERENCIA_CBU, TRANSFERENCIA_TITULAR.
+  transferencia: { porcentaje: 5 },
 
-const PRODUCTOS = [
-  { id: "jordan-negro", nombre: "Conjunto Jordan Negro", categoria: "jordan", detalle: "Remera + short", precio: 29999, talles: TALLES, imagen: "img/jordan-negro.jpg", drop: true, etiqueta: "NUEVO", descripcion: "Conjunto de remera negra con logo Jumpman estampado en blanco y short de básquet negro con paneles laterales blancos." },
-  { id: "sp5der-negro", nombre: "Conjunto Sp5der Negro", categoria: "sp5der", detalle: "Remera + short", precio: 29999, talles: TALLES, imagen: "img/sp5der-negro.jpg", drop: true, etiqueta: "NUEVO", descripcion: "Conjunto negro con estampa de telaraña y logo sp5der en blanco en la remera, y logo sp5der en el short." },
-  { id: "trapstar-shooters", nombre: "Conjunto Trapstar Shooters", categoria: "trapstar", detalle: "Remera + short", precio: 29999, talles: TALLES, imagen: "img/trapstar-shooters.jpg", drop: true, etiqueta: "NUEVO", descripcion: "Conjunto negro con estampa Trapstar London Shooters en la remera y en el short." },
-  { id: "jordan-blanco", nombre: "Conjunto Jordan Blanco", categoria: "jordan", detalle: "Remera + short", precio: 29999, talles: TALLES, imagen: "img/jordan-blanco.jpg", drop: false, etiqueta: "", descripcion: "Conjunto de remera blanca con logo Jumpman estampado en negro y short de básquet negro con paneles laterales blancos." },
-  { id: "jordan-rojo", nombre: "Conjunto Jordan Rojo", categoria: "jordan", detalle: "Remera + short", precio: 29999, talles: TALLES, imagen: "img/jordan-rojo.jpg", drop: false, etiqueta: "", descripcion: "Conjunto de remera roja con logo Jumpman estampado en blanco y short de básquet negro con paneles laterales blancos." },
-  { id: "trapstar-its-a-secret", nombre: "Conjunto Trapstar It's a Secret", categoria: "trapstar", detalle: "Remera + short", precio: 29999, talles: TALLES, imagen: "img/trapstar-its-a-secret.jpg", drop: false, etiqueta: "NUEVO", descripcion: "Conjunto negro con logo Trapstar \"It's a Secret\" en degradé azul en la remera y en el short." },
-  { id: "jordan-jumpman-negro", nombre: "Conjunto Jordan Jumpman", categoria: "jordan", detalle: "Remera + short", precio: 29999, talles: TALLES, imagen: "img/jordan-jumpman-negro.jpg", drop: false, etiqueta: "NUEVO", descripcion: "Conjunto negro con logo Jumpman blanco en la remera y Jumpman grande en el costado del short." },
-  { id: "corteiz-alcatraz", nombre: "Conjunto Corteiz Alcatraz", categoria: "corteiz", detalle: "Remera + short", precio: 29999, talles: TALLES, imagen: "img/corteiz-alcatraz.jpg", drop: false, etiqueta: "NUEVO", descripcion: "Conjunto negro con el logo Alcatraz de Corteiz en blanco en la remera y en el short." },
-  { id: "syna-negro", nombre: "Conjunto Syna World", categoria: "syna", detalle: "Remera + short", precio: 29999, talles: TALLES, imagen: "img/syna-negro.jpg", drop: false, etiqueta: "NUEVO", descripcion: "Conjunto negro con el logo Syna estilo graffiti en blanco en la remera y en el short." },
-  { id: "bape-ape-head", nombre: "Conjunto Bape Ape Head", categoria: "bape", detalle: "Remera + short", precio: 29999, talles: TALLES, imagen: "img/bape-ape-head.jpg", drop: false, etiqueta: "NUEVO", descripcion: "Conjunto negro con la cabeza de mono camuflada en blanco en la remera y en el short." },
-  { id: "guess-negro", nombre: "Conjunto Guess Los Angeles", categoria: "guess", detalle: "Remera + short", precio: 29999, talles: TALLES, imagen: "img/guess-negro.jpg", drop: false, etiqueta: "NUEVO", descripcion: "Conjunto negro con el triángulo Guess en rojo y blanco en la remera, y estampa Guess Los Angeles al costado del short." },
-];
+  envio: {
+    // Envío gratis cuando los productos suman este monto o más. 0 = sin envío gratis.
+    gratisDesde: 119000,   // 4 conjuntos
+    // Transportista preferido: si ese correo cotiza, se muestran solo sus opciones. Vacío = todos los activos en Zipnova.
+    transportista: "",
+    // Paquete de cada producto (peso en gramos, medidas en cm). El correo cobra según peso y tamaño.
+    // Un producto puede usar otro paquete con  caja: "nombre".
+    cajas: {
+      "conjunto": { peso: 500, alto: 8, ancho: 25, largo: 30 }
+    },
+    // Solo se usa mientras Zipnova no esté configurado: costo fijo por zona.
+    zonasDeRespaldo: { "CABA": 5000, "Buenos Aires": 6500, "resto": 9500 }
+  },
+
+  // Líneas / marcas: el orden de acá es el orden de los filtros y categorías.
+  // Solo se muestran las que tienen al menos un producto.
+  lineas: {
+    jordan: "Jordan",
+    trapstar: "Trapstar",
+    sp5der: "Sp5der",
+    corteiz: "Corteiz",
+    syna: "Syna World",
+    bape: "Bape",
+    guess: "Guess"
+  },
+
+  // detalle: texto chico debajo del nombre · drop: true = aparece en "El Drop" (los primeros 3) · etiqueta: cartelito sobre la foto
+  productos: [
+    { id: 1, cat: "jordan", caja: "conjunto", nombre: "Conjunto Jordan", detalle: "Remera + short", drop: true, etiqueta: "NUEVO",
+      desc: "Remera con logo Jumpman estampado y short de básquet negro con paneles laterales blancos.",
+      precio: 29999, talles: ["S", "M", "L", "XL"],
+      colores: [
+        { id: "negro", nombre: "Negro", hex: "#111111", foto: "img/jordan-negro.jpg" },
+        { id: "blanco", nombre: "Blanco", hex: "#F4F4F4", foto: "img/jordan-blanco.jpg" },
+        { id: "rojo", nombre: "Rojo", hex: "#C8102E", foto: "img/jordan-rojo.jpg" }
+      ] },
+    { id: 2, cat: "sp5der", caja: "conjunto", nombre: "Conjunto Sp5der", detalle: "Remera + short", drop: true, etiqueta: "NUEVO",
+      desc: "Conjunto negro con estampa de telaraña y logo sp5der en blanco en la remera, y logo sp5der en el short.",
+      precio: 29999, talles: ["S", "M", "L", "XL"],
+      colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/sp5der-negro.jpg" }] },
+    { id: 3, cat: "trapstar", caja: "conjunto", nombre: "Conjunto Trapstar Shooters", detalle: "Remera + short", drop: true, etiqueta: "NUEVO",
+      desc: "Conjunto negro con estampa Trapstar London Shooters en la remera y en el short.",
+      precio: 29999, talles: ["S", "M", "L", "XL"],
+      colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/trapstar-shooters.jpg" }] },
+    { id: 4, cat: "trapstar", caja: "conjunto", nombre: "Conjunto Trapstar It's a Secret", detalle: "Remera + short", etiqueta: "NUEVO",
+      desc: "Conjunto negro con logo Trapstar \"It's a Secret\" en degradé azul en la remera y en el short.",
+      precio: 29999, talles: ["S", "M", "L", "XL"],
+      colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/trapstar-its-a-secret.jpg" }] },
+    { id: 5, cat: "jordan", caja: "conjunto", nombre: "Conjunto Jordan Jumpman", detalle: "Remera + short", etiqueta: "NUEVO",
+      desc: "Conjunto negro con logo Jumpman blanco en la remera y Jumpman grande en el costado del short.",
+      precio: 29999, talles: ["S", "M", "L", "XL"],
+      colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/jordan-jumpman-negro.jpg" }] },
+    { id: 6, cat: "corteiz", caja: "conjunto", nombre: "Conjunto Corteiz Alcatraz", detalle: "Remera + short", etiqueta: "NUEVO",
+      desc: "Conjunto negro con el logo Alcatraz de Corteiz en blanco en la remera y en el short.",
+      precio: 29999, talles: ["S", "M", "L", "XL"],
+      colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/corteiz-alcatraz.jpg" }] },
+    { id: 7, cat: "syna", caja: "conjunto", nombre: "Conjunto Syna World", detalle: "Remera + short", etiqueta: "NUEVO",
+      desc: "Conjunto negro con el logo Syna estilo graffiti en blanco en la remera y en el short.",
+      precio: 29999, talles: ["S", "M", "L", "XL"],
+      colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/syna-negro.jpg" }] },
+    { id: 8, cat: "bape", caja: "conjunto", nombre: "Conjunto Bape Ape Head", detalle: "Remera + short", etiqueta: "NUEVO",
+      desc: "Conjunto negro con la cabeza de mono camuflada en blanco en la remera y en el short.",
+      precio: 29999, talles: ["S", "M", "L", "XL"],
+      colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/bape-ape-head.jpg" }] },
+    { id: 9, cat: "guess", caja: "conjunto", nombre: "Conjunto Guess Los Angeles", detalle: "Remera + short", etiqueta: "NUEVO",
+      desc: "Conjunto negro con el triángulo Guess en rojo y blanco en la remera, y estampa Guess Los Angeles al costado del short.",
+      precio: 29999, talles: ["S", "M", "L", "XL"],
+      colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/guess-negro.jpg" }] }
+  ]
+});

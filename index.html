@@ -2,37 +2,37 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>POWER UP — Store</title>
-  <meta name="description" content="POWER UP Store. Ropa urbana en blanco y negro. Nuevos drops, envíos a todo el país." />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>POWER UP Store | Conjuntos urbanos con envío a todo el país</title>
+  <meta name="description" content="POWER UP Store. Conjuntos urbanos en blanco y negro. Pagá con tarjeta, Mercado Pago o transferencia y recibilo en todo el país." />
   <meta name="theme-color" content="#000000" />
-  <meta property="og:title" content="POWER UP — Store" />
-  <meta property="og:description" content="Ropa urbana en blanco y negro. Nuevos drops, envíos a todo el país." />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="POWER UP Store" />
+  <meta property="og:title" content="POWER UP Store · Blanco. Negro. Sin grises." />
+  <meta property="og:description" content="Conjuntos urbanos. Pagá con tarjeta, Mercado Pago o transferencia y recibilo en todo el país." />
+  <meta property="og:image" content="img/jordan-negro.jpg" />
+  <meta property="og:locale" content="es_AR" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "ClothingStore", "name": "POWER UP Store", "description": "Conjuntos urbanos en blanco y negro. Envíos a todo el país.", "telephone": "+54 9 11 3819-6516", "currenciesAccepted": "ARS", "paymentAccepted": "Tarjeta de crédito, tarjeta de débito, Mercado Pago, transferencia", "sameAs": ["https://www.instagram.com/powerup.store1/"]}</script>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='black'/><text x='50' y='72' font-size='64' text-anchor='middle' fill='white' font-family='Arial Black'>P</text></svg>" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/styles.css" />
+  <!-- Vercel Web Analytics: visitas y páginas vistas (se activa en Vercel → Analytics). No usa cookies. -->
+  <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
+  <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
   <!-- Cursor personalizado (solo desktop) -->
   <div class="cursor" aria-hidden="true"></div>
 
-  <!-- Barra de anuncios -->
-  <div class="topbar">
-    <div class="topbar__track">
-      <span>ENVÍOS A TODO EL PAÍS</span><span>✦</span>
-      <span>3 CUOTAS SIN INTERÉS</span><span>✦</span>
-      <span>NUEVO DROP DISPONIBLE</span><span>✦</span>
-      <span>ENVÍOS A TODO EL PAÍS</span><span>✦</span>
-      <span>3 CUOTAS SIN INTERÉS</span><span>✦</span>
-      <span>NUEVO DROP DISPONIBLE</span><span>✦</span>
-    </div>
-  </div>
+  <!-- Barra de anuncios (los textos salen de productos.js) -->
+  <div class="topbar"><div class="topbar__track" id="topbar"></div></div>
 
   <!-- Header -->
   <header class="header" id="header">
-    <a href="#inicio" class="logo">POWER<span>UP</span></a>
+    <a href="#" class="logo" aria-label="POWER UP, inicio">POWER<span>UP</span></a>
     <nav class="nav" id="nav">
       <a href="#drop">Drop</a>
       <a href="#tienda">Tienda</a>
@@ -42,8 +42,8 @@
       <a href="https://www.instagram.com/powerup.store1/" target="_blank" rel="noopener">Instagram</a>
     </nav>
     <div class="header__actions">
-      <button class="cart-btn" id="cartOpen" aria-label="Abrir carrito">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 7h12l-1 13H7L6 7z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>
+      <button class="cart-btn" id="cartOpen" aria-label="Ver carrito">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 7h12l-1 13H7L6 7z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>
         <span class="cart-count" id="cartCount">0</span>
       </button>
       <button class="burger" id="burger" aria-label="Menú"><span></span><span></span></button>
@@ -51,130 +51,268 @@
   </header>
 
   <main>
-    <!-- HERO -->
-    <section class="hero" id="inicio">
-      <div class="hero__noise"></div>
-      <div class="hero__grid" aria-hidden="true"></div>
-      <p class="hero__kicker reveal">— SS/26 COLLECTION —</p>
-      <h1 class="hero__title">
-        <span class="line"><span class="word">POWER</span></span>
-        <span class="line"><span class="word word--outline">UP</span></span>
-      </h1>
-      <p class="hero__sub reveal">Ropa para los que no bajan el volumen.<br />Blanco. Negro. Sin grises.</p>
-      <div class="hero__ctas reveal">
-        <a href="#tienda" class="btn btn--white">Comprar ahora</a>
-        <a href="#drop" class="btn btn--ghost">Ver el drop</a>
-      </div>
-      <div class="hero__scroll" aria-hidden="true"><span>SCROLL</span><i></i></div>
-      <div class="hero__badge" aria-hidden="true">
-        <svg viewBox="0 0 200 200">
-          <defs><path id="circle" d="M100,100 m-75,0 a75,75 0 1,1 150,0 a75,75 0 1,1 -150,0"/></defs>
-          <text><textPath href="#circle">POWER UP STORE • NEW DROP • POWER UP STORE • NEW DROP •</textPath></text>
-        </svg>
-        <span>⚡</span>
-      </div>
-    </section>
+    <!-- ================= INICIO ================= -->
+    <div id="vista-inicio">
+      <section class="hero" id="inicio">
+        <div class="hero__noise"></div>
+        <div class="hero__grid" aria-hidden="true"></div>
+        <p class="hero__kicker reveal">— SS/26 COLLECTION —</p>
+        <h1 class="hero__title">
+          <span class="line"><span class="word">POWER</span></span>
+          <span class="line"><span class="word word--outline">UP</span></span>
+        </h1>
+        <p class="hero__sub reveal">Ropa para los que no bajan el volumen.<br />Blanco. Negro. Sin grises.</p>
+        <div class="hero__ctas reveal">
+          <a href="#tienda" class="btn btn--white">Comprar ahora</a>
+          <a href="#drop" class="btn btn--ghost">Ver el drop</a>
+        </div>
+        <div class="hero__scroll" aria-hidden="true"><span>SCROLL</span><i></i></div>
+        <div class="hero__badge" aria-hidden="true">
+          <svg viewBox="0 0 200 200">
+            <defs><path id="circle" d="M100,100 m-75,0 a75,75 0 1,1 150,0 a75,75 0 1,1 -150,0"/></defs>
+            <text><textPath href="#circle">POWER UP STORE • NEW DROP • POWER UP STORE • NEW DROP •</textPath></text>
+          </svg>
+          <span>⚡</span>
+        </div>
+      </section>
 
-    <!-- MARQUEE -->
-    <div class="marquee marquee--white">
-      <div class="marquee__track">
-        <span>POWER UP</span><span class="outline">LEVEL UP</span><span>POWER UP</span><span class="outline">NO LIMITS</span>
-        <span>POWER UP</span><span class="outline">LEVEL UP</span><span>POWER UP</span><span class="outline">NO LIMITS</span>
+      <!-- Ventajas -->
+      <section class="perks">
+        <div class="perk reveal"><span class="perk__ic">01</span><div><b>Envíos a todo el país</b><span id="perkEnvio">A domicilio o a sucursal del correo.</span></div></div>
+        <div class="perk reveal"><span class="perk__ic">02</span><div><b>Pagá como quieras</b><span id="perkPago">Tarjeta de crédito, débito o Mercado Pago.</span></div></div>
+        <div class="perk reveal"><span class="perk__ic">03</span><div><b>Compra segura</b><span>Los pagos los procesa Mercado Pago. Tus datos de tarjeta nunca pasan por esta página.</span></div></div>
+      </section>
+
+      <!-- MARQUEE -->
+      <div class="marquee marquee--white">
+        <div class="marquee__track">
+          <span>POWER UP</span><span class="outline">LEVEL UP</span><span>POWER UP</span><span class="outline">NO LIMITS</span>
+          <span>POWER UP</span><span class="outline">LEVEL UP</span><span>POWER UP</span><span class="outline">NO LIMITS</span>
+        </div>
       </div>
+
+      <!-- DROP DESTACADO -->
+      <section class="drop" id="drop">
+        <div class="section-head reveal">
+          <span class="section-head__num">01</span>
+          <h2>EL DROP</h2>
+          <p>Piezas limitadas. Cuando se van, se van.</p>
+        </div>
+        <div class="drop__grid" id="dropGrid"></div>
+      </section>
+
+      <!-- CATEGORÍAS -->
+      <section class="cats" id="cats"></section>
+
+      <!-- TIENDA -->
+      <section class="shop" id="tienda">
+        <div class="section-head reveal">
+          <span class="section-head__num">02</span>
+          <h2>TIENDA</h2>
+          <p>Tocá un producto para ver fotos, colores, talles y calcular el envío.</p>
+        </div>
+        <div class="filters reveal" id="filters" role="group" aria-label="Filtrar por marca"></div>
+        <div class="grid" id="productGrid"></div>
+      </section>
+
+      <!-- MANIFIESTO -->
+      <section class="manifesto" id="nosotros">
+        <p class="manifesto__text reveal">
+          NO HACEMOS ROPA PARA <span class="invert">PASAR DESAPERCIBIDO.</span>
+          HACEMOS ROPA PARA <span class="outline">SUBIR DE NIVEL.</span>
+          CADA PIEZA ES UN <span class="invert">POWER UP.</span>
+        </p>
+        <div class="stats">
+          <div class="stat reveal"><strong data-count="modelos">0</strong><span>conjuntos</span></div>
+          <div class="stat reveal"><strong data-count="lineas">0</strong><span>marcas</span></div>
+          <div class="stat reveal"><strong data-count="24">0</strong><span>provincias con envío</span></div>
+        </div>
+      </section>
+
+      <!-- MARQUEE 2 -->
+      <div class="marquee marquee--black marquee--reverse">
+        <div class="marquee__track">
+          <span>@POWERUP.STORE1</span><span class="outline">FOLLOW US</span><span>@POWERUP.STORE1</span><span class="outline">FOLLOW US</span>
+          <span>@POWERUP.STORE1</span><span class="outline">FOLLOW US</span><span>@POWERUP.STORE1</span><span class="outline">FOLLOW US</span>
+        </div>
+      </div>
+
+      <!-- INSTAGRAM CTA -->
+      <section class="insta">
+        <div class="insta__inner reveal">
+          <p class="insta__kicker">SEGUINOS EN INSTAGRAM</p>
+          <a class="insta__handle" href="https://www.instagram.com/powerup.store1/" target="_blank" rel="noopener">@powerup.store1</a>
+          <p class="insta__text">Drops, sorteos y lanzamientos antes que nadie.</p>
+          <a class="btn btn--black" href="https://www.instagram.com/powerup.store1/" target="_blank" rel="noopener">Ir a Instagram ↗</a>
+        </div>
+      </section>
+
+      <!-- FAQ -->
+      <section class="faq" id="faq">
+        <div class="section-head reveal">
+          <span class="section-head__num">03</span>
+          <h2>INFO</h2>
+          <p>Todo lo que necesitás saber antes de comprar.</p>
+        </div>
+        <div class="faq__list">
+          <details class="reveal" id="envios"><summary>¿Cuánto cuesta el envío y cuánto tarda?</summary>
+            <p>Depende de tu código postal: lo podés calcular en la página de cada producto o al finalizar la compra. Enviamos por correo a todo el país, a tu casa o a la sucursal que elijas. Despachamos dentro de las 48 horas hábiles de acreditado el pago y el correo tarda entre 2 y 7 días hábiles según la zona. <span data-gratis></span></p></details>
+          <details class="reveal"><summary>¿Cómo sigo mi envío?</summary>
+            <p>Cuando despachamos tu pedido te llega por email el número de seguimiento del correo. También te avisamos por WhatsApp.</p></details>
+          <details class="reveal" id="pagos"><summary>¿Qué medios de pago aceptan?</summary>
+            <p>Pagás con Mercado Pago: tarjeta de crédito, débito, dinero en cuenta y otros medios que ofrece Mercado Pago. Las cuotas disponibles las ves al momento de pagar. <span data-transf-faq></span></p></details>
+          <details class="reveal"><summary>¿Cómo sé mi talle?</summary>
+            <p>Nuestras prendas son de calce oversize. Si dudás entre dos talles, <a class="link" data-wa="¡Hola POWER UP! Quiero consultar por las medidas de los talles." href="#" target="_blank" rel="noopener">escribinos por WhatsApp</a> y te pasamos las medidas exactas de cada prenda.</p></details>
+          <details class="reveal" id="cambios"><summary>¿Puedo cambiar el talle o el modelo?</summary>
+            <p>Sí. Tenés 30 días desde que recibís el producto para cambiarlo, sin uso y con su etiqueta. Escribinos por WhatsApp con tu número de pedido. Si el cambio es por talle, el envío de vuelta corre por tu cuenta; si el producto llegó fallado, el cambio no tiene costo.</p></details>
+          <details class="reveal"><summary>¿Y si me arrepiento de la compra?</summary>
+            <p>Por ley tenés 10 días corridos desde que recibís el producto para arrepentirte y pedir la devolución del dinero, sin dar explicaciones. Usá el <button class="link" data-arrepentimiento>botón de arrepentimiento</button>: el producto tiene que volver sin uso y con su etiqueta.</p></details>
+          <details class="reveal" id="privacidad"><summary>¿Qué hacen con mis datos?</summary>
+            <p>Usamos tu nombre, teléfono, email, DNI y dirección solo para preparar tu pedido, cobrarlo y enviarlo. Para eso los compartimos únicamente con Mercado Pago (el cobro) y con el correo que lleva el paquete. No los vendemos ni los pasamos a nadie más. Los datos de tu tarjeta los carga Mercado Pago: nunca llegan a nosotros.</p>
+            <p>Para saber cuánta gente visita la tienda usamos Vercel Analytics, que cuenta visitas sin tu nombre ni tus datos de contacto. Podés pedirnos ver, corregir o borrar tus datos cuando quieras escribiéndonos por WhatsApp (Ley 25.326 de Protección de Datos Personales). La Agencia de Acceso a la Información Pública es el organismo que controla el cumplimiento de esta ley.</p></details>
+        </div>
+        <div class="faq__cta reveal">
+          <p>¿Tenés otra consulta? Talles, stock, envíos, lo que sea.</p>
+          <a class="btn btn--white btn--wa" data-wa="¡Hola POWER UP! Tengo una consulta." href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1.3-4A8 8 0 1 1 8 18.7L4 20z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1-1.3-1.8-.9-.8.8a4 4 0 0 1-2.2-2.2l.8-.8-.9-1.8L9 9.5z" fill="currentColor" stroke="none"/></svg> Escribinos</a>
+        </div>
+      </section>
     </div>
 
-    <!-- DROP DESTACADO -->
-    <section class="drop" id="drop">
-      <div class="section-head reveal">
-        <span class="section-head__num">01</span>
-        <h2>EL DROP</h2>
-        <p>Piezas limitadas. Cuando se van, se van.</p>
+    <!-- ================= PRODUCTO ================= -->
+    <div id="vista-producto" class="vista" hidden>
+      <nav class="migas" id="migas" aria-label="Estás en"></nav>
+      <div class="producto">
+        <div class="galeria">
+          <div class="foto-grande" id="fotoGrande"></div>
+          <div class="miniaturas" id="miniaturas"></div>
+        </div>
+        <div class="info-prod">
+          <div>
+            <p class="cat-lbl" id="pCat"></p>
+            <h1 class="prod-nombre" id="pNombre"></h1>
+          </div>
+          <div class="prod-precio" id="pPrecio"></div>
+          <p class="precio-transf" id="pTransf" hidden></p>
+          <p class="prod-desc" id="pDesc"></p>
+          <div id="pColoresBox">
+            <div class="lbl">Color <span id="pColorNombre"></span></div>
+            <div class="colores" id="pColores"></div>
+          </div>
+          <div>
+            <div class="lbl">Talle</div>
+            <div class="sizes" id="pTalles"></div>
+            <p class="quedan" id="pQuedan" aria-live="polite"></p>
+          </div>
+          <p class="aviso-error" id="pFalta" aria-live="polite"></p>
+          <div class="acciones" id="pAcciones"></div>
+          <div class="caja calc">
+            <b>Calculá el envío</b>
+            <form class="fila" id="calcForm">
+              <input class="in" id="calcCP" inputmode="numeric" maxlength="8" placeholder="Código postal" aria-label="Código postal" autocomplete="postal-code">
+              <select class="in" id="calcProv" aria-label="Provincia"></select>
+              <button class="btn btn--ghost btn--sm">Calcular</button>
+            </form>
+            <div id="calcRes" aria-live="polite"></div>
+          </div>
+          <ul class="beneficios">
+            <li id="pGratis">Envíos a todo el país, a domicilio o a sucursal.</li>
+            <li id="pPagoTxt">Pagá con tarjeta, débito o Mercado Pago.</li>
+            <li>Cambios dentro de los 30 días.</li>
+          </ul>
+        </div>
       </div>
-      <div class="drop__grid" id="dropGrid"></div>
-    </section>
-
-    <!-- CATEGORÍAS -->
-    <section class="cats" id="cats"></section>
-
-    <!-- TIENDA -->
-    <section class="shop" id="tienda">
-      <div class="section-head reveal">
-        <span class="section-head__num">02</span>
-        <h2>TIENDA</h2>
-        <p>Elegí tu talle, sumalo al carrito y cerramos la compra por WhatsApp.</p>
-      </div>
-      <div class="filters reveal" id="filters">
-        <button class="filter is-active" data-filter="todos">Todo</button>
-      </div>
-      <div class="grid" id="productGrid"></div>
-    </section>
-
-    <!-- MANIFIESTO -->
-    <section class="manifesto" id="nosotros">
-      <p class="manifesto__text reveal">
-        NO HACEMOS ROPA PARA <span class="invert">PASAR DESAPERCIBIDO.</span>
-        HACEMOS ROPA PARA <span class="outline">SUBIR DE NIVEL.</span>
-        CADA PIEZA ES UN <span class="invert">POWER UP.</span>
-      </p>
-      <div class="stats">
-        <div class="stat reveal"><strong data-count="100">0</strong><span>% algodón premium</span></div>
-        <div class="stat reveal"><strong data-count="24">0</strong><span>hs de despacho</span></div>
-        <div class="stat reveal"><strong data-count="3">0</strong><span>cuotas sin interés</span></div>
-      </div>
-    </section>
-
-    <!-- MARQUEE 2 -->
-    <div class="marquee marquee--black marquee--reverse">
-      <div class="marquee__track">
-        <span>@POWERUP.STORE1</span><span class="outline">FOLLOW US</span><span>@POWERUP.STORE1</span><span class="outline">FOLLOW US</span>
-        <span>@POWERUP.STORE1</span><span class="outline">FOLLOW US</span><span>@POWERUP.STORE1</span><span class="outline">FOLLOW US</span>
-      </div>
+      <section class="relacionados" id="relacionados" hidden>
+        <h2 class="vista-tit">TAMBIÉN TE PUEDE GUSTAR</h2>
+        <div class="grid" id="grillaRel"></div>
+      </section>
     </div>
 
-    <!-- INSTAGRAM CTA -->
-    <section class="insta">
-      <div class="insta__inner reveal">
-        <p class="insta__kicker">SEGUINOS EN INSTAGRAM</p>
-        <a class="insta__handle" href="https://www.instagram.com/powerup.store1/" target="_blank" rel="noopener">@powerup.store1</a>
-        <p class="insta__text">Drops, sorteos y lanzamientos antes que nadie.</p>
-        <a class="btn btn--black" href="https://www.instagram.com/powerup.store1/" target="_blank" rel="noopener">Ir a Instagram ↗</a>
-      </div>
-    </section>
+    <!-- ================= CHECKOUT ================= -->
+    <div id="vista-checkout" class="vista" hidden>
+      <div class="checkout">
+        <div>
+          <h1 class="vista-tit">FINALIZAR COMPRA</h1>
+          <ol class="pasos-ck" id="pasosCk">
+            <li data-p="1"><span class="n">1</span>Tus datos</li>
+            <li data-p="2"><span class="n">2</span>Entrega</li>
+            <li data-p="3"><span class="n">3</span>Pago</li>
+          </ol>
 
-    <!-- FAQ -->
-    <section class="faq" id="faq">
-      <div class="section-head reveal">
-        <span class="section-head__num">03</span>
-        <h2>INFO</h2>
-        <p>Todo lo que necesitás saber antes de comprar.</p>
+          <div class="paso" id="paso1">
+            <div class="paso-h"><h2>1. Tus datos</h2><button class="link" data-editar="1" hidden>Editar</button></div>
+            <p class="resumen-paso" id="res1" hidden></p>
+            <form class="paso-cuerpo" id="form1" novalidate>
+              <div class="campo"><label for="ckEmail">Email <small>(ahí te llega el seguimiento del envío)</small></label><input class="in" id="ckEmail" type="email" autocomplete="email"></div>
+              <div class="campo"><label for="ckNombre">Nombre y apellido</label><input class="in" id="ckNombre" autocomplete="name"></div>
+              <div class="fila2">
+                <div class="campo"><label for="ckTel">Teléfono (WhatsApp)</label><input class="in" id="ckTel" type="tel" inputmode="tel" autocomplete="tel"></div>
+                <div class="campo"><label for="ckDni">DNI</label><input class="in" id="ckDni" inputmode="numeric" maxlength="10"></div>
+              </div>
+              <p class="aviso-error" id="falta1" aria-live="polite"></p>
+              <button class="btn btn--white btn--full">Continuar</button>
+            </form>
+          </div>
+
+          <div class="paso bloqueado cerrado" id="paso2">
+            <div class="paso-h"><h2>2. Entrega</h2><button class="link" data-editar="2" hidden>Editar</button></div>
+            <p class="resumen-paso" id="res2" hidden></p>
+            <div class="paso-cuerpo">
+              <form class="fila2" id="formCP">
+                <div class="campo"><label for="ckCP">Código postal</label><input class="in" id="ckCP" inputmode="numeric" maxlength="8" autocomplete="postal-code"></div>
+                <div class="campo"><label for="ckProv">Provincia</label><select class="in" id="ckProv" autocomplete="address-level1"></select></div>
+                <div class="campo span2"><label for="ckLoc">Localidad</label><input class="in" id="ckLoc" autocomplete="address-level2"></div>
+                <button class="btn btn--ghost btn--full span2">Ver opciones de envío</button>
+              </form>
+              <div class="radios" id="opcionesCk" aria-live="polite"></div>
+              <div id="ckDomicilio" hidden>
+                <div class="fila3">
+                  <div class="campo"><label for="ckCalle">Calle</label><input class="in" id="ckCalle" autocomplete="address-line1"></div>
+                  <div class="campo"><label for="ckNum">Número</label><input class="in" id="ckNum" inputmode="numeric"></div>
+                  <div class="campo"><label for="ckPiso">Piso/Depto <small>(opcional)</small></label><input class="in" id="ckPiso" autocomplete="address-line2"></div>
+                </div>
+              </div>
+              <div id="ckSucursal" hidden>
+                <div class="lbl">Elegí la sucursal</div>
+                <div class="radios sucursales" id="listaSucursales"></div>
+              </div>
+              <p class="aviso-error" id="falta2" aria-live="polite"></p>
+              <button class="btn btn--white btn--full" id="continuar2">Continuar al pago</button>
+            </div>
+          </div>
+
+          <div class="paso bloqueado cerrado" id="paso3">
+            <div class="paso-h"><h2>3. Pago</h2></div>
+            <div class="paso-cuerpo">
+              <div id="conTarjeta" hidden>
+                <p class="m0"><b>Pagá con tarjeta de crédito o débito</b>, en cuotas si tu tarjeta lo permite.</p>
+                <div class="tarjeta-box"><div id="tarjetaBrick"></div></div>
+                <p class="cargando" id="tarjetaCargando">Cargando el formulario de pago…</p>
+                <div class="separador-o"><span>o también</span></div>
+              </div>
+              <p class="m0" id="textoMP">Vas a pagar en la página segura de Mercado Pago. Podés usar tarjeta de crédito, débito o dinero en cuenta.</p>
+              <p class="aviso-error" id="falta3" aria-live="polite"></p>
+              <button class="btn btn--mp btn--full" id="pagar"><span id="pagarTxt">Pagar con Mercado Pago</span><small>Se abre Mercado Pago</small></button>
+              <div id="conTransf" hidden>
+                <div class="separador-o"><span>o con descuento</span></div>
+                <div class="transf-box">
+                  <p class="m0"><b>Transferencia bancaria · <span id="pctTransf"></span>% OFF</b><br>Pagás <b id="totalTransf"></b><span id="ahorroTransf"></span>. Al confirmar te mostramos el alias para transferir y nos mandás el comprobante por WhatsApp.</p>
+                  <button class="btn btn--white btn--full" id="pagarTransf">Confirmar y pagar con transferencia</button>
+                </div>
+              </div>
+              <p class="seguro">🔒 Los pagos los procesa Mercado Pago: los datos de tu tarjeta nunca pasan por esta página.</p>
+            </div>
+          </div>
+        </div>
+
+        <aside class="resumen" aria-label="Resumen del pedido">
+          <h2>TU PEDIDO</h2>
+          <div id="resLineas"></div>
+          <div class="cuentas" id="resCuentas"></div>
+          <p class="aviso-transf" data-aviso-transf hidden></p>
+          <a class="link" href="#" id="seguirComprando">← Seguir comprando</a>
+        </aside>
       </div>
-      <div class="faq__list">
-        <details class="reveal">
-          <summary>¿Cómo compro?</summary>
-          <p>Elegí tus productos y talles, sumalos al carrito y tocá "Finalizar por WhatsApp". Te llega un mensaje armado con tu pedido y coordinamos pago y envío.</p>
-        </details>
-        <details class="reveal">
-          <summary>¿Hacen envíos?</summary>
-          <p>Sí, enviamos a todo el país por correo. Despachamos dentro de las 24 hs hábiles de confirmado el pago.</p>
-        </details>
-        <details class="reveal">
-          <summary>¿Qué medios de pago aceptan?</summary>
-          <p>Transferencia, Mercado Pago y efectivo en retiro. Con tarjeta hasta 3 cuotas sin interés.</p>
-        </details>
-        <details class="reveal">
-          <summary>¿Cómo sé mi talle?</summary>
-          <p>Nuestras prendas son de calce oversize. Si dudás entre dos talles, <a class="link" data-wa="¡Hola POWER UP! Quiero consultar por las medidas de los talles." href="#" target="_blank" rel="noopener">escribinos por WhatsApp</a> y te pasamos las medidas exactas de cada prenda.</p>
-        </details>
-        <details class="reveal">
-          <summary>¿Puedo cambiar una prenda?</summary>
-          <p>Sí, tenés 30 días para cambios. La prenda tiene que estar sin uso y con su etiqueta.</p>
-        </details>
-      </div>
-      <div class="faq__cta reveal">
-        <p>¿Tenés otra consulta? Talles, stock, envíos, lo que sea.</p>
-        <a class="btn btn--white btn--wa" data-wa="¡Hola POWER UP! Tengo una consulta." href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 20l1.3-4A8 8 0 1 1 8 18.7L4 20z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1-1.3-1.8-.9-.8.8a4 4 0 0 1-2.2-2.2l.8-.8-.9-1.8L9 9.5z" fill="currentColor" stroke="none"/></svg> Escribinos</a>
-      </div>
-    </section>
+    </div>
   </main>
 
   <!-- FOOTER -->
@@ -187,7 +325,9 @@
       </div>
       <div>
         <h4>Ayuda</h4>
-        <a href="#faq">Envíos</a><a href="#faq">Cambios</a><a href="#faq">Pagos</a>
+        <a href="#envios">Envíos</a><a href="#pagos">Pagos</a><a href="#cambios">Cambios y devoluciones</a><a href="#privacidad">Privacidad</a>
+        <button class="footer__btn" data-arrepentimiento>Botón de arrepentimiento</button>
+        <a href="https://www.argentina.gob.ar/produccion/defensadelconsumidor/formulario" target="_blank" rel="noopener">Defensa del consumidor</a>
       </div>
       <div>
         <h4>Contacto</h4>
@@ -195,47 +335,62 @@
         <a href="#" data-wa="¡Hola POWER UP! Tengo una consulta." target="_blank" rel="noopener">WhatsApp · 11 3819-6516</a>
       </div>
     </div>
-    <p class="footer__copy">© <span id="year"></span> POWER UP STORE — Todos los derechos reservados.</p>
+    <p class="footer__copy">Envíos a todo el país · Pagos con Mercado Pago · © <span id="year"></span> POWER UP STORE</p>
   </footer>
 
   <!-- CARRITO -->
   <div class="overlay" id="overlay"></div>
-  <aside class="cart" id="cart" aria-label="Carrito">
+  <aside class="cart" id="cart" aria-label="Carrito" role="dialog" aria-modal="true">
     <div class="cart__head">
       <h3>TU CARRITO</h3>
       <button class="cart__close" id="cartClose" aria-label="Cerrar carrito">✕</button>
     </div>
     <div class="cart__items" id="cartItems"></div>
-    <div class="cart__foot">
-      <div class="cart__total"><span>TOTAL</span><strong id="cartTotal">$0</strong></div>
-      <button class="btn btn--white btn--full" id="checkout">Finalizar por WhatsApp</button>
-      <p class="cart__note">Coordinamos pago y envío por WhatsApp.</p>
+    <div class="cart__foot" id="cartFoot" hidden>
+      <div class="barra-gratis" id="barraGratis"></div>
+      <div class="cart__fila" id="filaDescuento" hidden></div>
+      <div class="cart__total"><span>SUBTOTAL</span><strong id="cartTotal">$0</strong></div>
+      <p class="aviso-transf" data-aviso-transf hidden></p>
+      <p class="cart__note" id="notaConsultar" hidden></p>
+      <a class="btn btn--white btn--full" id="iniciarCompra" href="#checkout">Iniciar compra</a>
+      <a class="btn btn--ghost btn--full btn--wa" id="waCarrito" href="#" target="_blank" rel="noopener">Consultar por WhatsApp</a>
+      <p class="cart__note" id="notaEnvio">El envío se calcula en el siguiente paso.</p>
     </div>
   </aside>
 
-  <!-- MODAL PRODUCTO -->
-  <div class="modal" id="modal" aria-hidden="true">
-    <div class="modal__box">
-      <button class="modal__close" id="modalClose" aria-label="Cerrar">✕</button>
-      <div class="modal__media" id="modalMedia"></div>
-      <div class="modal__info">
-        <p class="modal__cat" id="modalCat"></p>
-        <h3 class="modal__name" id="modalName"></h3>
-        <p class="modal__price" id="modalPrice"></p>
-        <p class="modal__desc" id="modalDesc"></p>
-        <p class="modal__label">TALLE</p>
-        <div class="sizes" id="modalSizes"></div>
-        <button class="btn btn--white btn--full" id="modalAdd">Agregar al carrito</button>
-        <a class="btn btn--ghost btn--full btn--wa" id="modalAsk" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 20l1.3-4A8 8 0 1 1 8 18.7L4 20z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1-1.3-1.8-.9-.8.8a4 4 0 0 1-2.2-2.2l.8-.8-.9-1.8L9 9.5z" fill="currentColor" stroke="none"/></svg> Consultar por WhatsApp</a>
+  <!-- Botón de arrepentimiento -->
+  <div class="modal" id="arrepentimiento" hidden role="dialog" aria-modal="true" aria-labelledby="arrTit">
+    <form class="modal-caja" id="formArr" novalidate>
+      <div class="paso-h"><h2 id="arrTit">Botón de arrepentimiento</h2><button type="button" class="cerrar" data-cerrar-arr aria-label="Cerrar">✕</button></div>
+      <div id="arrCuerpo" class="modal-cuerpo">
+        <p class="m0 gris">Tenés 10 días corridos desde que recibiste tu compra para cancelarla. Completá tus datos y te contactamos para coordinar la devolución y el reintegro del dinero.</p>
+        <div class="campo"><label for="arrNombre">Nombre y apellido</label><input class="in" id="arrNombre" autocomplete="name"></div>
+        <div class="fila2">
+          <div class="campo"><label for="arrEmail">Email</label><input class="in" id="arrEmail" type="email" autocomplete="email"></div>
+          <div class="campo"><label for="arrTel">Teléfono</label><input class="in" id="arrTel" type="tel" autocomplete="tel"></div>
+        </div>
+        <div class="campo"><label for="arrPedido">Número de pedido <small>(ej: PU-ABC123)</small></label><input class="in" id="arrPedido"></div>
+        <div class="campo"><label for="arrMotivo">Motivo <small>(opcional)</small></label><input class="in" id="arrMotivo"></div>
+        <p class="aviso-error" id="arrError" aria-live="polite"></p>
+        <button class="btn btn--white btn--full">Enviar solicitud</button>
       </div>
+    </form>
+  </div>
+
+  <!-- Resultado del pago -->
+  <div class="modal" id="resultado" hidden role="dialog" aria-modal="true" aria-labelledby="resTit">
+    <div class="modal-caja">
+      <div class="paso-h"><h2 id="resTit"></h2><button class="cerrar" id="resCerrar" aria-label="Cerrar">✕</button></div>
+      <div id="resCuerpo" class="modal-cuerpo"></div>
     </div>
   </div>
 
-  <a class="wa-float" href="#" data-wa="¡Hola POWER UP! Tengo una consulta." target="_blank" rel="noopener" aria-label="Consultar por WhatsApp"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 20l1.3-4A8 8 0 1 1 8 18.7L4 20z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1-1.3-1.8-.9-.8.8a4 4 0 0 1-2.2-2.2l.8-.8-.9-1.8L9 9.5z" fill="currentColor" stroke="none"/></svg><span>¿Consultas?</span></a>
+  <a class="wa-float" id="flotante" href="#" data-wa="¡Hola POWER UP! Tengo una consulta." target="_blank" rel="noopener" aria-label="Consultar por WhatsApp"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1.3-4A8 8 0 1 1 8 18.7L4 20z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1-1.3-1.8-.9-.8.8a4 4 0 0 1-2.2-2.2l.8-.8-.9-1.8L9 9.5z" fill="currentColor" stroke="none"/></svg><span>¿Consultas?</span></a>
 
-  <div class="toast" id="toast"></div>
+  <div class="toast" id="toast" role="status"></div>
 
   <script src="js/productos.js"></script>
-  <script src="js/main.js"></script>
+  <script src="js/ajustes.js"></script>
+  <script src="js/tienda.js"></script>
 </body>
 </html>

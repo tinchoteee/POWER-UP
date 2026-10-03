@@ -1,0 +1,6 @@
+{
+  "name": "powerup-tienda",
+  "private": true,
+  "description": "Tienda online de POWER UP Store",
+  "engines": { "node": ">=20" }
+}

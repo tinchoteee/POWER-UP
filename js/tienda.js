@@ -1,0 +1,879 @@
+"use strict";
+/* =========================================================
+   POWER UP — tienda: catálogo, página de producto, carrito y checkout por pasos.
+   Los productos, precios y la configuración del envío están en productos.js.
+   Los precios y agotados que se cambian desde el editor (admin.html) llegan de /api/stock.
+   ========================================================= */
+
+let PRODUCTOS = aplicarAjustes(CATALOGO.productos, {});
+const ENVIO = CATALOGO.envio;
+const WHATSAPP = CATALOGO.whatsapp || "";
+const LOCAL = CATALOGO.local && CATALOGO.local.direccion ? CATALOGO.local : null;
+const PROVINCIAS = ["CABA", "Buenos Aires", "Catamarca", "Chaco", "Chubut", "Córdoba", "Corrientes", "Entre Ríos", "Formosa",
+  "Jujuy", "La Pampa", "La Rioja", "Mendoza", "Misiones", "Neuquén", "Río Negro", "Salta", "San Juan", "San Luis",
+  "Santa Cruz", "Santa Fe", "Santiago del Estero", "Tierra del Fuego", "Tucumán"];
+const SIN_MOVIMIENTO = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// ---------- Utilidades ----------
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = t => String(t == null ? "" : t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const pesos = n => "$" + Math.round(n).toLocaleString("es-AR");
+const producto = id => PRODUCTOS.find(p => p.id === id);
+const precioDe = aplicarAjustes.precioDe;   // precio del color elegido (o del modelo)
+const rangoDe = aplicarAjustes.rangoDe;     // { min, max } entre todos los colores, o null si es a consultar
+const paresDe = aplicarAjustes.paresDe;     // unidades que quedan de un talle (null = no se lleva la cuenta)
+const precioTxt = p => { const r = rangoDe(p); return !r ? "Consultar precio" : r.min !== r.max ? "Desde " + pesos(r.min) : pesos(r.min); };
+const colorDe = (p, cid) => (p.colores || []).find(c => c.id === cid);
+const nombreLinea = id => (CATALOGO.lineas || {})[id] || id;
+const fotoDe = (p, cid) => (colorDe(p, cid) || {}).foto || p.foto || ((p.colores || []).find(c => c.foto) || {}).foto || "";
+const img = (src, alt = "") => src ? `<img src="${esc(src)}" alt="${esc(alt)}" loading="lazy">` : "";
+const wa = texto => (WHATSAPP ? `https://wa.me/${WHATSAPP}` : "https://wa.me/") + (texto ? "?text=" + encodeURIComponent(texto) : "");
+const leer = (k, def) => { try { return JSON.parse(localStorage.getItem(k)) ?? def; } catch (e) { return def; } };
+const escribir = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+const juntar = l => l.length > 1 ? l.slice(0, -1).join(", ") + " y " + l[l.length - 1] : l[0];
+// Líneas (marcas) con al menos un producto, en el orden de productos.js
+const lineasActivas = () => Object.keys(CATALOGO.lineas || {}).filter(k => PRODUCTOS.some(p => p.cat === k));
+
+// ---------- Datos públicos del servidor y Píxel de Meta ----------
+const configPublica = fetch("/api/config").then(r => r.ok ? r.json() : {}).catch(() => ({}));
+const pixelListo = configPublica.then(c => {
+  if (!c.metaPixelId) return false;
+  /* Código oficial de Meta */
+  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version="2.0";n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,"script","https://connect.facebook.net/en_US/fbevents.js");
+  fbq("init", String(c.metaPixelId));
+  fbq("track", "PageView");
+  return true;
+});
+const medir = (evento, datos, id) => pixelListo.then(ok => { if (ok) fbq("track", evento, { currency: "ARS", ...datos }, id ? { eventID: id } : undefined); });
+
+async function api(ruta, datos) {
+  let r;
+  try {
+    r = await fetch(ruta, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(datos) });
+  } catch (e) { throw new Error("No pudimos conectarnos. Revisá tu conexión y probá de nuevo."); }
+  if (r.status === 404 || r.status === 405 || r.status === 501) throw new Error("Esto funciona cuando la página está publicada en Vercel.");
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || "Algo salió mal. Probá de nuevo en un momento.");
+  return d;
+}
+
+// Último stock conocido (para que la página no parpadee mientras llega el actualizado)
+PRODUCTOS = aplicarAjustes(CATALOGO.productos, leer("powerup-stock", {}));
+
+// ---------- Stock ----------
+// ¿Hay stock de ese talle? (si no se eligió color, alcanza con que algún color lo tenga)
+function talleDisponible(p, cid, t) {
+  if (p.agotado) return false;
+  const cols = p.colores || [];
+  if (!cols.length) return true;
+  return (cid ? cols.filter(c => c.id === cid) : cols).some(c => !c.agotado && !c.sinTalle.includes(t));
+}
+// Máximo que se puede llevar de un talle: las unidades que quedan (si se lleva la cuenta), hasta 10
+const maxCant = (p, cid, t) => Math.min(10, paresDe(p, cid, t) ?? 10);
+function problemaItem(i) {
+  const p = producto(i.id);
+  if (!(precioDe(p, i.color) > 0)) return "Precio a consultar";
+  if (!talleDisponible(p, i.color, i.talle)) return "Se agotó";
+  return null;
+}
+
+// ---------- Carrito ----------
+let carrito = leer("powerup-carrito", []).filter(i => i && producto(i.id) && producto(i.id).talles.includes(String(i.talle)) && (!(producto(i.id).colores || []).length || colorDe(producto(i.id), i.color)));
+carrito.forEach(i => { i.talle = String(i.talle); });
+const subtotal = () => carrito.reduce((a, i) => a + precioDe(producto(i.id), i.color) * i.cant, 0);
+// Descuento por monto (ver "descuento" en productos.js): misma cuenta que hace el servidor al cobrar
+const DESCUENTO = CATALOGO.descuento || { desde: 0, porcentaje: 0 };
+const cuenta = extra => aplicarAjustes.conDescuento(carrito.map(i => ({ precio: precioDe(producto(i.id), i.color), cant: i.cant })), DESCUENTO, extra);
+const totalProductos = () => cuenta().total;
+const hayConsultar = () => carrito.some(problemaItem);
+const detalleItem = i => { const p = producto(i.id), c = colorDe(p, i.color); return `${c && (p.colores || []).length > 1 ? c.nombre + " · " : ""}Talle ${i.talle}`; };
+
+// ¿Se puede cobrar online? Mientras Mercado Pago no esté configurado en Vercel (o la página esté en un hosting sin
+// servidor, como GitHub Pages), el carrito cierra la compra por WhatsApp, como antes.
+let cobraOnline = true;
+// Descuento por transferencia: lo confirma el servidor (/api/config)
+let transf = null;
+configPublica.then(c => {
+  cobraOnline = Boolean(c && c.cobraOnline);
+  if (!cobraOnline && !$("#vista-checkout").hidden) { location.hash = ""; abrirCarrito(); }
+  pintarCarrito();
+  transf = c && c.transferencia ? c.transferencia : null;
+  const faq = $("[data-transf-faq]");
+  if (faq && transf && transf.porcentaje) faq.textContent = `También podés pagar con transferencia bancaria y tenés ${transf.porcentaje}% OFF en los productos.`;
+  if (transf && transf.porcentaje) {
+    $("#perkPago").textContent = `Tarjeta, débito, Mercado Pago o transferencia con ${transf.porcentaje}% OFF.`;
+    $("#pPagoTxt").textContent = `Pagá con tarjeta, débito, Mercado Pago o transferencia con ${transf.porcentaje}% OFF.`;
+  }
+  if (!$("#vista-producto").hidden && sel.id) pintarProducto();
+  if (!$("#vista-checkout").hidden) pintarCheckout();
+  pintarAvisoTransf();
+});
+// Cartelito en el carrito y en el resumen del checkout: "con transferencia pagás $X (5% OFF)"
+function pintarAvisoTransf() {
+  const hay = transf && transf.porcentaje && carrito.length && !hayConsultar();
+  const txt = hay ? `💸 <b>${transf.porcentaje}% OFF pagando con transferencia</b>: tus productos te quedan en <b>${pesos(cuenta(transf.porcentaje).total)}</b>${$("#vista-checkout").hidden ? "" : ". Elegilo en el paso 3 (Pago)"}.` : "";
+  $$("[data-aviso-transf]").forEach(el => { el.hidden = !hay; el.innerHTML = txt; });
+}
+
+function guardarCarrito() {
+  escribir("powerup-carrito", carrito);
+  pintarCarrito();
+  if (!$("#vista-checkout").hidden) {
+    if (!carrito.length || hayConsultar()) { location.hash = ""; return; }
+    ck.cot = null; ck.opcion = null; ck.sucursal = null; if (ck.paso > 2) ck.paso = 2; pintarCheckout();
+  }
+}
+function agregar(id, color, talle) {
+  const ex = carrito.find(i => i.id === id && i.talle === talle && i.color === color);
+  if (ex) ex.cant = Math.min(maxCant(producto(id), color, talle), ex.cant + 1); else carrito.push({ id, color, talle, cant: 1 });
+  guardarCarrito();
+  const p = producto(id);
+  medir("AddToCart", { content_ids: [String(id)], content_name: p.nombre, content_type: "product", value: precioDe(p, color) || 0 });
+}
+
+function pintarCarrito() {
+  const cant = carrito.reduce((a, i) => a + i.cant, 0);
+  const c = $("#cartCount"), antes = Number(c.textContent) || 0;
+  c.textContent = cant;
+  if (cant > antes) { c.classList.remove("bump"); void c.offsetWidth; c.classList.add("bump"); }
+  $("#cartOpen").setAttribute("aria-label", `Ver carrito (${cant} ${cant === 1 ? "producto" : "productos"})`);
+  $("#cartFoot").hidden = !carrito.length;
+  pintarAvisoTransf();
+  $("#cartItems").innerHTML = carrito.length ? carrito.map((i, n) => { const p = producto(i.id); const prob = problemaItem(i); return `
+    <div class="cart-item">
+      <a class="cart-item__img" href="#p/${p.id}">${img(fotoDe(p, i.color), p.nombre)}</a>
+      <div>
+        <p class="cart-item__name">${esc(p.nombre)}</p>
+        <p class="cart-item__meta">${esc(detalleItem(i))}</p>
+        ${prob === "Se agotó" ? `<p class="aviso-error">Se agotó · <button class="link" data-quitar="${n}">Sacar del carrito</button></p>` : ""}
+        <div class="qty"><button data-menos="${n}" aria-label="Quitar uno">−</button><span>${i.cant}</span><button data-mas="${n}" aria-label="Sumar uno">+</button></div>
+      </div>
+      <div class="cart-item__right">
+        <span class="cart-item__price">${precioDe(p, i.color) > 0 ? pesos(precioDe(p, i.color) * i.cant) : "A consultar"}</span>
+        <button class="cart-item__remove" data-quitar="${n}">Quitar</button>
+      </div>
+    </div>`; }).join("") : `<div class="cart__empty"><strong>VACÍO</strong>Todavía no sumaste nada.<br><br><a class="link" href="#tienda">Ver productos</a></div>`;
+
+  const sub = subtotal();
+  const sinPrecio = carrito.some(i => !(precioDe(producto(i.id), i.color) > 0));
+  const cta = cuenta();
+  $("#cartTotal").textContent = sinPrecio ? (sub ? pesos(cta.total) + " + a consultar" : "A consultar") : pesos(cta.total);
+  $("#filaDescuento").hidden = !cta.porcentaje;
+  if (cta.porcentaje) $("#filaDescuento").innerHTML = `<span>Descuento ${cta.porcentaje}% OFF</span><span>−${pesos(cta.descuento)}</span>`;
+  pintarBarraBeneficios(sub);
+  $("#notaConsultar").hidden = !hayConsultar();
+  $("#notaConsultar").textContent = carrito.some(i => problemaItem(i) === "Se agotó")
+    ? "Hay productos que se agotaron. Sacalos del carrito para seguir con la compra."
+    : "Hay productos con precio a consultar. Para pagar online, consultalos por WhatsApp o sacalos del carrito.";
+  $("#iniciarCompra").classList.toggle("is-off", hayConsultar());
+  $("#iniciarCompra").toggleAttribute("aria-disabled", hayConsultar());
+  $("#iniciarCompra").hidden = !cobraOnline;
+  $("#waCarrito").classList.toggle("btn--white", !cobraOnline);
+  $("#waCarrito").classList.toggle("btn--ghost", cobraOnline);
+  $("#waCarrito").textContent = cobraOnline ? "Consultar por WhatsApp" : "Finalizar compra por WhatsApp";
+  $("#notaEnvio").textContent = cobraOnline ? "El envío se calcula en el siguiente paso." : "Coordinamos el pago y el envío por WhatsApp.";
+  const lineasWa = carrito.map(i => `• ${i.cant} x ${producto(i.id).nombre} - ${detalleItem(i)}${precioDe(producto(i.id), i.color) > 0 ? " - " + pesos(precioDe(producto(i.id), i.color) * i.cant) : ""}`).join("\n");
+  $("#waCarrito").href = wa(cobraOnline ? "¡Hola POWER UP! Quiero consultar por:\n\n" + lineasWa
+    : `¡Hola POWER UP! ⚡ Quiero hacer este pedido:\n\n${lineasWa}\n\nTOTAL: ${pesos(cta.total)}${cta.porcentaje ? ` (con ${cta.porcentaje}% OFF)` : ""}\n\n¿Cómo seguimos con el pago y el envío?`);
+}
+// Barra de beneficios del carrito: se llena a medida que se suman productos (envío gratis y descuento)
+function pintarBarraBeneficios(sub) {
+  const metas = [];
+  if (ENVIO.gratisDesde > 0) metas.push({ monto: ENVIO.gratisDesde, texto: "envío gratis", logrado: "¡Tenés envío gratis!", ic: "🚚" });
+  if (DESCUENTO.desde > 0 && DESCUENTO.porcentaje > 0) metas.push({ monto: DESCUENTO.desde, texto: `${DESCUENTO.porcentaje}% OFF`, logrado: `¡Tenés ${DESCUENTO.porcentaje}% OFF en tu compra!`, ic: "🏷️" });
+  metas.sort((a, b) => a.monto - b.monto);
+  $("#barraGratis").hidden = !metas.length;
+  if (!metas.length) return;
+  const tope = metas[metas.length - 1].monto;
+  const proxima = metas.find(m => sub < m.monto);
+  const logradas = metas.filter(m => sub >= m.monto);
+  let msj;
+  if (!proxima) msj = `<span class="ok">¡Tenés ${metas.map(m => m.texto).join(" y ")}!</span>`;
+  else msj = (logradas.length ? `<span class="ok">${logradas[logradas.length - 1].logrado}</span> ` : "")
+    + `Te faltan <b>${pesos(proxima.monto - sub)}</b> para ${logradas.length ? "sumar " : "tener "}<b>${proxima.texto}</b>`;
+  $("#barraGratis").innerHTML = `<div class="barra-msj">${msj}</div>
+    <div class="barra"><i style="width:${Math.min(100, sub / tope * 100)}%"></i>
+      ${metas.map(m => `<span class="meta${sub >= m.monto ? " ok" : ""}" style="left:${m.monto / tope * 100}%" title="${esc(m.texto)} desde ${pesos(m.monto)}">${m.ic}</span>`).join("")}</div>
+    <div class="barra-metas">${metas.map(m => `<span style="left:${m.monto / tope * 100}%">${esc(m.texto)}<br>${pesos(m.monto)}</span>`).join("")}</div>`;
+}
+function abrirCarrito() { $("#cart").classList.add("is-open"); $("#overlay").classList.add("is-open"); $("#cartClose").focus(); }
+function cerrarCarrito() { $("#cart").classList.remove("is-open"); $("#overlay").classList.remove("is-open"); }
+
+$("#cartOpen").addEventListener("click", abrirCarrito);
+$("#cartClose").addEventListener("click", cerrarCarrito);
+$("#overlay").addEventListener("click", cerrarCarrito);
+$("#cartItems").addEventListener("click", e => {
+  const m = e.target.closest("[data-mas]"), n = e.target.closest("[data-menos]"), q = e.target.closest("[data-quitar]");
+  if (m) { const i = carrito[+m.dataset.mas]; const tope = maxCant(producto(i.id), i.color, i.talle); if (i.cant >= tope) toast(tope === 1 ? "Queda 1 sola unidad de ese talle" : `Quedan ${tope} unidades de ese talle`); i.cant = Math.min(tope, i.cant + 1); guardarCarrito(); }
+  else if (n) { const k = +n.dataset.menos; carrito[k].cant--; if (carrito[k].cant <= 0) carrito.splice(k, 1); guardarCarrito(); }
+  else if (q) { carrito.splice(+q.dataset.quitar, 1); guardarCarrito(); }
+  if (e.target.closest("a")) cerrarCarrito();
+});
+$("#iniciarCompra").addEventListener("click", e => { if (hayConsultar()) { e.preventDefault(); return; } cerrarCarrito(); });
+
+// ---------- Inicio y catálogo ----------
+let catActual = "todos";
+
+function tarjeta(p) {
+  const cols = p.colores || [];
+  // Carrusel: si los colores tienen fotos distintas, la tarjeta las va pasando sola (ver "Carrusel de las tarjetas")
+  const fotos = [...new Set(cols.map(c => c.foto).filter(Boolean))];
+  const carrusel = fotos.length > 1 && !p.agotado;
+  const fotoHtml = carrusel
+    ? fotos.map((f, i) => `<img src="${esc(f)}" alt="${i ? "" : esc(p.nombre)}" loading="lazy"${i ? "" : ' class="on"'}>`).join("")
+    : img(fotoDe(p), p.nombre);
+  const tag = p.agotado ? "AGOTADO" : !rangoDe(p) ? "CONSULTAR" : p.etiqueta;
+  return `<a class="card${p.agotado ? " is-agotado" : ""}" href="#p/${p.id}" data-cat="${esc(p.cat)}">
+    <div class="card__media${carrusel ? " carrusel" : ""}">
+      ${tag ? `<span class="card__tag">${esc(tag)}</span>` : ""}
+      ${fotoHtml}
+      <span class="card__quick">+ VER PRODUCTO</span>
+    </div>
+    <div class="card__info">
+      <div>
+        <h3 class="card__name">${esc(p.nombre)}</h3>
+        <p class="card__cat">${esc(p.detalle || nombreLinea(p.cat))}${cols.length > 1 ? ` · ${cols.length} colores` : ""}</p>
+        ${cols.length > 1 ? `<div class="puntos">${cols.map(c => `<i style="--sw:${esc(c.hex)}" title="${esc(c.nombre)}"${carrusel && c.foto ? ` data-foto="${fotos.indexOf(c.foto)}"${c.foto === fotos[0] ? ' class="on"' : ""}` : ""}></i>`).join("")}</div>` : ""}
+      </div>
+      <span class="card__price">${precioTxt(p)}</span>
+    </div>
+  </a>`;
+}
+function pintarCatalogo() {
+  const lineas = lineasActivas();
+  if (catActual !== "todos" && !lineas.includes(catActual)) catActual = "todos";
+  $("#dropGrid").innerHTML = PRODUCTOS.filter(p => p.drop && !p.agotado).slice(0, 3).map(tarjeta).join("");
+  $("#drop").hidden = !$("#dropGrid").innerHTML;
+  $("#cats").innerHTML = [...lineas, "todos"].map((k, i) => `
+    <a href="#cat/${k}" class="cat" data-cat="${k}">
+      <span class="cat__num">/${String(i + 1).padStart(2, "0")}</span>
+      <span class="cat__name">${k === "todos" ? "VER TODO" : esc(nombreLinea(k).toUpperCase())}</span>
+      <span class="cat__arrow">→</span>
+    </a>`).join("");
+  $("#filters").innerHTML = ["todos", ...lineas].map(k => `<button class="filter${k === catActual ? " is-active" : ""}" data-filter="${k}" aria-pressed="${k === catActual}">${k === "todos" ? "Todo" : esc(nombreLinea(k))}</button>`).join("");
+  $("#footerLineas").innerHTML = lineas.map(k => `<a href="#cat/${k}">${esc(nombreLinea(k))}</a>`).join("");
+  // Agrupados por marca; los agotados van al final
+  const orden = p => lineas.indexOf(p.cat);
+  $("#productGrid").innerHTML = PRODUCTOS.filter(p => catActual === "todos" || p.cat === catActual)
+    .sort((a, b) => a.agotado - b.agotado || orden(a) - orden(b)).map(tarjeta).join("");
+  animarEntrada($("#vista-inicio"));
+}
+$("#filters").addEventListener("click", e => {
+  const b = e.target.closest(".filter"); if (!b) return;
+  catActual = b.dataset.filter; pintarCatalogo();
+});
+
+// ---------- Página de producto ----------
+const sel = { id: null, color: null, talle: null, foto: null };
+
+function mostrarProducto(id) {
+  const p = producto(id);
+  if (!p) { location.hash = ""; return; }
+  if (sel.id !== id) medir("ViewContent", { content_ids: [String(id)], content_name: p.nombre, content_type: "product", value: (rangoDe(p) || {}).min || 0 });
+  if (sel.id !== id) Object.assign(sel, { id, color: p.colores && p.colores.length === 1 ? p.colores[0].id : null, talle: null, foto: null });
+  document.title = `${p.nombre} · POWER UP Store`;
+  $("#migas").innerHTML = `<a href="#">Inicio</a> / <a href="#cat/${esc(p.cat)}">${esc(nombreLinea(p.cat))}</a> / ${esc(p.nombre)}`;
+  $("#pCat").textContent = [nombreLinea(p.cat), p.detalle].filter(Boolean).join(" · ");
+  $("#pNombre").textContent = p.nombre;
+  $("#pDesc").textContent = p.desc || "";
+  $("#pDesc").hidden = !p.desc;
+  $("#pFalta").textContent = "";
+  $("#calcRes").innerHTML = "";
+  pintarProducto();
+
+  const rel = PRODUCTOS.filter(x => x.id !== p.id && x.cat === p.cat);
+  const otros = PRODUCTOS.filter(x => x.id !== p.id && x.cat !== p.cat);
+  const sugeridos = [...rel, ...otros].filter(x => !x.agotado).slice(0, 4);
+  $("#grillaRel").innerHTML = sugeridos.map(tarjeta).join("");
+  $("#relacionados").hidden = !sugeridos.length;
+}
+function pintarProducto() {
+  const p = producto(sel.id);
+  if (!p) return;
+  const cols = p.colores || [];
+  // Galería: una foto por color (y la foto general si la hay)
+  const fotos = [];
+  cols.forEach(c => { if (c.foto) fotos.push({ src: c.foto, color: c.id }); });
+  if (p.foto && !fotos.some(f => f.src === p.foto)) fotos.unshift({ src: p.foto, color: null });
+  const actual = sel.foto || fotoDe(p, sel.color);
+  $("#fotoGrande").innerHTML = img(actual, p.nombre).replace(' loading="lazy"', "");
+  $("#miniaturas").innerHTML = fotos.length > 1 ? fotos.map(f => `<button data-foto="${esc(f.src)}" data-color="${esc(f.color || "")}" aria-pressed="${f.src === actual}" aria-label="Ver foto">${img(f.src).replace(' loading="lazy"', "")}</button>`).join("") : "";
+
+  const colSel = colorDe(p, sel.color);
+  const colAgotado = c => c.agotado || p.talles.every(t => c.sinTalle.includes(t));
+  $("#pColoresBox").hidden = cols.length < 2;
+  $("#pColorNombre").textContent = colSel ? colSel.nombre + (colAgotado(colSel) ? " · agotado" : "") : "· elegí uno";
+  $("#pColores").innerHTML = cols.map(c => `<button class="swatch${colAgotado(c) ? " sin-stock" : ""}" data-c="${esc(c.id)}" aria-pressed="${sel.color === c.id}" aria-label="${esc(c.nombre)}${colAgotado(c) ? " (agotado)" : ""}" title="${esc(c.nombre)}${colAgotado(c) ? " · agotado" : ""}" style="--sw:${esc(c.hex)}"></button>`).join("");
+  $("#pTalles").innerHTML = p.talles.map(t => { const hay = talleDisponible(p, sel.color, t);
+    return `<button class="size${sel.talle === t ? " is-active" : ""}" data-t="${esc(t)}" aria-pressed="${sel.talle === t}"${hay ? "" : ` disabled aria-label="Talle ${esc(t)}, agotado"`}>${esc(t)}</button>`; }).join("");
+  // Pocas unidades del talle elegido: se avisa
+  const quedan = sel.color && sel.talle ? paresDe(p, sel.color, sel.talle) : null;
+  $("#pQuedan").textContent = quedan > 0 && quedan <= 3 ? (quedan === 1 ? "¡Queda la última unidad de este talle!" : `¡Quedan solo ${quedan} unidades de este talle!`) : "";
+
+  // Precio: el del color elegido; si todavía no eligió color, "Desde $X" cuando los colores cuestan distinto
+  const precioSel = colSel ? precioDe(p, colSel.id) : 0;
+  $("#pPrecio").textContent = colSel ? (precioSel > 0 ? pesos(precioSel) : "Consultar precio") : precioTxt(p);
+  const tienePrecio = colSel ? precioSel > 0 : Boolean(rangoDe(p));
+  const base = colSel ? precioSel : (rangoDe(p) || {}).min;
+  $("#pTransf").hidden = !(transf && transf.porcentaje && base > 0);
+  if (!$("#pTransf").hidden) $("#pTransf").innerHTML = `${colSel || !rangoDe(p) || rangoDe(p).min === rangoDe(p).max ? "" : "Desde "}<b>${pesos(Math.round(base * (100 - transf.porcentaje) / 100))}</b> con transferencia (${transf.porcentaje}% OFF)`;
+
+  const consulta = `¡Hola POWER UP! Quiero consultar por ${p.nombre}${colSel && cols.length > 1 ? " color " + colSel.nombre : ""}${sel.talle ? " talle " + sel.talle : ""}.`;
+  const botonWa = texto => `<a class="btn btn--ghost btn--full btn--wa" href="${wa(consulta)}" target="_blank" rel="noopener">${texto}</a>`;
+  if (p.agotado) $("#pAcciones").innerHTML = `<button class="btn btn--white btn--full" disabled>Agotado</button>` + botonWa("Consultar si vuelve a entrar");
+  else if (colSel && colAgotado(colSel)) $("#pAcciones").innerHTML = `<button class="btn btn--white btn--full" disabled>Agotado en ${esc(colSel.nombre)}</button>` + botonWa("Consultar por WhatsApp");
+  else if (tienePrecio) $("#pAcciones").innerHTML = `<button class="btn btn--white btn--full" id="agregarBtn">Agregar al carrito</button>` + botonWa("Consultar por WhatsApp");
+  else $("#pAcciones").innerHTML = botonWa("Consultar precio por WhatsApp");
+}
+$("#vista-producto").addEventListener("click", e => {
+  const p = producto(sel.id); if (!p) return;
+  const f = e.target.closest("[data-foto]");
+  if (f && f.closest("#miniaturas")) { sel.foto = f.dataset.foto; if (f.dataset.color) { sel.color = f.dataset.color; if (sel.talle && !talleDisponible(p, sel.color, sel.talle)) sel.talle = null; } pintarProducto(); return; }
+  const s = e.target.closest(".swatch");
+  if (s) {
+    sel.color = s.dataset.c; sel.foto = null; $("#pFalta").textContent = "";
+    if (sel.talle && !talleDisponible(p, sel.color, sel.talle)) sel.talle = null; // ese talle no hay en este color
+    pintarProducto(); return;
+  }
+  const t = e.target.closest(".size");
+  if (t) { sel.talle = t.dataset.t; $("#pFalta").textContent = ""; pintarProducto(); return; }
+  if (e.target.closest("#agregarBtn")) {
+    const faltaColor = (p.colores || []).length && !sel.color;
+    if (faltaColor || !sel.talle) {
+      $("#pFalta").textContent = faltaColor && !sel.talle ? "Elegí el color y tu talle." : faltaColor ? "Elegí un color." : "Elegí tu talle.";
+      const box = faltaColor ? $("#pColores") : $("#pTalles"); box.classList.remove("shake"); void box.offsetWidth; box.classList.add("shake");
+      return;
+    }
+    agregar(p.id, sel.color, sel.talle);
+    toast(`${p.nombre} (${sel.talle}) agregado`);
+    setTimeout(abrirCarrito, SIN_MOVIMIENTO ? 0 : 350);
+  }
+});
+
+// Calculadora de envío en la página de producto
+const opcionesProv = `<option value="">Provincia</option>` + PROVINCIAS.map(p => `<option>${p}</option>`).join("");
+$("#calcProv").innerHTML = opcionesProv;
+$("#ckProv").innerHTML = opcionesProv;
+const zonaGuardada = leer("powerup-cp", {});
+$("#calcCP").value = zonaGuardada.cp || ""; $("#calcProv").value = zonaGuardada.provincia || "";
+const diasTxt = d => d && d.min ? (d.max && d.max !== d.min ? `Llega entre ${d.min} y ${d.max} días hábiles` : `Llega en ${d.min} días hábiles`) : "";
+
+$("#calcForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const cp = $("#calcCP").value.trim(), provincia = $("#calcProv").value;
+  if (!/\d{4}/.test(cp) || !provincia) { $("#calcRes").innerHTML = `<p class="aviso-error">Ingresá tu código postal y provincia.</p>`; return; }
+  escribir("powerup-cp", { cp, provincia });
+  $("#calcRes").innerHTML = `<p class="cargando">Calculando…</p>`;
+  try {
+    const r = await api("/api/cotizar-envio", { cp, provincia, items: [{ id: sel.id, color: sel.color, cant: 1 }] });
+    $("#calcRes").innerHTML = `<ul class="opciones-envio">${r.opciones.map(o => `<li><span>${esc(o.nombre)}<small>${esc(o.tipo === "local" ? o.detalle : diasTxt(o.dias))}</small></span><b class="${o.precio ? "" : "ok"}">${o.precio ? pesos(o.precio) : "Gratis"}</b></li>`).join("")}</ul>`;
+  } catch (err) {
+    $("#calcRes").innerHTML = `<p class="aviso-error">${esc(err.message)}</p>`;
+  }
+});
+
+// ---------- Checkout por pasos ----------
+const ck = { paso: 1, cot: null, opcion: null, sucursal: null };
+const datos = leer("powerup-datos", {});
+[["ckEmail", "email"], ["ckNombre", "nombre"], ["ckTel", "telefono"], ["ckDni", "dni"], ["ckCalle", "calle"], ["ckNum", "numero"], ["ckPiso", "piso"], ["ckLoc", "localidad"]]
+  .forEach(([id, k]) => { if (datos[k]) document.getElementById(id).value = datos[k]; });
+$("#ckCP").value = zonaGuardada.cp || ""; $("#ckProv").value = zonaGuardada.provincia || "";
+const val = id => document.getElementById(id).value.trim();
+const opcionLocal = () => ({ id: "local", tipo: "local", nombre: "Retiro en persona", precio: 0, detalle: LOCAL.direccion });
+
+function mostrarCheckout() {
+  if (!carrito.length || hayConsultar() || !cobraOnline) { location.hash = ""; setTimeout(abrirCarrito, 60); return; }   // se abre después del cambio de dirección (que cierra el carrito)
+  document.title = "Finalizar compra · POWER UP Store";
+  medir("InitiateCheckout", { value: cuenta().total, num_items: carrito.reduce((a, i) => a + i.cant, 0), content_ids: carrito.map(i => String(i.id)), content_type: "product" });
+  // Si ya calculó el envío en la página del producto, se completa solo
+  const z = leer("powerup-cp", {});
+  if (!val("ckCP") && z.cp) { $("#ckCP").value = z.cp; $("#ckProv").value = z.provincia || ""; }
+  pintarCheckout();
+}
+function pintarCheckout() {
+  // Resumen
+  $("#resLineas").innerHTML = carrito.map(i => { const p = producto(i.id); return `
+    <div class="linea"><div class="linea__img">${img(fotoDe(p, i.color), p.nombre)}<span class="q">${i.cant}</span></div>
+      <div><b>${esc(p.nombre)}</b><span>${esc(detalleItem(i))}</span></div><div class="m">${pesos(precioDe(p, i.color) * i.cant)}</div></div>`; }).join("");
+  const envio = ck.opcion ? ck.opcion.precio : null;
+  const cta = cuenta();
+  $("#resCuentas").innerHTML = `<div><span>Subtotal</span><span>${pesos(cta.subtotal)}</span></div>
+    ${cta.porcentaje ? `<div class="ok"><span>Descuento ${cta.porcentaje}% OFF</span><span>−${pesos(cta.descuento)}</span></div>` : ""}
+    <div><span>Envío</span><span>${envio == null ? '<span class="gris">Se calcula en el paso 2</span>' : envio ? pesos(envio) : '<span class="ok">Gratis</span>'}</span></div>
+    <div class="tot"><span>Total</span><span>${pesos(cta.total + (envio || 0))}</span></div>`;
+  if (!$("#pagar").disabled) $("#pagarTxt").textContent = pagoTarjeta.brick ? "Pagar con mi cuenta de Mercado Pago" : `Pagar ${pesos(cta.total + (envio || 0))} con Mercado Pago`;
+  pintarAvisoTransf();
+  // Transferencia: mismo pedido con el descuento extra (sobre los productos, no sobre el envío)
+  $("#conTransf").hidden = !(transf && transf.porcentaje);
+  if (transf && transf.porcentaje) {
+    const ct = cuenta(transf.porcentaje);
+    $("#pctTransf").textContent = transf.porcentaje;
+    $("#totalTransf").textContent = pesos(ct.total + (envio || 0));
+    $("#ahorroTransf").textContent = ` (ahorrás ${pesos(ct.descuentoTransferencia)})`;
+  }
+
+  // Pasos
+  for (let n = 1; n <= 3; n++) {
+    const el = $("#paso" + n);
+    el.classList.toggle("cerrado", n !== ck.paso);
+    el.classList.toggle("bloqueado", n > ck.paso);
+    const li = document.querySelector(`#pasosCk li[data-p="${n}"]`);
+    li.classList.toggle("hecho", n < ck.paso);
+    if (n === ck.paso) li.setAttribute("aria-current", "step"); else li.removeAttribute("aria-current");
+    const ed = el.querySelector("[data-editar]"); if (ed) ed.hidden = !(n < ck.paso);
+    const res = $("#res" + n); if (res) res.hidden = !(n < ck.paso);
+  }
+  $("#res1").textContent = [val("ckNombre"), val("ckTel"), val("ckEmail")].filter(Boolean).join(" · ");
+  if (ck.opcion) {
+    const o = ck.opcion;
+    $("#res2").textContent = o.tipo === "local" ? `Retiro en persona · ${o.detalle || ""}`
+      : o.tipo === "sucursal" ? `${o.nombre} · ${ck.sucursal ? ck.sucursal.nombre : ""}`
+      : `${o.nombre} · ${val("ckCalle")} ${val("ckNum")}${val("ckPiso") ? " " + val("ckPiso") : ""}, ${val("ckLoc")}`;
+  }
+  pintarOpciones();
+  pintarTarjeta();
+}
+function irPaso(n) { ck.paso = n; pintarCheckout(); $("#paso" + n).scrollIntoView({ behavior: SIN_MOVIMIENTO ? "auto" : "smooth", block: "start" }); }
+
+$("#vista-checkout").addEventListener("click", e => {
+  const ed = e.target.closest("[data-editar]");
+  if (ed) irPaso(+ed.dataset.editar);
+});
+
+// Paso 1: datos
+// Al corregir un campo marcado en rojo, se le saca la marca
+document.addEventListener("input", e => { if (e.target.classList && e.target.classList.contains("mal")) e.target.classList.remove("mal"); });
+$("#form1").addEventListener("submit", e => {
+  e.preventDefault();
+  $$("#form1 .in").forEach(i => i.classList.remove("mal"));
+  const faltan = [];
+  const marcar = (id, txt) => { document.getElementById(id).classList.add("mal"); faltan.push(txt); };
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val("ckEmail"))) marcar("ckEmail", "tu email");
+  if (val("ckNombre").split(/\s+/).length < 2) marcar("ckNombre", "tu nombre y apellido");
+  if (val("ckTel").replace(/\D/g, "").length < 8) marcar("ckTel", "tu teléfono con código de área");
+  if (!/^\d{7,8}$/.test(val("ckDni").replace(/\D/g, ""))) marcar("ckDni", "tu DNI (7 u 8 números)");
+  if (faltan.length) { $("#falta1").textContent = "Completá " + juntar(faltan) + "."; $("#form1 .mal").focus(); return; }
+  $("#falta1").textContent = "";
+  guardarDatos();
+  irPaso(2);
+  if (!ck.cot && val("ckCP") && $("#ckProv").value) cotizarCheckout();
+});
+function guardarDatos() {
+  escribir("powerup-datos", { email: val("ckEmail"), nombre: val("ckNombre"), telefono: val("ckTel"), dni: val("ckDni"),
+    calle: val("ckCalle"), numero: val("ckNum"), piso: val("ckPiso"), localidad: val("ckLoc") });
+}
+
+// Paso 2: entrega
+$("#formCP").addEventListener("submit", e => { e.preventDefault(); cotizarCheckout(); });
+["ckCP", "ckProv"].forEach(id => document.getElementById(id).addEventListener("change", () => { ck.cot = null; ck.opcion = null; ck.sucursal = null; pintarCheckout(); }));
+
+async function cotizarCheckout() {
+  const cp = val("ckCP"), provincia = $("#ckProv").value;
+  if (!/\d{4}/.test(cp) || !provincia) { $("#falta2").textContent = "Ingresá tu código postal y provincia."; return; }
+  escribir("powerup-cp", { cp, provincia });
+  $("#falta2").textContent = "";
+  ck.cot = null; ck.opcion = null; ck.sucursal = null;
+  $("#opcionesCk").innerHTML = `<p class="cargando">Buscando opciones de envío…</p>`;
+  try {
+    ck.cot = await api("/api/cotizar-envio", { cp, provincia, localidad: val("ckLoc"), items: carrito.map(i => ({ id: i.id, color: i.color, cant: i.cant })) });
+  } catch (err) {
+    $("#opcionesCk").innerHTML = "";
+    // Si no se puede cotizar y hay retiro en persona, se ofrece igual
+    ck.cot = LOCAL ? { opciones: [opcionLocal()] } : null;
+    $("#falta2").textContent = err.message;
+  }
+  pintarCheckout();
+}
+function pintarOpciones() {
+  if (!ck.cot) { if (!$("#opcionesCk .cargando")) $("#opcionesCk").innerHTML = ""; $("#ckDomicilio").hidden = true; $("#ckSucursal").hidden = true; return; }
+  $("#opcionesCk").innerHTML = ck.cot.opciones.map(o => `
+    <label class="radio"><input type="radio" name="opcion" value="${esc(o.id)}"${ck.opcion && ck.opcion.id === o.id ? " checked" : ""}>
+      <span class="txt"><b>${esc(o.nombre)}</b><small>${esc(o.tipo === "local" ? o.detalle : o.tipo === "sucursal" ? `${diasTxt(o.dias) || "Retirás en la sucursal que elijas"}` : diasTxt(o.dias))}</small></span>
+      <span class="pr">${o.precio ? pesos(o.precio) : `<span class="ok">Gratis</span>`}${o.precioOriginal > o.precio ? `<br><s>${pesos(o.precioOriginal)}</s>` : ""}</span>
+    </label>`).join("");
+  const o = ck.opcion;
+  $("#ckDomicilio").hidden = !o || o.tipo !== "domicilio";
+  $("#ckSucursal").hidden = !o || o.tipo !== "sucursal";
+  if (o && o.tipo === "sucursal") {
+    $("#listaSucursales").innerHTML = o.sucursales.map(s => `
+      <label class="radio"><input type="radio" name="sucursal" value="${esc(s.id)}"${ck.sucursal && ck.sucursal.id === s.id ? " checked" : ""}>
+        <span class="txt"><b>${esc(s.nombre)}</b><small>${esc(s.direccion)}${s.horario ? " · " + esc(s.horario) : ""}</small></span></label>`).join("");
+  }
+}
+$("#paso2").addEventListener("change", e => {
+  if (e.target.name === "opcion") { ck.opcion = ck.cot.opciones.find(o => o.id === e.target.value); ck.sucursal = null; $("#falta2").textContent = ""; pintarCheckout(); }
+  if (e.target.name === "sucursal") { ck.sucursal = ck.opcion.sucursales.find(s => s.id === e.target.value); $("#falta2").textContent = ""; }
+});
+$("#continuar2").addEventListener("click", () => {
+  $$("#paso2 .in").forEach(i => i.classList.remove("mal"));
+  const o = ck.opcion;
+  if (!ck.cot) { $("#falta2").textContent = "Ingresá tu código postal y tocá “Ver opciones de envío”."; return; }
+  if (!o) { $("#falta2").textContent = "Elegí cómo querés recibir tu pedido."; return; }
+  const faltan = [];
+  const marcar = (id, txt) => { document.getElementById(id).classList.add("mal"); faltan.push(txt); };
+  if (o.tipo === "domicilio") {
+    if (!val("ckCalle")) marcar("ckCalle", "la calle");
+    if (!val("ckNum")) marcar("ckNum", "el número");
+    if (!val("ckLoc")) marcar("ckLoc", "la localidad");
+  }
+  if (o.tipo === "sucursal") {
+    if (!val("ckLoc")) marcar("ckLoc", "la localidad");
+    if (!ck.sucursal && !faltan.length) { $("#falta2").textContent = "Elegí la sucursal del correo donde vas a retirar."; return; }
+  }
+  if (faltan.length) { $("#falta2").textContent = "Completá " + juntar(faltan) + "."; return; }
+  $("#falta2").textContent = "";
+  guardarDatos();
+  irPaso(3);
+});
+
+// Paso 3: pago
+function datosPedido() {
+  const o = ck.opcion;
+  return {
+    items: carrito.map(i => ({ id: i.id, talle: i.talle, color: i.color, cant: i.cant })),
+    cliente: { nombre: val("ckNombre"), telefono: val("ckTel"), email: val("ckEmail"), dni: val("ckDni") },
+    entrega: { opcion: o.id, sucursal: ck.sucursal ? ck.sucursal.id : null, cp: val("ckCP"), provincia: $("#ckProv").value,
+      localidad: val("ckLoc"), calle: val("ckCalle"), numero: val("ckNum"), piso: val("ckPiso") }
+  };
+}
+function recordarPedido(numero, total, cliente) {
+  escribir("powerup-ultimo-pedido", {
+    numero, total,
+    lineas: carrito.map(i => `${i.cant} x ${producto(i.id).nombre} - ${detalleItem(i)}`),
+    cliente, entrega: $("#res2").textContent, local: ck.opcion.tipo === "local"
+  });
+}
+$("#pagar").addEventListener("click", async () => {
+  const o = ck.opcion;
+  if (!o) { irPaso(2); return; }
+  const pedido = datosPedido();
+  $("#pagar").disabled = true; $("#pagarTxt").textContent = "Conectando con Mercado Pago…"; $("#falta3").textContent = "";
+  try {
+    const r = await api("/api/crear-pago", pedido);
+    recordarPedido(r.pedido, totalProductos() + o.precio, pedido.cliente);
+    location.href = r.url;
+  } catch (err) {
+    $("#pagar").disabled = false; pintarCheckout();
+    $("#falta3").textContent = err.message;
+    if (/agot|quedan|queda 1/i.test(err.message)) actualizarStock();   // algo se agotó mientras compraba
+  }
+});
+
+// ---------- Pago por transferencia ----------
+$("#pagarTransf").addEventListener("click", async () => {
+  const o = ck.opcion;
+  if (!o) { irPaso(2); return; }
+  const pedido = datosPedido();
+  const b = $("#pagarTransf"); b.disabled = true; b.textContent = "Registrando tu pedido…"; $("#falta3").textContent = "";
+  try {
+    const r = await api("/api/transferencia", pedido);
+    const lineas = carrito.map(i => `${i.cant} x ${producto(i.id).nombre} - ${detalleItem(i)}`);
+    carrito = []; escribir("powerup-carrito", carrito); pintarCarrito();
+    const c = r.cuenta || {};
+    const dato = (t, v, copiar) => v ? `<div class="dato-transf"><span>${t}</span><b>${esc(v)}</b>${copiar ? `<button class="link" data-copiar="${esc(copiar)}">Copiar</button>` : ""}</div>` : "";
+    const hayDatos = Boolean(c.alias || c.cbu);
+    const msj = hayDatos ? `¡Hola POWER UP! Hice la transferencia del pedido ${r.pedido} por ${pesos(r.total)}. Te mando el comprobante.`
+      : `¡Hola POWER UP! Hice el pedido ${r.pedido} para pagar con transferencia (${pesos(r.total)}). ¿Me pasan el alias?`;
+    $("#resTit").textContent = "¡Pedido reservado!";
+    $("#resCuerpo").innerHTML = (hayDatos
+      ? `<p class="m0">Tu pedido <b>${esc(r.pedido)}</b> quedó reservado. Para confirmarlo, transferí <b>${pesos(r.total)}</b> a esta cuenta:</p>
+      <div class="datos-transf">${dato("Alias", c.alias, c.alias)}${dato("CBU/CVU", c.cbu, c.cbu)}${dato("Titular", c.titular)}${dato("Banco", c.banco)}${dato("Monto", pesos(r.total), String(r.total).replace(".", ","))}</div>`
+      : `<p class="m0">Tu pedido <b>${esc(r.pedido)}</b> quedó reservado con el descuento. Tenés que transferir <b>${pesos(r.total)}</b>: escribinos por WhatsApp y te pasamos el alias para hacerlo.</p>`) + `
+      <ul>${lineas.map(l => `<li>${esc(l)}</li>`).join("")}</ul>
+      <p class="m0">Después mandanos el comprobante por WhatsApp. Cuando veamos el pago, te avisamos y preparamos tu pedido.</p>
+      ${WHATSAPP ? `<a class="btn btn--white btn--full btn--wa" href="${wa(msj)}" target="_blank" rel="noopener">${hayDatos ? "Mandar comprobante por WhatsApp" : "Pedir el alias por WhatsApp"}</a>` : ""}`;
+    history.pushState(null, "", location.pathname); ruta();   // vuelve al inicio sin cerrar el cartel
+    $("#resultado").hidden = false;
+  } catch (err) {
+    $("#falta3").textContent = err.message;
+    if (/agot|quedan|queda 1/i.test(err.message)) actualizarStock();
+  }
+  b.disabled = false; b.textContent = "Confirmar y pagar con transferencia";
+});
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-copiar]"); if (!b) return;
+  if (navigator.clipboard) navigator.clipboard.writeText(b.dataset.copiar).then(() => { b.textContent = "¡Copiado!"; setTimeout(() => { b.textContent = "Copiar"; }, 1500); });
+});
+$("#seguirComprando").addEventListener("click", e => { e.preventDefault(); location.hash = "tienda"; });
+
+// ---------- Pago con tarjeta dentro de la página (formulario de Mercado Pago) ----------
+// Los datos de la tarjeta los carga el formulario de Mercado Pago, que los convierte en un código de un solo uso:
+// a nuestro servidor solo llega ese código. Si falta la clave pública, se paga solo con el botón de Mercado Pago.
+const pagoTarjeta = { clave: undefined, mp: null, brick: null, monto: null, armando: false };
+function cargarScript(src) {
+  return new Promise((ok, mal) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = mal; document.head.appendChild(s); });
+}
+async function prepararTarjeta() {
+  if (pagoTarjeta.clave === undefined) {
+    try { pagoTarjeta.clave = (await configPublica).mpPublicKey || null; } catch (e) { pagoTarjeta.clave = null; }
+  }
+  if (!pagoTarjeta.clave) return false;
+  if (!window.MercadoPago) { try { await cargarScript("https://sdk.mercadopago.com/js/v2"); } catch (e) { pagoTarjeta.clave = null; return false; } }
+  if (!pagoTarjeta.mp) pagoTarjeta.mp = new MercadoPago(pagoTarjeta.clave, { locale: "es-AR" });
+  return true;
+}
+function sacarTarjeta() {
+  if (pagoTarjeta.brick) { try { pagoTarjeta.brick.unmount(); } catch (e) {} }
+  pagoTarjeta.brick = null; pagoTarjeta.monto = null;
+}
+async function pintarTarjeta() {
+  const enPago = !$("#vista-checkout").hidden && ck.paso === 3 && ck.opcion;
+  if (!enPago) { sacarTarjeta(); return; }
+  const monto = Math.round((totalProductos() + (ck.opcion.precio || 0)) * 100) / 100;
+  if ((pagoTarjeta.brick && pagoTarjeta.monto === monto) || pagoTarjeta.armando) return;
+  pagoTarjeta.armando = true;
+  try {
+    if (!(await prepararTarjeta())) { $("#conTarjeta").hidden = true; return; }
+    sacarTarjeta();
+    $("#conTarjeta").hidden = false; $("#tarjetaCargando").hidden = false;
+    $("#textoMP").textContent = "Pagá con tu cuenta de Mercado Pago (dinero en cuenta o tarjetas guardadas).";
+    $("#pagarTxt").textContent = "Pagar con mi cuenta de Mercado Pago";
+    pagoTarjeta.monto = monto;
+    pagoTarjeta.brick = await pagoTarjeta.mp.bricks().create("cardPayment", "tarjetaBrick", {
+      initialization: { amount: monto, payer: { email: val("ckEmail") } },
+      customization: {
+        visual: { style: { theme: "default", customVariables: { baseColor: "#000000", borderRadiusLarge: "0px", borderRadiusMedium: "0px", borderRadiusSmall: "0px" } } },
+        paymentMethods: { maxInstallments: 12 }
+      },
+      callbacks: {
+        onReady: () => { $("#tarjetaCargando").hidden = true; },
+        onError: err => { console.error("Formulario de tarjeta", err); },
+        onSubmit: formData => pagarConTarjeta(formData)
+      }
+    });
+  } catch (e) {
+    console.error("No se pudo cargar el formulario de tarjeta", e);
+    $("#conTarjeta").hidden = true;
+  } finally { pagoTarjeta.armando = false; }
+}
+async function pagarConTarjeta(formData) {
+  $("#falta3").textContent = "";
+  const pedido = datosPedido();
+  try {
+    const r = await api("/api/pagar-tarjeta", { ...pedido, tarjeta: formData });
+    if (r.estado === "aprobado" || r.estado === "pendiente") {
+      recordarPedido(r.pedido, r.total, pedido.cliente);
+      location.href = `${location.pathname}?pago=${r.estado}`;
+      return;
+    }
+    $("#falta3").textContent = r.error || "El pago fue rechazado. Probá con otra tarjeta.";
+  } catch (err) {
+    $("#falta3").textContent = err.message;
+    if (/agot|quedan|queda 1/i.test(err.message)) actualizarStock();
+  }
+  // El código de la tarjeta sirve una sola vez: se vuelve a armar el formulario para reintentar
+  sacarTarjeta(); setTimeout(pintarTarjeta, 50);
+  $("#falta3").scrollIntoView({ behavior: SIN_MOVIMIENTO ? "auto" : "smooth", block: "center" });
+}
+
+// ---------- Navegación entre vistas ----------
+function ruta() {
+  const h = decodeURIComponent(location.hash.slice(1));
+  const vista = h.startsWith("p/") ? "producto" : h === "checkout" ? "checkout" : "inicio";
+  ["inicio", "producto", "checkout"].forEach(v => { $("#vista-" + v).hidden = v !== vista; });
+  $("#flotante").hidden = !WHATSAPP || vista === "checkout";
+  if (vista === "producto") { mostrarProducto(+h.slice(2)); window.scrollTo(0, 0); return; }
+  if (vista === "checkout") { mostrarCheckout(); window.scrollTo(0, 0); return; }
+  document.title = "POWER UP Store | Conjuntos urbanos con envío a todo el país";
+  if (h.startsWith("cat/")) { catActual = h.slice(4); pintarCatalogo(); $("#tienda").scrollIntoView(); return; }
+  pintarCatalogo();
+  const destino = h && document.getElementById(h);
+  if (destino && destino.tagName === "DETAILS") destino.open = true;
+  if (destino) destino.scrollIntoView(); else window.scrollTo(0, 0);
+}
+window.addEventListener("hashchange", () => { $("#resultado").hidden = true; cerrarCarrito(); cerrarMenu(); ruta(); });
+document.addEventListener("keydown", e => {
+  if (e.key !== "Escape") return;
+  if (!$("#arrepentimiento").hidden) $("#arrepentimiento").hidden = true;
+  else if (!$("#resultado").hidden) $("#resultado").hidden = true;
+  else { cerrarCarrito(); cerrarMenu(); }
+});
+
+// ---------- Textos que dependen de la configuración (productos.js) ----------
+// Franja de arriba: el descuento por transferencia aparece solo si el servidor lo confirma (/api/config)
+function pintarFranja(pctTransf) {
+  const avisos = ["ENVÍOS A TODO EL PAÍS",
+    ENVIO.gratisDesde > 0 && `ENVÍO GRATIS DESDE ${pesos(ENVIO.gratisDesde)}`,
+    DESCUENTO.desde > 0 && DESCUENTO.porcentaje > 0 && `${DESCUENTO.porcentaje}% OFF DESDE ${pesos(DESCUENTO.desde)}`,
+    pctTransf > 0 && `${pctTransf}% OFF CON TRANSFERENCIA`,
+    "PAGÁ CON TARJETA O MERCADO PAGO"].filter(Boolean);
+  const vuelta = avisos.map(t => `<span>${t}</span><span>✦</span>`).join("");
+  $("#topbar").innerHTML = vuelta + vuelta;
+}
+pintarFranja(0);
+configPublica.then(c => { if (c && c.transferencia && c.transferencia.porcentaje) pintarFranja(c.transferencia.porcentaje); });
+{
+  if (ENVIO.gratisDesde > 0) {
+    $("#perkEnvio").textContent = `A domicilio o a sucursal. Gratis desde ${pesos(ENVIO.gratisDesde)}.`;
+    $("#pGratis").textContent = `Envíos a todo el país. Gratis en compras desde ${pesos(ENVIO.gratisDesde)}.`;
+  }
+  $$("[data-gratis]").forEach(el => { el.textContent = ENVIO.gratisDesde > 0 ? `En compras desde ${pesos(ENVIO.gratisDesde)} el envío es gratis.` : ""; });
+  $$("[data-wa]").forEach(a => { a.href = wa(a.dataset.wa); });
+  if (!WHATSAPP) $$("[data-wa]").forEach(a => { a.hidden = true; });
+  $("#year").textContent = new Date().getFullYear();
+}
+
+// ---------- Botón de arrepentimiento ----------
+const formArrOriginal = $("#arrCuerpo").innerHTML;
+document.addEventListener("click", e => {
+  if (e.target.closest("[data-arrepentimiento]")) {
+    if (!$("#arrNombre")) $("#arrCuerpo").innerHTML = formArrOriginal;   // si ya había mandado una, formulario nuevo
+    $("#arrepentimiento").hidden = false; $("#arrNombre").focus();
+  }
+  if (e.target.closest("[data-cerrar-arr]") || e.target === $("#arrepentimiento")) $("#arrepentimiento").hidden = true;
+});
+$("#formArr").addEventListener("submit", async e => {
+  e.preventDefault();
+  const d = { nombre: $("#arrNombre").value.trim(), email: $("#arrEmail").value.trim(), telefono: $("#arrTel").value.trim(), pedido: $("#arrPedido").value.trim(), motivo: $("#arrMotivo").value.trim() };
+  if (!d.nombre || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email) || !d.pedido) { $("#arrError").textContent = "Completá tu nombre, email y número de pedido."; return; }
+  $("#arrError").textContent = "";
+  try {
+    const r = await api("/api/arrepentimiento", d);
+    $("#arrCuerpo").innerHTML = `<p class="m0">Recibimos tu solicitud. Tu código de trámite es <b>${esc(r.codigo)}</b>: guardalo.</p><p class="m0 gris">Te vamos a contactar en las próximas 24 horas hábiles para coordinar la devolución del producto y el reintegro del dinero.</p><button type="button" class="btn btn--white btn--full" data-cerrar-arr>Cerrar</button>`;
+  } catch (err) {
+    $("#arrError").textContent = err.message + (WHATSAPP ? " También podés pedirlo por WhatsApp." : "");
+  }
+});
+
+// ---------- Vuelta de Mercado Pago ----------
+(function () {
+  const estado = new URLSearchParams(location.search).get("pago");
+  if (!estado) return;
+  history.replaceState(null, "", location.pathname);
+  const ult = leer("powerup-ultimo-pedido", null);
+  const lista = ult ? `<ul>${ult.lineas.map(l => `<li>${esc(l)}</li>`).join("")}</ul><p class="m0"><b>Total: ${pesos(ult.total)}</b><br>${esc(ult.entrega)}</p>` : "";
+  let tit, cuerpo;
+  if (estado === "aprobado" || estado === "pendiente") { carrito = []; escribir("powerup-carrito", carrito); }
+  if (estado === "aprobado") {
+    tit = "¡Gracias por tu compra!";
+    if (ult) medir("Purchase", { value: ult.total, content_type: "product" }, ult.numero);
+    cuerpo = `<p class="m0">Recibimos tu pago${ult ? ` del pedido <b>${esc(ult.numero)}</b>` : ""}. ${ult && ult.local ? "Te avisamos por WhatsApp cuando esté listo para retirar." : "Te avisamos por WhatsApp cuando lo despachemos, con el número de seguimiento."}</p>${lista}`;
+    if (WHATSAPP && ult) {
+      const t = `¡Hola POWER UP! Ya pagué el pedido ${ult.numero}:\n\n${ult.lineas.map(l => "• " + l).join("\n")}\n\nTotal: ${pesos(ult.total)}\nNombre: ${ult.cliente.nombre}\nEntrega: ${ult.entrega}`;
+      cuerpo += `<a class="btn btn--white btn--full btn--wa" href="${wa(t)}" target="_blank" rel="noopener">Avisar por WhatsApp</a>`;
+    }
+  } else if (estado === "pendiente") {
+    tit = "Tu pago está en proceso";
+    cuerpo = `<p class="m0">Mercado Pago todavía está procesando el pago${ult ? ` del pedido <b>${esc(ult.numero)}</b>` : ""}. Cuando se apruebe, te contactamos.</p>${lista}`;
+  } else {
+    tit = "El pago no se completó";
+    cuerpo = `<p class="m0">No se hizo ningún cobro. Tu carrito sigue guardado: podés intentar de nuevo con otro medio de pago.</p><a class="btn btn--white btn--full" href="#checkout" id="reintentar">Volver a intentar</a>`;
+  }
+  $("#resTit").textContent = tit; $("#resCuerpo").innerHTML = cuerpo; $("#resultado").hidden = false;
+  const re = $("#reintentar"); if (re) re.addEventListener("click", () => { $("#resultado").hidden = true; });
+})();
+$("#resCerrar").addEventListener("click", () => { $("#resultado").hidden = true; });
+$("#resultado").addEventListener("click", e => { if (e.target === $("#resultado")) $("#resultado").hidden = true; });
+
+// ---------- Carrusel de las tarjetas ----------
+// Cada 2,8 segundos, las tarjetas que se ven en pantalla pasan a la foto del color siguiente.
+if (!SIN_MOVIMIENTO) {
+  setInterval(() => {
+    if (document.hidden) return;
+    $$(".card .card__media.carrusel").forEach(f => {
+      const r = f.getBoundingClientRect();
+      if (r.bottom < 0 || r.top > innerHeight || r.right < 0 || r.left > innerWidth) return;
+      const imgs = f.querySelectorAll("img");
+      const i = [...imgs].findIndex(x => x.classList.contains("on"));
+      const sig = (i + 1) % imgs.length;
+      if (!imgs[sig].complete) return;   // espera a que cargue la próxima foto
+      imgs[i].classList.remove("on"); imgs[sig].classList.add("on");
+      f.closest(".card").querySelectorAll(".puntos i[data-foto]").forEach(p => p.classList.toggle("on", +p.dataset.foto === sig));
+    });
+  }, 2800);
+}
+
+// ---------- Stock actualizado ----------
+// Se pide al abrir la página y cada vez que se vuelve a la pestaña (por si algo se agotó mientras tanto)
+function refrescarVista() {
+  pintarCarrito();
+  if (!$("#vista-producto").hidden && sel.id) pintarProducto();
+  else if (!$("#vista-checkout").hidden) { if (!carrito.length || hayConsultar()) { location.hash = ""; abrirCarrito(); } else pintarCheckout(); }
+  else pintarCatalogo();
+}
+async function actualizarStock() {
+  try {
+    const r = await fetch("/api/stock", { cache: "no-store" });
+    if (!r.ok) return;
+    const ajustes = await r.json();
+    escribir("powerup-stock", ajustes);
+    PRODUCTOS = aplicarAjustes(CATALOGO.productos, ajustes);
+    // Si en el carrito hay más unidades de las que quedan, se baja a las que hay
+    let bajo = false;
+    for (const i of carrito) { const p = producto(i.id); const m = p ? maxCant(p, i.color, i.talle) : 10; if (m > 0 && i.cant > m) { i.cant = m; bajo = true; } }
+    if (bajo) escribir("powerup-carrito", carrito);
+    refrescarVista();
+  } catch (e) { /* sin conexión: se usa el último stock conocido */ }
+}
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") actualizarStock(); });
+
+// ---------- Menú del celular ----------
+const burger = $("#burger");
+function cerrarMenu() {
+  burger.classList.remove("is-open"); $("#nav").classList.remove("is-open"); $("#header").classList.remove("menu-open");
+  document.body.style.overflow = "";
+}
+burger.addEventListener("click", () => {
+  const open = burger.classList.toggle("is-open");
+  $("#nav").classList.toggle("is-open", open);
+  $("#header").classList.toggle("menu-open", open);
+  document.body.style.overflow = open ? "hidden" : "";
+});
+$$("#nav a").forEach(a => a.addEventListener("click", cerrarMenu));
+
+// ---------- Aviso chiquito ----------
+let toastTimer;
+function toast(text) {
+  const t = $("#toast");
+  t.textContent = text;
+  t.classList.add("is-show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("is-show"), 2200);
+}
+
+// ---------- Animaciones al scrollear ----------
+const valoresContar = () => ({ modelos: PRODUCTOS.length, lineas: lineasActivas().length });
+function countUp(el) {
+  const fin = valoresContar()[el.dataset.count] ?? Number(el.dataset.count);
+  if (SIN_MOVIMIENTO) { el.textContent = fin; return; }
+  const start = performance.now(), dur = 1400;
+  const step = now => {
+    const t = Math.min((now - start) / dur, 1);
+    el.textContent = Math.round(fin * (1 - Math.pow(1 - t, 3)));
+    if (t < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+const io = "IntersectionObserver" in window ? new IntersectionObserver(entries => {
+  entries.forEach(en => {
+    if (!en.isIntersecting) return;
+    en.target.classList.add("is-in");
+    const counter = en.target.querySelector("[data-count]");
+    if (counter) countUp(counter);
+    io.unobserve(en.target);
+  });
+}, { threshold: 0.15 }) : null;
+function animarEntrada(raiz) {
+  raiz.querySelectorAll(".reveal:not(.is-in)").forEach(el => { if (io) io.observe(el); else { el.classList.add("is-in"); const c = el.querySelector("[data-count]"); if (c) countUp(c); } });
+}
+
+// ---------- Cursor (solo compu) ----------
+if (matchMedia("(hover: hover) and (pointer: fine)").matches && !SIN_MOVIMIENTO) {
+  const cursor = $(".cursor");
+  let x = -100, y = -100, cx = x, cy = y;
+  document.addEventListener("mousemove", e => { x = e.clientX; y = e.clientY; });
+  (function loop() {
+    cx += (x - cx) * 0.2; cy += (y - cy) * 0.2;
+    cursor.style.transform = `translate(${cx}px, ${cy}px) translate(-50%, -50%)`;
+    requestAnimationFrame(loop);
+  })();
+  document.addEventListener("mouseover", e => {
+    cursor.classList.toggle("is-hover", !!e.target.closest("a, button, .card, summary, label"));
+  });
+}
+
+pintarCarrito();
+ruta();
+animarEntrada(document);
+actualizarStock();
