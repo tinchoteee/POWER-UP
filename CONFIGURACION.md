@@ -14,7 +14,7 @@ La tienda ya está armada (es la misma base que Nací Reina). Para que cobre y d
    - Se **crea solo el envío en Zipnova**, que genera la etiqueta.
    - Te llega un **email** con todo el pedido.
    - Se descuentan las **unidades vendidas** del stock (si cargaste cuántas hay).
-5. **Vos solo tenés que**: imprimir la etiqueta desde Zipnova, pegarla en el paquete y entregarlo al correo.
+5. **Vos solo tenés que**: imprimir la etiqueta desde Zipnova, pegarla en el paquete y **llevarlo a la sucursal de Correo Argentino u OCA más cercana** (POWER UP despacha en sucursal: el correo no pasa a buscar).
 
 ---
 
@@ -43,7 +43,7 @@ Se crean solas las variables. Podés crear una base nueva o conectar la misma de
 
 Podés usar la misma cuenta de Nací Reina o crear una nueva en **zipnova.com.ar**.
 
-1. Cargá la dirección desde donde despachás POWER UP como **origen**.
+1. Cargá la dirección desde donde despachás POWER UP como **origen** y elegí que **vos llevás los paquetes a la sucursal del correo** (despacho en sucursal), no retiro a domicilio.
 2. En **Configuración → Transportes** activá los correos de **servicio completo** (Correo Argentino, OCA).
 3. En **Configuración → API** copiá a Vercel:
    - API Token → `ZIPNOVA_API_TOKEN`
