@@ -119,7 +119,7 @@ img { display: block; max-width: 100%; }
 .hero__bg {
   position: absolute; inset: 0; pointer-events: none;
   background: url("../img/hero.jpg") center 30% / cover no-repeat;
-  opacity: .45; filter: grayscale(1) contrast(1.15);
+  opacity: .42; filter: grayscale(1) contrast(1.1);
   animation: zoomLento 24s ease-in-out infinite alternate;
 }
 .hero__bg::after {   /* velo: más oscuro arriba y abajo, para que se lea el texto y se funda con la página */
