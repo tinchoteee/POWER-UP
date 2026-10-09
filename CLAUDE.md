@@ -28,3 +28,4 @@ Tienda online de ropa (conjuntos remera + short) del mismo dueño que Nací Rein
 - Dominio propio: https://powerupstore.website (comprado en Vercel, 2026-10-03; powerupstore.com no estaba disponible). `canonical`, `og:*`, JSON-LD, `sitemap.xml` y `robots.txt` lo usan; imagen para compartir `img/compartir.jpg` (1200×630). Si cambia el dominio, actualizarlos.
 - Nunca pedir ni pegar claves, alias ni CBU en el chat: se cargan en Vercel.
 - Vercel Hobby: máximo 100 deploys por día. `vercel.json` desactiva deploys de ramas `claude/*`.
+- 2026-10-09: el dueño mandó una foto mejor del conjunto Corteiz buzo + pantalón (fondo blanco). De ahí salen las fotos del conjunto (id 10), del pantalón (id 12) y del buzo (id 14), recortadas por separado sobre #f2f2f2.
