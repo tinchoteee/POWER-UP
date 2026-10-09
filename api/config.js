@@ -14,6 +14,8 @@ module.exports = function handler(req, res) {
     // si no, el pedido se guarda igual y se le avisa al cliente que le pasan los datos por WhatsApp.
     // Sin base de datos no se puede guardar el pedido: no se ofrece.
     transferencia: Number((CATALOGO.transferencia || {}).porcentaje) > 0 && db.hayDB() ? { porcentaje: Number(CATALOGO.transferencia.porcentaje), conDatos: Boolean(datosCuenta()) } : null,
+    // Cartel de bienvenida con código de descuento (necesita la base de datos para guardar los emails)
+    bienvenida: Number((CATALOGO.bienvenida || {}).porcentaje) > 0 && db.hayDB() ? { porcentaje: Number(CATALOGO.bienvenida.porcentaje) } : null,
     metaPixelId: String(process.env.META_PIXEL_ID || CATALOGO.metaPixel || "").replace(/\D/g, "") || null  // Píxel de Meta (también es público)
   });
 };

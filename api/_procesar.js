@@ -107,6 +107,8 @@ async function procesarPagoAprobado(pago) {
 
   // Descuenta las unidades vendidas (solo de los talles que llevan la cuenta) y arma el aviso de stock
   const stock = await moverStock(m.productos, numero);
+  // El código de descuento ya no se puede volver a usar
+  if (m.cupon) { try { await require("./_cupones.js").usarCupon(m.cupon, numero); pedido.cupon = m.cupon; } catch (err) { console.error("No se pudo marcar el código", m.cupon, err.message); } }
 
   // Envío automático (solo con base de datos, para no crear nunca dos envíos del mismo pedido)
   const conZipnova = process.env.ZIPNOVA_API_TOKEN && process.env.ZIPNOVA_API_SECRET && process.env.ZIPNOVA_ACCOUNT_ID;

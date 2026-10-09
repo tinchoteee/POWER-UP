@@ -59,6 +59,18 @@ Mientras no esté Zipnova, la tienda cobra el envío con precios fijos por zona 
 2. En Vercel `AVISOS_EMAIL` con el email donde querés recibir las ventas.
 3. Más adelante, con dominio propio, `RESEND_FROM` (ej. `POWER UP <ventas@tudominio.com>`) y también le llega un email al cliente.
 
+### Paso 5b · Emails a los clientes (código de regalo y novedades)
+
+Para escribirles a los clientes, Resend necesita que **verifiques tu dominio** (con la cuenta gratis, sin dominio, solo te puede escribir a vos):
+
+1. En **resend.com → Domains → Add Domain** escribí `powerupstore.website`. Resend te muestra 3 o 4 registros (MX y TXT).
+2. En **Vercel → Domains → powerupstore.website → DNS Records** agregá cada uno, copiando Type, Name y Value tal cual.
+3. Volvé a Resend y tocá **Verify** (puede tardar unos minutos).
+4. En Vercel agregá `RESEND_FROM` = `POWER UP <hola@powerupstore.website>` y hacé **Redeploy**.
+
+Con eso: el código del cartel de bienvenida le llega al mail del cliente, le llega un email cuando compra, y podés mandar novedades desde el editor → **Suscriptores**. Mientras no esté, el código se le muestra al cliente en la pantalla.
+La cuenta gratis de Resend manda hasta 100 emails por día (3.000 por mes).
+
 ## Paso 6 · Contraseña del editor
 
 En Vercel agregá `ADMIN_CLAVE` con una contraseña larga que solo sepas vos. El editor está en `tu-tienda.vercel.app/admin.html`.
@@ -87,7 +99,7 @@ Vercel → proyecto POWER-UP → **Settings → Environment Variables**. Despué
 | `RESEND_API_KEY`, `AVISOS_EMAIL` | Email con cada venta | Recomendado |
 | `TRANSFERENCIA_ALIAS` / `TRANSFERENCIA_CBU`, `TRANSFERENCIA_TITULAR` | Pago por transferencia | No |
 | `META_PIXEL_ID` | Medir ventas de publicidades de Instagram | No |
-| `RESEND_FROM` | Email de confirmación al cliente (dominio propio) | No |
+| `RESEND_FROM` | Emails a clientes: código de regalo, confirmación de compra y novedades (dominio propio verificado) | Recomendado |
 
 En el editor, la pestaña **Estado** muestra qué está configurado y qué falta.
 

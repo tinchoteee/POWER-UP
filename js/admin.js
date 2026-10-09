@@ -11,6 +11,8 @@ let permiso = sessionStorage.getItem("pu-permiso") || "";
 let guardado = { productos: {} };   // lo que está en la base de datos
 let ajustes = { productos: {} };    // lo que se está editando
 let pedidos = [];
+let suscriptores = [];
+let cfgServidor = {};
 let paresGuardado = {};             // unidades por talle en la base de datos ("id|color|talle" → número)
 let pares = {};                     // lo que se está editando (sin clave = no se lleva la cuenta)
 
@@ -54,15 +56,17 @@ async function cargar() {
   paresGuardado = (d.ajustes && d.ajustes.pares) || {};
   pares = { ...paresGuardado };
   pedidos = d.pedidos || [];
+  suscriptores = d.suscriptores || [];
+  cfgServidor = d.config || {};
   $("#pantallaLogin").hidden = true; $("#pantallaEditor").hidden = false;
-  pintarStock(); pintarPedidos(); pintarEstado(d.config || {});
+  pintarStock(); pintarPedidos(); pintarSuscriptores(); pintarEstado(d.config || {});
   if (!d.config.baseDeDatos) mostrarTab("estado");
 }
 
 // ---------- Pestañas ----------
 function mostrarTab(t) {
   document.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === t));
-  ["stock", "pedidos", "estado"].forEach(x => { $("#tab-" + x).hidden = x !== t; });
+  ["stock", "pedidos", "suscriptores", "estado"].forEach(x => { $("#tab-" + x).hidden = x !== t; });
   $("#barraGuardar").hidden = t !== "stock" || !hayCambios();
 }
 document.querySelector(".tabs").addEventListener("click", e => { const b = e.target.closest(".tab"); if (b) mostrarTab(b.dataset.tab); });
@@ -285,7 +289,8 @@ function pintarEstado(cfg) {
     [cfg.zipnova, "Zipnova · envíos por correo", "Cotiza el envío según el código postal.", "Falta configurar Zipnova: mientras tanto el envío se cobra con los precios fijos por zona."],
     [cfg.zipnova && cfg.baseDeDatos && cfg.envioAutomatico, "Envío automático", "Cada venta pagada crea sola el envío en Zipnova.", "Desactivado: los envíos se crean a mano desde el panel de Zipnova."],
     [cfg.transferencia, `Pago por transferencia (${(CATALOGO.transferencia || {}).porcentaje || 0}% OFF)`, "El cliente ve tu alias al confirmar el pedido; lo pasás a Pagado cuando llega la plata.", "Falta cargar TRANSFERENCIA_ALIAS (o TRANSFERENCIA_CBU) y TRANSFERENCIA_TITULAR en Vercel: por ahora no aparece la opción."],
-    [cfg.emails, "Avisos por email", "Te llega un email con cada venta.", "Falta RESEND_API_KEY y AVISOS_EMAIL: no vas a recibir emails de las ventas."]
+    [cfg.emails, "Avisos por email", "Te llega un email con cada venta.", "Falta RESEND_API_KEY y AVISOS_EMAIL: no vas a recibir emails de las ventas."],
+    [cfg.emailsClientes, "Emails a clientes (código de regalo y novedades)", "El código de descuento le llega al mail del cliente, y podés mandar novedades a los suscriptores.", "Falta verificar tu dominio powerupstore.website en Resend y cargar RESEND_FROM en Vercel. Mientras tanto, el código de regalo se le muestra al cliente en la pantalla y no se pueden mandar novedades."]
   ];
   $("#listaEstado").innerHTML = items.map(([ok, tit, si, no]) => `<div class="check"><span class="ic">${ok ? "✅" : "⚠️"}</span><div><b>${tit}</b><p>${ok ? si : no}</p></div></div>`).join("")
     + `<div class="check"><span class="ic">✉️</span><div><b>Probar los avisos por email</b><p>Te manda un email de prueba. Si no llega, acá te dice por qué.</p>
@@ -303,6 +308,40 @@ $("#listaEstado").addEventListener("click", async e => {
   } catch (err) { $("#resEmail").style.color = "var(--error)"; $("#resEmail").textContent = "⚠️ " + err.message; }
   b.disabled = false; b.textContent = "Mandar email de prueba";
 });
+
+// ---------- Suscriptores (cartel de bienvenida) ----------
+function pintarSuscriptores() {
+  const pct = (CATALOGO.bienvenida || {}).porcentaje || 0;
+  const semana = suscriptores.filter(x => Date.now() - new Date(x.fecha) < 7 * 864e5).length;
+  $("#resumenSusc").innerHTML = `<h3>💌 ${suscriptores.length} ${suscriptores.length === 1 ? "suscriptor" : "suscriptores"}${semana ? ` · ${semana} esta semana` : ""}</h3>
+    <p class="ayuda">Son los clientes que dejaron su email en el cartel de bienvenida. A cada uno le llega un código único de <b>${pct}% OFF</b> para usar una sola vez.</p>
+    ${cfgServidor.emailsClientes ? "" : `<p class="aviso-error">⚠️ Todavía no podés mandarles emails: falta verificar tu dominio en Resend (mirá la pestaña Estado). Mientras tanto el código se les muestra en la pantalla.</p>`}
+    ${suscriptores.length ? `<button class="btn btn-borde" id="bajarCsv" style="width:auto">Descargar lista (Excel / CSV)</button>` : ""}`;
+  $("#listaSusc").innerHTML = suscriptores.length
+    ? `<div style="display:grid;gap:4px;font-size:14px">${suscriptores.map(x => `<div style="display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--borde);padding:6px 0"><span>${esc(x.email)}</span><small style="color:var(--tinta-2)">${new Date(x.fecha).toLocaleDateString("es-AR")}</small></div>`).join("")}</div>`
+    : `<p class="ayuda">Todavía nadie se suscribió. El cartel aparece a los pocos segundos de entrar a la tienda.</p>`;
+}
+$("#resumenSusc").addEventListener("click", e => {
+  if (!e.target.closest("#bajarCsv")) return;
+  const csv = "email,fecha\n" + suscriptores.map(x => `${x.email},${new Date(x.fecha).toLocaleDateString("es-AR")}`).join("\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" }));
+  a.download = "suscriptores-powerup.csv"; a.click();
+});
+async function mandarNovedad(prueba) {
+  const datos = { accion: "novedad", prueba, asunto: $("#novAsunto").value, mensaje: $("#novMensaje").value, boton: $("#novBoton").value, link: $("#novLink").value };
+  if (!datos.asunto.trim() || !datos.mensaje.trim()) { $("#novRes").textContent = "⚠️ Escribí el asunto y el mensaje."; return; }
+  if (!prueba && !confirm(`¿Mandar este email a ${suscriptores.length} ${suscriptores.length === 1 ? "persona" : "personas"}?`)) return;
+  const b = prueba ? $("#novPrueba") : $("#novEnviar"); b.disabled = true; $("#novRes").textContent = "Mandando…";
+  try {
+    const d = await api("POST", datos);
+    $("#novRes").textContent = d.ok ? (prueba ? "✓ Te mandamos la prueba a tu email de avisos." : `✓ Enviado a ${d.enviados} ${d.enviados === 1 ? "persona" : "personas"}.`)
+      : `⚠️ Se mandaron ${d.enviados} de ${d.total}. Resend dijo: ${d.error}`;
+  } catch (err) { $("#novRes").textContent = "⚠️ " + err.message; }
+  b.disabled = false;
+}
+$("#novPrueba").addEventListener("click", () => mandarNovedad(true));
+$("#formNovedad").addEventListener("submit", e => { e.preventDefault(); mandarNovedad(false); });
 
 // Si ya había entrado en esta pestaña, entra directo
 if (permiso) cargar().catch(() => salir());

@@ -27,13 +27,23 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/styles.css" />
+  <script>try{if(sessionStorage.getItem("pu-intro")||location.hash.length>1||location.search)document.documentElement.classList.add("sin-intro");sessionStorage.setItem("pu-intro","1")}catch(e){}</script>
   <!-- Vercel Web Analytics: visitas y páginas vistas (se activa en Vercel → Analytics). No usa cookies. -->
   <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
   <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
+  <!-- Intro: pantalla negra con el logo al entrar (una vez por visita; se va sola aunque falle el JS) -->
+  <div class="intro" aria-hidden="true">
+    <div class="intro__logo"><span>POWER</span><span class="intro__up">UP</span></div>
+    <div class="intro__barra"><i></i></div>
+    <p class="intro__txt">LOADING DRIP</p>
+  </div>
+
   <!-- Cursor personalizado (solo desktop) -->
-  <div class="cursor" aria-hidden="true"></div>
+  <div class="cursor" aria-hidden="true"><span class="cursor__txt">VER</span></div>
+  <!-- Barra de avance al scrollear -->
+  <div class="progreso" aria-hidden="true"><i id="progreso"></i></div>
 
   <!-- Barra de anuncios (los textos salen de productos.js) -->
   <div class="topbar"><div class="topbar__track" id="topbar"></div></div>
@@ -66,15 +76,16 @@
         <div class="hero__bg" aria-hidden="true"></div>
         <div class="hero__noise"></div>
         <div class="hero__grid" aria-hidden="true"></div>
+        <div class="hero__luz" aria-hidden="true"></div>
         <p class="hero__kicker reveal">— SS/26 COLLECTION —</p>
         <h1 class="hero__title">
-          <span class="line"><span class="word">POWER</span></span>
+          <span class="line"><span class="word glitch" data-text="POWER">POWER</span></span>
           <span class="line"><span class="word word--outline">UP</span></span>
         </h1>
         <p class="hero__sub reveal">Ropa para los que no bajan el volumen.<br />Blanco. Negro. Sin grises.</p>
         <div class="hero__ctas reveal">
-          <a href="#tienda" class="btn btn--white">Comprar ahora</a>
-          <a href="#drop" class="btn btn--ghost">Ver el drop</a>
+          <a href="#tienda" class="btn btn--white magnet">Comprar ahora</a>
+          <a href="#drop" class="btn btn--ghost magnet">Ver el drop</a>
         </div>
         <div class="hero__scroll" aria-hidden="true"><span>SCROLL</span><i></i></div>
         <div class="hero__badge" aria-hidden="true">
@@ -147,6 +158,23 @@
         </div>
       </div>
 
+      <!-- CLUB: suscripción con código de descuento (aparece si está activo el cartel de bienvenida) -->
+      <section class="club" id="club" hidden>
+        <div class="club__big" aria-hidden="true"><span data-pct-club>5</span>%<small>OFF</small></div>
+        <div class="club__box reveal">
+          <p class="club__kicker">POWER UP CLUB</p>
+          <h2 class="club__tit">SUMATE Y LLEVATE <span class="invert"><span data-pct-club>5</span>% OFF</span> EN TU PRIMERA COMPRA.</h2>
+          <p class="club__txt">Te mandamos un código único a tu mail. Y te enterás antes que nadie de los drops nuevos.</p>
+          <form class="club__form" data-form-susc="club" novalidate>
+            <input class="in" type="email" name="email" placeholder="Tu email" aria-label="Tu email" autocomplete="email" required>
+            <button class="btn btn--black">Quiero mi descuento</button>
+          </form>
+          <p class="aviso-error" data-err-susc aria-live="polite"></p>
+          <div class="club__ok" data-ok-susc hidden></div>
+          <p class="club__legal">Sin spam. Te das de baja cuando quieras.</p>
+        </div>
+      </section>
+
       <!-- INSTAGRAM CTA -->
       <section class="insta">
         <div class="insta__inner reveal">
@@ -181,6 +209,7 @@
             <p>Por ley tenés 10 días corridos desde que recibís el producto para arrepentirte y pedir la devolución del dinero, sin dar explicaciones. Usá el <button class="link" data-arrepentimiento>botón de arrepentimiento</button>: el producto tiene que volver sin uso y con su etiqueta.</p></details>
           <details class="reveal" id="privacidad"><summary>¿Qué hacen con mis datos?</summary>
             <p>Usamos tu nombre, teléfono, email, DNI y dirección solo para preparar tu pedido, cobrarlo y enviarlo. Para eso los compartimos únicamente con Mercado Pago (el cobro) y con el correo que lleva el paquete. No los vendemos ni los pasamos a nadie más. Los datos de tu tarjeta los carga Mercado Pago: nunca llegan a nosotros.</p>
+            <p>Si te sumás al POWER UP Club, guardamos tu email para mandarte tu código de descuento y novedades de la tienda. Cada email trae un link para darte de baja cuando quieras.</p>
             <p>Para saber cuánta gente visita la tienda usamos Vercel Analytics, que cuenta visitas sin tu nombre ni tus datos de contacto. Podés pedirnos ver, corregir o borrar tus datos cuando quieras escribiéndonos por WhatsApp (Ley 25.326 de Protección de Datos Personales). La Agencia de Acceso a la Información Pública es el organismo que controla el cumplimiento de esta ley.</p></details>
         </div>
         <div class="faq__cta reveal">
@@ -321,6 +350,14 @@
           <h2>TU PEDIDO</h2>
           <div id="resLineas"></div>
           <div class="cuentas" id="resCuentas"></div>
+          <div class="cupon" id="cuponBox" hidden>
+            <form id="formCupon" novalidate>
+              <label for="inCupon">¿Tenés un código de descuento?</label>
+              <div class="cupon__fila"><input class="in" id="inCupon" placeholder="POWER-XXXXXX" autocomplete="off" autocapitalize="characters" spellcheck="false"><button class="btn btn--ghost btn--sm" id="aplicarCupon">Aplicar</button></div>
+            </form>
+            <p class="aviso-error" id="errCupon" aria-live="polite"></p>
+            <p class="cupon__ok" id="cuponOk" hidden></p>
+          </div>
           <p class="aviso-transf" data-aviso-transf hidden></p>
           <a class="link" href="#" id="seguirComprando">← Seguir comprando</a>
         </aside>
@@ -362,6 +399,7 @@
     <div class="cart__foot" id="cartFoot" hidden>
       <div class="barra-gratis" id="barraGratis"></div>
       <div class="cart__fila" id="filaDescuento" hidden></div>
+      <div class="cart__fila" id="filaCupon" hidden></div>
       <div class="cart__total"><span>SUBTOTAL</span><strong id="cartTotal">$0</strong></div>
       <p class="aviso-transf" data-aviso-transf hidden></p>
       <p class="cart__note" id="notaConsultar" hidden></p>
@@ -388,6 +426,33 @@
         <button class="btn btn--white btn--full">Enviar solicitud</button>
       </div>
     </form>
+  </div>
+
+  <!-- Cartel de bienvenida: email → código de descuento -->
+  <div class="modal bienv" id="bienvenida" hidden role="dialog" aria-modal="true" aria-labelledby="bienvTit">
+    <div class="bienv__caja">
+      <button type="button" class="cerrar bienv__cerrar" data-cerrar-bienv aria-label="Cerrar">✕</button>
+      <div class="bienv__lado" aria-hidden="true">
+        <span class="bienv__pct"><span data-pct-club>5</span>%</span>
+        <span class="bienv__off">OFF</span>
+        <span class="bienv__cinta"><span>REGALO ✦ REGALO ✦ REGALO ✦ REGALO ✦ REGALO ✦ REGALO ✦ </span></span>
+      </div>
+      <div class="bienv__cuerpo">
+        <p class="bienv__kicker">BIENVENIDO A POWER UP</p>
+        <h2 id="bienvTit" class="bienv__tit">TENEMOS UN<br><span class="outline">REGALO</span> PARA VOS</h2>
+        <div data-form-wrap>
+          <p class="bienv__txt">Dejá tu email y te mandamos un <b>código de <span data-pct-club>5</span>% OFF</b> para tu primera compra. Además, te enterás antes que nadie de los drops nuevos.</p>
+          <form class="bienv__form" data-form-susc="cartel" novalidate>
+            <input class="in" type="email" name="email" placeholder="Tu email" aria-label="Tu email" autocomplete="email" required>
+            <button class="btn btn--white btn--full"><span>Quiero mi <span data-pct-club>5</span>% OFF</span></button>
+          </form>
+          <p class="aviso-error" data-err-susc aria-live="polite"></p>
+          <button type="button" class="bienv__no" data-cerrar-bienv>No, gracias</button>
+          <p class="bienv__legal">Sin spam. Te das de baja cuando quieras.</p>
+        </div>
+        <div class="club__ok" data-ok-susc hidden></div>
+      </div>
+    </div>
   </div>
 
   <!-- Resultado del pago -->

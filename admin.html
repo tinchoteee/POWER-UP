@@ -116,6 +116,7 @@
     <div class="tabs" role="tablist">
       <button class="tab" role="tab" data-tab="stock" aria-selected="true">Stock y precios</button>
       <button class="tab" role="tab" data-tab="pedidos" aria-selected="false">Pedidos</button>
+      <button class="tab" role="tab" data-tab="suscriptores" aria-selected="false">Suscriptores</button>
       <button class="tab" role="tab" data-tab="estado" aria-selected="false">Estado</button>
     </div>
 
@@ -128,6 +129,29 @@
     <section id="tab-pedidos" hidden>
       <div id="resumenEnvios"></div>
       <div id="listaPedidos" style="display:grid;gap:12px;padding-bottom:40px"></div>
+    </section>
+
+    <section id="tab-suscriptores" hidden>
+      <div style="display:grid;gap:12px;padding-bottom:40px">
+        <div class="resumen-envios" id="resumenSusc"></div>
+        <form class="resumen-envios" id="formNovedad">
+          <h3>📣 Mandar una novedad por email</h3>
+          <p class="ayuda">Les llega a todos los suscriptores, con tu logo y un botón a la tienda. Ideal para avisar que entraron productos nuevos, un drop o una promo. Primero mandate una prueba a vos.</p>
+          <input class="in" id="novAsunto" maxlength="120" placeholder="Asunto (ej: ¡Entraron los conjuntos Corteiz!)" aria-label="Asunto">
+          <textarea class="in" id="novMensaje" rows="6" maxlength="5000" placeholder="Mensaje. Dejá una línea en blanco para separar párrafos." aria-label="Mensaje"></textarea>
+          <div style="display:grid;grid-template-columns:1fr 2fr;gap:8px">
+            <input class="in" id="novBoton" maxlength="40" placeholder="Texto del botón" aria-label="Texto del botón">
+            <input class="in" id="novLink" placeholder="Link del botón (si lo dejás vacío, va a la tienda)" aria-label="Link del botón">
+          </div>
+          <p class="ayuda">Tip: para que el botón lleve a un producto, abrilo en la tienda y copiá el link de arriba (termina en #p/número).</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button type="button" class="btn btn-borde" id="novPrueba" style="width:auto">Mandarme una prueba</button>
+            <button class="btn" id="novEnviar" style="width:auto">Mandar a todos</button>
+          </div>
+          <p id="novRes" class="ayuda" aria-live="polite"></p>
+        </form>
+        <div class="resumen-envios"><h3>Lista de emails</h3><div id="listaSusc"></div></div>
+      </div>
     </section>
 
     <section id="tab-estado" hidden>

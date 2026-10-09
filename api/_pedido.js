@@ -5,6 +5,7 @@ const { cotizar, lineasDelPedido } = require("./_envios.js");
 const { productosActuales } = require("./_catalogo.js");
 const CATALOGO = require("../js/productos.js");
 const aplicarAjustes = require("../js/ajustes.js");
+const { validarCupon } = require("./_cupones.js");
 
 const texto = (v, max) => String(v == null ? "" : v).trim().slice(0, max);
 
@@ -12,6 +13,8 @@ const texto = (v, max) => String(v == null ? "" : v).trim().slice(0, max);
 async function armarPedido(body, base, { transferencia = false } = {}) {
   const lineas = lineasDelPedido(body.items, await productosActuales());
   const subtotal = lineas.reduce((a, l) => a + l.precio * l.cant, 0);
+  // Código de descuento del cartel de bienvenida (si no sirve, se le avisa al cliente por qué)
+  const cupon = body.cupon ? await validarCupon(body.cupon) : null;
 
   const c = body.cliente || {};
   const cliente = { nombre: texto(c.nombre, 80), telefono: texto(c.telefono, 30), email: texto(c.email, 120), dni: texto(c.dni, 12) };
@@ -42,8 +45,9 @@ async function armarPedido(body, base, { transferencia = false } = {}) {
 
   // Descuento por monto (productos.js → descuento): se aplica a cada producto, no al envío
   const pctTransf = transferencia ? Number((CATALOGO.transferencia || {}).porcentaje) || 0 : 0;
-  const cuenta = aplicarAjustes.conDescuento(lineas.map(l => ({ precio: l.precio, cant: l.cant })), CATALOGO.descuento, pctTransf);
-  const off = [cuenta.porcentaje ? `${cuenta.porcentaje}% OFF` : "", cuenta.porcentajeTransferencia ? `${cuenta.porcentajeTransferencia}% OFF transferencia` : ""].filter(Boolean).join(" + ");
+  const cuenta = aplicarAjustes.conDescuento(lineas.map(l => ({ precio: l.precio, cant: l.cant })), CATALOGO.descuento, pctTransf, cupon ? cupon.porcentaje : 0);
+  const off = [cuenta.porcentaje ? `${cuenta.porcentaje}% OFF` : "", cuenta.porcentajeTransferencia ? `${cuenta.porcentajeTransferencia}% OFF transferencia` : "",
+    cuenta.porcentajeCupon ? `${cuenta.porcentajeCupon}% OFF código` : ""].filter(Boolean).join(" + ");
   const items = lineas.map((l, i) => ({
     id: String(l.producto.id),
     title: `${l.producto.nombre}${l.color ? " - " + l.color.nombre : ""} - Talle ${l.talle}${off ? ` (${off})` : ""}`,
@@ -60,9 +64,11 @@ async function armarPedido(body, base, { transferencia = false } = {}) {
     metadata: { pedido: numero, cliente, entrega,
       detalle: items.filter(i => i.id !== "envio").map(i => `${i.quantity} x ${i.title} ($${i.unit_price})`),
       productos: lineas.map(l => ({ id: l.producto.id, color: l.color ? l.color.id : "", talle: l.talle, cant: l.cant })), subtotal: cuenta.total,
-      ...(cuenta.porcentaje || cuenta.porcentajeTransferencia ? { descuento: [
+      ...(cuenta.porcentajeCupon ? { cupon: cupon.codigo } : {}),
+      ...(cuenta.porcentaje || cuenta.porcentajeTransferencia || cuenta.porcentajeCupon ? { descuento: [
         cuenta.porcentaje ? `${cuenta.porcentaje}% OFF: -$${cuenta.descuento.toLocaleString("es-AR")}` : "",
-        cuenta.porcentajeTransferencia ? `${cuenta.porcentajeTransferencia}% OFF por transferencia: -$${cuenta.descuentoTransferencia.toLocaleString("es-AR")}` : ""
+        cuenta.porcentajeTransferencia ? `${cuenta.porcentajeTransferencia}% OFF por transferencia: -$${cuenta.descuentoTransferencia.toLocaleString("es-AR")}` : "",
+        cuenta.porcentajeCupon ? `${cuenta.porcentajeCupon}% OFF con el código ${cupon.codigo}: -$${cuenta.descuentoCupon.toLocaleString("es-AR")}` : ""
       ].filter(Boolean).join(" · ") } : {}) }
   };
 }

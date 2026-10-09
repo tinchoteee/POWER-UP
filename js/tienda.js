@@ -84,7 +84,9 @@ carrito.forEach(i => { i.talle = String(i.talle); });
 const subtotal = () => carrito.reduce((a, i) => a + precioDe(producto(i.id), i.color) * i.cant, 0);
 // Descuento por monto (ver "descuento" en productos.js): misma cuenta que hace el servidor al cobrar
 const DESCUENTO = CATALOGO.descuento || { desde: 0, porcentaje: 0 };
-const cuenta = extra => aplicarAjustes.conDescuento(carrito.map(i => ({ precio: precioDe(producto(i.id), i.color), cant: i.cant })), DESCUENTO, extra);
+// Código de descuento del cartel de bienvenida ({ codigo, porcentaje }); el servidor lo vuelve a revisar al cobrar
+let cupon = leer("powerup-cupon", null);
+const cuenta = extra => aplicarAjustes.conDescuento(carrito.map(i => ({ precio: precioDe(producto(i.id), i.color), cant: i.cant })), DESCUENTO, extra, cupon ? cupon.porcentaje : 0);
 const totalProductos = () => cuenta().total;
 const hayConsultar = () => carrito.some(problemaItem);
 const detalleItem = i => { const p = producto(i.id), c = colorDe(p, i.color); return `${c && (p.colores || []).length > 1 ? c.nombre + " · " : ""}Talle ${i.talle}`; };
@@ -161,6 +163,8 @@ function pintarCarrito() {
   $("#cartTotal").textContent = sinPrecio ? (sub ? pesos(cta.total) + " + a consultar" : "A consultar") : pesos(cta.total);
   $("#filaDescuento").hidden = !cta.porcentaje;
   if (cta.porcentaje) $("#filaDescuento").innerHTML = `<span>Descuento ${cta.porcentaje}% OFF</span><span>−${pesos(cta.descuento)}</span>`;
+  $("#filaCupon").hidden = !cta.porcentajeCupon;
+  if (cta.porcentajeCupon) $("#filaCupon").innerHTML = `<span>Código ${esc(cupon.codigo)} · ${cta.porcentajeCupon}% OFF</span><span>−${pesos(cta.descuentoCupon)}</span>`;
   pintarBarraBeneficios(sub);
   $("#notaConsultar").hidden = !hayConsultar();
   $("#notaConsultar").textContent = carrito.some(i => problemaItem(i) === "Se agotó")
@@ -412,6 +416,7 @@ function pintarCheckout() {
   const cta = cuenta();
   $("#resCuentas").innerHTML = `<div><span>Subtotal</span><span>${pesos(cta.subtotal)}</span></div>
     ${cta.porcentaje ? `<div class="ok"><span>Descuento ${cta.porcentaje}% OFF</span><span>−${pesos(cta.descuento)}</span></div>` : ""}
+    ${cta.porcentajeCupon ? `<div class="ok"><span>Código ${esc(cupon.codigo)} · ${cta.porcentajeCupon}% OFF</span><span>−${pesos(cta.descuentoCupon)}</span></div>` : ""}
     <div><span>Envío</span><span>${envio == null ? '<span class="gris">Se calcula en el paso 2</span>' : envio ? pesos(envio) : '<span class="ok">Gratis</span>'}</span></div>
     <div class="tot"><span>Total</span><span>${pesos(cta.total + (envio || 0))}</span></div>`;
   if (!$("#pagar").disabled) $("#pagarTxt").textContent = pagoTarjeta.brick ? "Pagar con mi cuenta de Mercado Pago" : `Pagar ${pesos(cta.total + (envio || 0))} con Mercado Pago`;
@@ -424,6 +429,7 @@ function pintarCheckout() {
     $("#totalTransf").textContent = pesos(ct.total + (envio || 0));
     $("#ahorroTransf").textContent = ` (ahorrás ${pesos(ct.descuentoTransferencia)})`;
   }
+  pintarCupon();
 
   // Pasos
   for (let n = 1; n <= 3; n++) {
@@ -546,8 +552,15 @@ function datosPedido() {
     items: carrito.map(i => ({ id: i.id, talle: i.talle, color: i.color, cant: i.cant })),
     cliente: { nombre: val("ckNombre"), telefono: val("ckTel"), email: val("ckEmail"), dni: val("ckDni") },
     entrega: { opcion: o.id, sucursal: ck.sucursal ? ck.sucursal.id : null, cp: val("ckCP"), provincia: $("#ckProv").value,
-      localidad: val("ckLoc"), calle: val("ckCalle"), numero: val("ckNum"), piso: val("ckPiso") }
+      localidad: val("ckLoc"), calle: val("ckCalle"), numero: val("ckNum"), piso: val("ckPiso") },
+    ...(cupon ? { cupon: cupon.codigo } : {})
   };
+}
+// Si al pagar el servidor dice que el código ya no sirve, se saca para que pueda seguir sin él
+function revisarErrorCupon(msj) {
+  if (!cupon || !/código/i.test(msj)) return;
+  ponerCupon(null);
+  $("#errCupon").textContent = msj;
 }
 function recordarPedido(numero, total, cliente) {
   escribir("powerup-ultimo-pedido", {
@@ -566,7 +579,7 @@ $("#pagar").addEventListener("click", async () => {
     recordarPedido(r.pedido, totalProductos() + o.precio, pedido.cliente);
     location.href = r.url;
   } catch (err) {
-    $("#pagar").disabled = false; pintarCheckout();
+    $("#pagar").disabled = false; revisarErrorCupon(err.message); pintarCheckout();
     $("#falta3").textContent = err.message;
     if (/agot|quedan|queda 1/i.test(err.message)) actualizarStock();   // algo se agotó mientras compraba
   }
@@ -581,7 +594,7 @@ $("#pagarTransf").addEventListener("click", async () => {
   try {
     const r = await api("/api/transferencia", pedido);
     const lineas = carrito.map(i => `${i.cant} x ${producto(i.id).nombre} - ${detalleItem(i)}`);
-    carrito = []; escribir("powerup-carrito", carrito); pintarCarrito();
+    carrito = []; escribir("powerup-carrito", carrito); cupon = null; escribir("powerup-cupon", null); pintarCarrito();
     const c = r.cuenta || {};
     const dato = (t, v, copiar) => v ? `<div class="dato-transf"><span>${t}</span><b>${esc(v)}</b>${copiar ? `<button class="link" data-copiar="${esc(copiar)}">Copiar</button>` : ""}</div>` : "";
     const hayDatos = Boolean(c.alias || c.cbu);
@@ -599,6 +612,7 @@ $("#pagarTransf").addEventListener("click", async () => {
     $("#resultado").hidden = false;
   } catch (err) {
     $("#falta3").textContent = err.message;
+    revisarErrorCupon(err.message);
     if (/agot|quedan|queda 1/i.test(err.message)) actualizarStock();
   }
   b.disabled = false; b.textContent = "Confirmar y pagar con transferencia";
@@ -672,12 +686,91 @@ async function pagarConTarjeta(formData) {
     $("#falta3").textContent = r.error || "El pago fue rechazado. Probá con otra tarjeta.";
   } catch (err) {
     $("#falta3").textContent = err.message;
+    revisarErrorCupon(err.message);
     if (/agot|quedan|queda 1/i.test(err.message)) actualizarStock();
   }
   // El código de la tarjeta sirve una sola vez: se vuelve a armar el formulario para reintentar
   sacarTarjeta(); setTimeout(pintarTarjeta, 50);
   $("#falta3").scrollIntoView({ behavior: SIN_MOVIMIENTO ? "auto" : "smooth", block: "center" });
 }
+
+// ---------- Código de descuento (checkout) ----------
+let bienvenida = null;   // { porcentaje } si el cartel de bienvenida está activo (lo confirma /api/config)
+function ponerCupon(c) {
+  cupon = c; escribir("powerup-cupon", c);
+  pintarCarrito();
+  if (!$("#vista-checkout").hidden) pintarCheckout();
+}
+function pintarCupon() {
+  $("#cuponBox").hidden = !bienvenida && !cupon;
+  $("#formCupon").hidden = Boolean(cupon);
+  $("#cuponOk").hidden = !cupon;
+  if (cupon) $("#cuponOk").innerHTML = `✓ Código <b>${esc(cupon.codigo)}</b> aplicado: ${cupon.porcentaje}% OFF en los productos. <button class="link" id="quitarCupon" type="button">Quitar</button>`;
+}
+$("#formCupon").addEventListener("submit", async e => {
+  e.preventDefault();
+  const codigo = $("#inCupon").value.trim();
+  if (!codigo) { $("#errCupon").textContent = "Escribí el código."; return; }
+  const b = $("#aplicarCupon"); b.disabled = true; $("#errCupon").textContent = "";
+  try { const r = await api("/api/club", { accion: "cupon", codigo }); $("#inCupon").value = ""; ponerCupon({ codigo: r.codigo, porcentaje: r.porcentaje }); toast(`¡${r.porcentaje}% OFF aplicado!`); }
+  catch (err) { $("#errCupon").textContent = err.message; }
+  b.disabled = false;
+});
+$("#cuponBox").addEventListener("click", e => { if (e.target.closest("#quitarCupon")) { ponerCupon(null); $("#errCupon").textContent = ""; } });
+
+// ---------- Cartel de bienvenida y club (email → código de descuento) ----------
+const SUSC = "powerup-suscripto", CERRADO = "powerup-bienv-cerrado";
+function abrirBienvenida() {
+  if (!bienvenida || leer(SUSC, false) || cupon) return;
+  if (!$("#vista-checkout").hidden || $("#cart").classList.contains("is-open") || !$("#resultado").hidden || !$("#arrepentimiento").hidden || $("#nav").classList.contains("is-open")) return;
+  $("#bienvenida").hidden = false;
+  medir("ViewContent", { content_name: "Cartel de bienvenida" });
+}
+function cerrarBienvenida() {
+  if ($("#bienvenida").hidden) return;
+  $("#bienvenida").hidden = true;
+  if (!leer(SUSC, false)) escribir(CERRADO, Date.now());   // no vuelve a aparecer por 3 días
+}
+document.addEventListener("click", e => {
+  if (e.target.closest("[data-cerrar-bienv]") || e.target === $("#bienvenida")) cerrarBienvenida();
+  const cp = e.target.closest("[data-copiar-cupon]");
+  if (cp && navigator.clipboard) navigator.clipboard.writeText(cp.dataset.copiarCupon).then(() => { cp.textContent = "¡Copiado!"; });
+});
+document.addEventListener("submit", async e => {
+  const f = e.target.closest("[data-form-susc]"); if (!f) return;
+  e.preventDefault();
+  const caja = f.closest(".bienv__cuerpo, .club__box");
+  const err = caja.querySelector("[data-err-susc]"), ok = caja.querySelector("[data-ok-susc]");
+  const email = f.email.value.trim();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(email)) { err.textContent = "Ingresá un email válido."; f.email.focus(); return; }
+  const b = f.querySelector("button"); b.disabled = true; err.textContent = "";
+  try {
+    const r = await api("/api/club", { accion: "suscribir", email, origen: f.dataset.formSusc });
+    escribir(SUSC, true);
+    if (f.dataset.formSusc === "cartel") $("#club").hidden = true;
+    medir("Lead", { content_name: "Suscripción" });
+    if (r.codigo) ponerCupon({ codigo: r.codigo, porcentaje: r.porcentaje });   // sin email al cliente: se aplica solo
+    ok.innerHTML = r.usado ? `<b class="club__okTit">¡YA ESTABAS ADENTRO!</b><p>Ese email ya usó su código de regalo. Igual te vamos a avisar de todos los drops nuevos.</p>`
+      : r.codigo ? `<b class="club__okTit">¡LISTO! 🎁</b><p>Este es tu código de <b>${r.porcentaje}% OFF</b>. Ya quedó aplicado en tu carrito:</p>
+        <div class="club__codigo"><span>${esc(r.codigo)}</span><button type="button" class="link" data-copiar-cupon="${esc(r.codigo)}">Copiar</button></div>`
+      : `<b class="club__okTit">¡LISTO! 🎁</b><p>${r.nuevo ? "Te mandamos" : "Te volvimos a mandar"} tu código de <b>${r.porcentaje}% OFF</b> a <b>${esc(email)}</b>. Si no lo ves en unos minutos, fijate en Promociones o Spam.</p>`;
+    ok.innerHTML += f.dataset.formSusc === "cartel" ? `<button type="button" class="btn btn--white btn--full" data-cerrar-bienv>Ir a la tienda</button>` : "";
+    ok.hidden = false;
+    caja.querySelectorAll("[data-form-wrap], .club__form, .club__legal").forEach(x => { x.hidden = true; });
+  } catch (er) { err.textContent = er.message; }
+  b.disabled = false;
+});
+configPublica.then(c => {
+  bienvenida = c && c.bienvenida ? c.bienvenida : null;
+  if (!bienvenida) return;
+  $$("[data-pct-club]").forEach(el => { el.textContent = bienvenida.porcentaje; });
+  $("#club").hidden = leer(SUSC, false);
+  animarEntrada($("#club"));
+  if (!$("#vista-checkout").hidden) pintarCheckout();
+  // Aparece a los pocos segundos de entrar (después de la intro), si no se suscribió ni lo cerró hace poco
+  const cerrado = leer(CERRADO, 0);
+  if (!leer(SUSC, false) && Date.now() - cerrado > 3 * 864e5) setTimeout(abrirBienvenida, document.documentElement.classList.contains("sin-intro") ? 4000 : 6000);
+});
 
 // ---------- Navegación entre vistas ----------
 function ruta() {
@@ -697,7 +790,8 @@ function ruta() {
 window.addEventListener("hashchange", () => { $("#resultado").hidden = true; cerrarCarrito(); cerrarMenu(); ruta(); });
 document.addEventListener("keydown", e => {
   if (e.key !== "Escape") return;
-  if (!$("#arrepentimiento").hidden) $("#arrepentimiento").hidden = true;
+  if (!$("#bienvenida").hidden) cerrarBienvenida();
+  else if (!$("#arrepentimiento").hidden) $("#arrepentimiento").hidden = true;
   else if (!$("#resultado").hidden) $("#resultado").hidden = true;
   else { cerrarCarrito(); cerrarMenu(); }
 });
@@ -762,7 +856,7 @@ $("#formArr").addEventListener("submit", async e => {
   const ult = leer("powerup-ultimo-pedido", null);
   const lista = ult ? `<ul>${ult.lineas.map(l => `<li>${esc(l)}</li>`).join("")}</ul><p class="m0"><b>Total: ${pesos(ult.total)}</b><br>${esc(ult.entrega)}</p>` : "";
   let tit, cuerpo;
-  if (estado === "aprobado" || estado === "pendiente") { carrito = []; escribir("powerup-carrito", carrito); }
+  if (estado === "aprobado" || estado === "pendiente") { carrito = []; escribir("powerup-carrito", carrito); cupon = null; escribir("powerup-cupon", null); }
   if (estado === "aprobado") {
     tit = "¡Gracias por tu compra!";
     if (ult) medir("Purchase", { value: ult.total, content_type: "product" }, ult.numero);
@@ -873,6 +967,8 @@ const io = "IntersectionObserver" in window ? new IntersectionObserver(entries =
   });
 }, { threshold: 0.15 }) : null;
 function animarEntrada(raiz) {
+  // Las fotos de los productos aparecen con una cortina cuando entran en pantalla
+  if (io && !SIN_MOVIMIENTO) raiz.querySelectorAll(".card:not(.al-entrar)").forEach(c => { c.classList.add("al-entrar"); io.observe(c); });
   raiz.querySelectorAll(".reveal:not(.is-in)").forEach(el => { if (io) io.observe(el); else { el.classList.add("is-in"); const c = el.querySelector("[data-count]"); if (c) countUp(c); } });
 }
 
@@ -887,8 +983,52 @@ if (matchMedia("(hover: hover) and (pointer: fine)").matches && !SIN_MOVIMIENTO)
     requestAnimationFrame(loop);
   })();
   document.addEventListener("mouseover", e => {
+    const card = e.target.closest(".card");
     cursor.classList.toggle("is-hover", !!e.target.closest("a, button, .card, summary, label"));
+    cursor.classList.toggle("is-ver", !!card);   // sobre un producto dice "VER"
   });
+
+  // Luz que sigue al mouse en la portada
+  const hero = $(".hero");
+  hero.addEventListener("mousemove", e => {
+    const r = hero.getBoundingClientRect();
+    hero.style.setProperty("--mx", (e.clientX - r.left) + "px");
+    hero.style.setProperty("--my", (e.clientY - r.top) + "px");
+  });
+
+  // Botones "imán": se van un poco hacia el mouse
+  document.addEventListener("mousemove", e => {
+    const b = e.target.closest(".magnet");
+    $$(".magnet.is-mag").forEach(x => { if (x !== b) { x.classList.remove("is-mag"); x.style.transform = ""; } });
+    if (!b) return;
+    const r = b.getBoundingClientRect();
+    b.classList.add("is-mag");
+    b.style.transform = `translate(${(e.clientX - r.left - r.width / 2) * 0.25}px, ${(e.clientY - r.top - r.height / 2) * 0.35}px)`;
+  });
+
+  // Tarjetas que se inclinan en 3D con un brillo
+  document.addEventListener("mousemove", e => {
+    const card = e.target.closest(".card");
+    if (window._cardTilt && window._cardTilt !== card) { window._cardTilt.style.transform = ""; window._cardTilt = null; }
+    if (!card) return;
+    const r = card.getBoundingClientRect(), px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+    card.style.transform = `perspective(900px) rotateX(${(0.5 - py) * 7}deg) rotateY(${(px - 0.5) * 9}deg)`;
+    card.style.setProperty("--gx", px * 100 + "%"); card.style.setProperty("--gy", py * 100 + "%");
+    window._cardTilt = card;
+  });
+}
+
+// ---------- Barra de avance y textos que se inclinan con la velocidad del scroll ----------
+if (!SIN_MOVIMIENTO) {
+  let ultimoY = scrollY, skew = 0;
+  (function loop() {
+    const max = document.documentElement.scrollHeight - innerHeight;
+    $("#progreso").style.transform = `scaleX(${max > 0 ? Math.min(1, scrollY / max) : 0})`;
+    const v = scrollY - ultimoY; ultimoY = scrollY;
+    skew += (Math.max(-12, Math.min(12, v * 0.25)) - skew) * 0.12;
+    document.documentElement.style.setProperty("--skew", skew.toFixed(2) + "deg");
+    requestAnimationFrame(loop);
+  })();
 }
 
 pintarCarrito();

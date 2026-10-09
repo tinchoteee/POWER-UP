@@ -9,6 +9,7 @@ const { login, permisoValido } = require("./_admin.js");
 const { leerAjustes, olvidarCache } = require("./_catalogo.js");
 
 const { moverStock, crearEnvioZipnova } = require("./_procesar.js");
+const { liberarCupon, usarCupon, listarSuscriptores, mandarNovedad } = require("./_cupones.js");
 
 const ESTADOS = ["esperando-transferencia", "pagado", "envio-creado", "despachado", "listo-para-retirar", "entregado", "cancelado"];
 
@@ -75,8 +76,10 @@ module.exports = async function handler(req, res) {
           zipnova: Boolean(process.env.ZIPNOVA_API_TOKEN && process.env.ZIPNOVA_API_SECRET && process.env.ZIPNOVA_ACCOUNT_ID),
           envioAutomatico: process.env.ZIPNOVA_CREAR_ENVIOS !== "no",
           emails: Boolean(process.env.RESEND_API_KEY && process.env.AVISOS_EMAIL),
-          transferencia: Boolean(process.env.TRANSFERENCIA_ALIAS || process.env.TRANSFERENCIA_CBU)
-        }
+          transferencia: Boolean(process.env.TRANSFERENCIA_ALIAS || process.env.TRANSFERENCIA_CBU),
+          emailsClientes: Boolean(process.env.RESEND_API_KEY && process.env.RESEND_FROM)
+        },
+        suscriptores: (await listarSuscriptores()).map(x => ({ email: x.email, fecha: x.fecha, codigo: x.codigo }))
       });
     }
     if (req.method !== "POST") return res.status(405).json({ error: "Método no permitido" });
@@ -127,11 +130,13 @@ module.exports = async function handler(req, res) {
           await moverStock(pedido.datos && pedido.datos.productos, numero, -1);
           cambios.stockReservado = false;
           aviso = "Las unidades volvieron al stock.";
+          if (pedido.cupon) { await liberarCupon(pedido.cupon, numero); aviso += " El código de descuento se puede volver a usar."; }
         }
         // Si se reactiva un pedido cancelado, se vuelven a reservar
         if (body.estado !== "cancelado" && pedido.estado === "cancelado" && pedido.stockReservado === false) {
           await moverStock(pedido.datos && pedido.datos.productos, numero);
           cambios.stockReservado = true;
+          if (pedido.cupon) await usarCupon(pedido.cupon, numero);
         }
         // Pagado: se crea el envío en Zipnova, igual que con Mercado Pago
         const conZipnova = process.env.ZIPNOVA_API_TOKEN && process.env.ZIPNOVA_API_SECRET && process.env.ZIPNOVA_ACCOUNT_ID;
@@ -150,6 +155,22 @@ module.exports = async function handler(req, res) {
       }
       await db.actualizarPedido(numero, cambios);
       return res.status(200).json({ ok: true, pedido: { ...pedido, ...cambios }, aviso });
+    }
+    // Novedad por email a todos los suscriptores (o solo a AVISOS_EMAIL si es una prueba)
+    if (body.accion === "novedad") {
+      const asunto = String(body.asunto || "").trim().slice(0, 120), mensaje = String(body.mensaje || "").trim().slice(0, 5000);
+      const link = /^https?:\/\//.test(String(body.link || "").trim()) ? String(body.link).trim().slice(0, 300) : "";
+      if (!asunto || !mensaje) return res.status(400).json({ error: "Escribí el asunto y el mensaje." });
+      if (!process.env.RESEND_API_KEY || !process.env.RESEND_FROM) return res.status(400).json({ error: "Para mandar emails a los clientes falta verificar tu dominio en Resend y cargar RESEND_FROM en Vercel (mirá la pestaña Estado)." });
+      let lista = await listarSuscriptores();
+      if (body.prueba) {
+        if (!process.env.AVISOS_EMAIL) return res.status(400).json({ error: "Falta AVISOS_EMAIL en Vercel para mandarte la prueba." });
+        lista = [{ email: process.env.AVISOS_EMAIL, token: "prueba" }];
+      }
+      if (!lista.length) return res.status(400).json({ error: "Todavía no tenés suscriptores." });
+      const r = await mandarNovedad({ asunto, mensaje, boton: String(body.boton || "").trim().slice(0, 40), link }, lista);
+      console.log("Novedad enviada", asunto, r.enviados, r.error || "");
+      return res.status(200).json({ ok: !r.error, enviados: r.enviados, total: lista.length, error: r.error });
     }
     return res.status(400).json({ error: "Acción desconocida." });
   } catch (e) {

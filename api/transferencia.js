@@ -6,6 +6,7 @@ const CATALOGO = require("../js/productos.js");
 const db = require("./_db.js");
 const { armarPedido, leerBody, baseDe } = require("./_pedido.js");
 const { moverStock, mandarEmail, textoEntrega, esc, pesos } = require("./_procesar.js");
+const { usarCupon } = require("./_cupones.js");
 
 const datosCuenta = () => {
   const alias = String(process.env.TRANSFERENCIA_ALIAS || "").trim(), cbu = String(process.env.TRANSFERENCIA_CBU || "").trim();
@@ -36,7 +37,8 @@ module.exports = async function handler(req, res) {
     cliente: pedido.cliente, detalle, estado: "esperando-transferencia",
     entrega: { ...pedido.entrega, zipnova: undefined },
     datos: { productos: m.productos, entrega: pedido.entrega, cliente: pedido.cliente, subtotal: m.subtotal },   // para crear el envío al confirmar
-    stockReservado: true
+    stockReservado: true,
+    ...(m.cupon ? { cupon: m.cupon } : {})
   };
   const stock = await moverStock(m.productos, pedido.numero);   // se reservan las unidades mientras espera el pago
   try { await db.agregarPedido(registro); }
@@ -46,6 +48,7 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ error: "No pudimos registrar el pedido. Probá de nuevo en un momento." });
   }
   console.log("Pedido por transferencia", pedido.numero, pedido.total);
+  if (m.cupon) await usarCupon(m.cupon, pedido.numero).catch(err => console.error("No se pudo marcar el código", m.cupon, err.message));
 
   if (process.env.RESEND_API_KEY) {
     const lista = `<ul>${detalle.map(d => `<li>${esc(d)}</li>`).join("")}</ul>`;

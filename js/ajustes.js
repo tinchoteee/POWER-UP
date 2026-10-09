@@ -56,17 +56,22 @@
   // Descuento por monto de compra (ver "descuento" en productos.js). Recibe [{ precio, cant }] y devuelve
   // el precio con descuento de cada línea (redondeado a centavos) y los totales. Página y servidor usan esta misma cuenta.
   // extra: porcentaje de descuento por pagar con transferencia (se aplica después del de monto, solo a los productos).
-  aplicarAjustes.conDescuento = function (lineas, cfg, extra) {
+  // cupon: porcentaje del código de bienvenida (se aplica al final, también solo a los productos).
+  aplicarAjustes.conDescuento = function (lineas, cfg, extra, cupon) {
     const subtotal = lineas.reduce((a, l) => a + l.precio * l.cant, 0);
     const pct = cfg && cfg.desde > 0 && subtotal >= cfg.desde ? Number(cfg.porcentaje) || 0 : 0;
     const suma = ps => Math.round(ps.reduce((a, p, i) => a + p * lineas[i].cant, 0) * 100) / 100;
     const conMonto = lineas.map(l => Math.round(l.precio * (100 - pct)) / 100);
     const totalMonto = suma(conMonto);
     const pctT = Number(extra) > 0 ? Number(extra) : 0;
-    const precios = pctT ? conMonto.map(p => Math.round(p * (100 - pctT)) / 100) : conMonto;
+    const conTransf = pctT ? conMonto.map(p => Math.round(p * (100 - pctT)) / 100) : conMonto;
+    const totalTransf = suma(conTransf);
+    const pctC = Number(cupon) > 0 ? Number(cupon) : 0;
+    const precios = pctC ? conTransf.map(p => Math.round(p * (100 - pctC)) / 100) : conTransf;
     const total = suma(precios);
     return { subtotal, porcentaje: pct, descuento: Math.round((subtotal - totalMonto) * 100) / 100,
-      porcentajeTransferencia: pctT, descuentoTransferencia: Math.round((totalMonto - total) * 100) / 100, total, precios };
+      porcentajeTransferencia: pctT, descuentoTransferencia: Math.round((totalMonto - totalTransf) * 100) / 100,
+      porcentajeCupon: pctC, descuentoCupon: Math.round((totalTransf - total) * 100) / 100, total, precios };
   };
   return aplicarAjustes;
 })());
