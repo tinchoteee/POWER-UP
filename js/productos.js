@@ -32,7 +32,8 @@
     // Paquete de cada producto (peso en gramos, medidas en cm). El correo cobra según peso y tamaño.
     // Un producto puede usar otro paquete con  caja: "nombre".
     cajas: {
-      "conjunto": { peso: 500, alto: 8, ancho: 25, largo: 30 }
+      "conjunto": { peso: 500, alto: 8, ancho: 25, largo: 30 },
+      "buzo":     { peso: 1100, alto: 12, ancho: 30, largo: 35 }   // buzo + pantalón (a confirmar con el dueño)
     },
     // Solo se usa mientras Zipnova no esté configurado: costo fijo por zona.
     zonasDeRespaldo: { "CABA": 5000, "Buenos Aires": 6500, "resto": 9500 }
@@ -91,6 +92,14 @@
     { id: 9, cat: "guess", caja: "conjunto", nombre: "Conjunto Guess Los Angeles", detalle: "Remera + short", etiqueta: "NUEVO",
       desc: "Conjunto negro con el triángulo Guess en rojo y blanco en la remera, y estampa Guess Los Angeles al costado del short.",
       precio: 29999, talles: ["S", "M", "L", "XL"],
-      colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/guess-negro.jpg" }] }
+      colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/guess-negro.jpg" }] },
+    { id: 10, cat: "corteiz", caja: "buzo", nombre: "Conjunto Corteiz Alcatraz Buzo", detalle: "Buzo + pantalón", etiqueta: "NUEVO",
+      desc: "Buzo con capucha y pantalón de frisa negros, con el logo Alcatraz de Corteiz en blanco en el pecho y en el pantalón.",
+      precio: 44500, talles: ["M", "L", "XL"],
+      colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/corteiz-alcatraz-buzo.jpg" }] },
+    { id: 11, cat: "jordan", caja: "buzo", nombre: "Conjunto Jordan Buzo Gris", detalle: "Buzo + pantalón", etiqueta: "NUEVO",
+      desc: "Buzo con capucha y pantalón de frisa gris melange, con el logo Jumpman blanco en el pecho y en la pierna.",
+      precio: 44500, talles: ["M", "L", "XL"],
+      colores: [{ id: "gris", nombre: "Gris", hex: "#C8C8C8", foto: "img/jordan-buzo-gris.jpg" }] }
   ]
 });
