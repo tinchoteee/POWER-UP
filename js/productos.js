@@ -116,6 +116,14 @@
     { id: 15, cat: "jordan", caja: "conjunto", nombre: "Conjunto Jordan Letras", detalle: "Remera + short", etiqueta: "NUEVO",
       desc: "Conjunto negro con la palabra JORDAN en letras grandes gastadas y el logo Jumpman, en la remera y en el short.",
       precio: 29999, talles: ["S", "M", "L", "XL"],
-      colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/jordan-arco-negro.jpg" }] }
+      colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/jordan-arco-negro.jpg" }] },
+    { id: 16, cat: "jordan", caja: "conjunto", nombre: "Remera Jordan Letras", detalle: "Remera", etiqueta: "NUEVO",
+      desc: "Remera negra con la palabra JORDAN en letras grandes gastadas y el logo Jumpman. Es la remera del Conjunto Jordan Letras, vendida por separado.",
+      precio: 17000, talles: ["S", "M", "L", "XL"],
+      colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/remera-jordan-letras.jpg" }] },
+    { id: 17, cat: "jordan", caja: "conjunto", nombre: "Short Jordan Letras", detalle: "Short", etiqueta: "NUEVO",
+      desc: "Short negro con cintura elastizada, bolsillos y la palabra JORDAN en letras grandes gastadas con el logo Jumpman. Es el short del Conjunto Jordan Letras, vendido por separado.",
+      precio: 17000, talles: ["S", "M", "L", "XL"],
+      colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/short-jordan-letras.jpg" }] }
   ]
 });
