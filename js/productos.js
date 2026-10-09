@@ -24,7 +24,7 @@
   // Los datos de la cuenta (alias, CBU, titular) se cargan en Vercel: TRANSFERENCIA_ALIAS, TRANSFERENCIA_CBU, TRANSFERENCIA_TITULAR.
   transferencia: { porcentaje: 5 },
   // Cartel de bienvenida: el cliente deja su email y recibe un código único de un solo uso con este descuento
-  // (sobre los productos; NO es acumulable con otros descuentos: se aplica el que más conviene). Los emails quedan en el editor → Suscriptores. 0 = sin cartel.
+  // (sobre los productos, se suma a los otros). Los emails quedan en el editor → Suscriptores. 0 = sin cartel.
   bienvenida: { porcentaje: 5 },
 
   envio: {

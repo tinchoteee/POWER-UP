@@ -163,10 +163,8 @@ function pintarCarrito() {
   $("#cartTotal").textContent = sinPrecio ? (sub ? pesos(cta.total) + " + a consultar" : "A consultar") : pesos(cta.total);
   $("#filaDescuento").hidden = !cta.porcentaje;
   if (cta.porcentaje) $("#filaDescuento").innerHTML = `<span>Descuento ${cta.porcentaje}% OFF</span><span>−${pesos(cta.descuento)}</span>`;
-  $("#filaCupon").hidden = !cta.porcentajeCupon && !cta.cuponNoAplica;
-  $("#filaCupon").classList.toggle("gris", Boolean(cta.cuponNoAplica));
+  $("#filaCupon").hidden = !cta.porcentajeCupon;
   if (cta.porcentajeCupon) $("#filaCupon").innerHTML = `<span>Código ${esc(cupon.codigo)} · ${cta.porcentajeCupon}% OFF</span><span>−${pesos(cta.descuentoCupon)}</span>`;
-  else if (cta.cuponNoAplica) $("#filaCupon").innerHTML = `<span>Tu código no es acumulable: ya tenés un descuento mayor. Lo podés usar en otra compra.</span>`;
   pintarBarraBeneficios(sub);
   $("#notaConsultar").hidden = !hayConsultar();
   $("#notaConsultar").textContent = carrito.some(i => problemaItem(i) === "Se agotó")
@@ -707,14 +705,7 @@ function pintarCupon() {
   $("#cuponBox").hidden = !bienvenida && !cupon;
   $("#formCupon").hidden = Boolean(cupon);
   $("#cuponOk").hidden = !cupon;
-  if (cupon) {
-    const noAplica = cuenta().cuponNoAplica;
-    $("#cuponOk").classList.toggle("gris", noAplica);
-    $("#cuponOk").innerHTML = (noAplica
-      ? `Código <b>${esc(cupon.codigo)}</b>: no es acumulable con otros descuentos y ya tenés uno mayor, así que no se usa (te queda para otra compra).`
-      : `✓ Código <b>${esc(cupon.codigo)}</b> aplicado: ${cupon.porcentaje}% OFF en los productos. No es acumulable con otros descuentos.`)
-      + ` <button class="link" id="quitarCupon" type="button">Quitar</button>`;
-  }
+  if (cupon) $("#cuponOk").innerHTML = `✓ Código <b>${esc(cupon.codigo)}</b> aplicado: ${cupon.porcentaje}% OFF en los productos. <button class="link" id="quitarCupon" type="button">Quitar</button>`;
 }
 $("#formCupon").addEventListener("submit", async e => {
   e.preventDefault();
