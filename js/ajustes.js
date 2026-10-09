@@ -56,22 +56,29 @@
   // Descuento por monto de compra (ver "descuento" en productos.js). Recibe [{ precio, cant }] y devuelve
   // el precio con descuento de cada línea (redondeado a centavos) y los totales. Página y servidor usan esta misma cuenta.
   // extra: porcentaje de descuento por pagar con transferencia (se aplica después del de monto, solo a los productos).
-  // cupon: porcentaje del código de bienvenida (se aplica al final, también solo a los productos).
+  // cupon: porcentaje de un código de descuento. Los códigos NO son acumulables: o se usa el código solo, o los
+  // otros descuentos (monto y transferencia). Se aplica lo que más le conviene al cliente; si el código no conviene,
+  // no se usa (cuponNoAplica: true) y queda libre para otra compra.
   aplicarAjustes.conDescuento = function (lineas, cfg, extra, cupon) {
     const subtotal = lineas.reduce((a, l) => a + l.precio * l.cant, 0);
-    const pct = cfg && cfg.desde > 0 && subtotal >= cfg.desde ? Number(cfg.porcentaje) || 0 : 0;
     const suma = ps => Math.round(ps.reduce((a, p, i) => a + p * lineas[i].cant, 0) * 100) / 100;
+    const r2 = n => Math.round(n * 100) / 100;
+    const pct = cfg && cfg.desde > 0 && subtotal >= cfg.desde ? Number(cfg.porcentaje) || 0 : 0;
     const conMonto = lineas.map(l => Math.round(l.precio * (100 - pct)) / 100);
     const totalMonto = suma(conMonto);
     const pctT = Number(extra) > 0 ? Number(extra) : 0;
     const conTransf = pctT ? conMonto.map(p => Math.round(p * (100 - pctT)) / 100) : conMonto;
-    const totalTransf = suma(conTransf);
+    const total = suma(conTransf);
+    const normal = { subtotal, porcentaje: pct, descuento: r2(subtotal - totalMonto),
+      porcentajeTransferencia: pctT, descuentoTransferencia: r2(totalMonto - total),
+      porcentajeCupon: 0, descuentoCupon: 0, total, precios: conTransf };
     const pctC = Number(cupon) > 0 ? Number(cupon) : 0;
-    const precios = pctC ? conTransf.map(p => Math.round(p * (100 - pctC)) / 100) : conTransf;
-    const total = suma(precios);
-    return { subtotal, porcentaje: pct, descuento: Math.round((subtotal - totalMonto) * 100) / 100,
-      porcentajeTransferencia: pctT, descuentoTransferencia: Math.round((totalMonto - totalTransf) * 100) / 100,
-      porcentajeCupon: pctC, descuentoCupon: Math.round((totalTransf - total) * 100) / 100, total, precios };
+    if (!pctC) return normal;
+    const conCupon = lineas.map(l => Math.round(l.precio * (100 - pctC)) / 100);
+    const totalCupon = suma(conCupon);
+    if (totalCupon >= total) return { ...normal, cuponNoAplica: true };
+    return { subtotal, porcentaje: 0, descuento: 0, porcentajeTransferencia: 0, descuentoTransferencia: 0,
+      porcentajeCupon: pctC, descuentoCupon: r2(subtotal - totalCupon), total: totalCupon, precios: conCupon };
   };
   return aplicarAjustes;
 })());
