@@ -108,6 +108,10 @@
     { id: 13, cat: "jordan", caja: "conjunto", nombre: "Pantalón Jordan Gris", detalle: "Pantalón", etiqueta: "NUEVO",
       desc: "Pantalón de frisa gris melange con el logo Jumpman blanco en la pierna. Es el pantalón del conjunto Jordan Buzo Gris, vendido por separado.",
       precio: 24500, talles: ["M", "L", "XL"],
-      colores: [{ id: "gris", nombre: "Gris", hex: "#C8C8C8", foto: "img/pantalon-jordan-gris.jpg" }] }
+      colores: [{ id: "gris", nombre: "Gris", hex: "#C8C8C8", foto: "img/pantalon-jordan-gris.jpg" }] },
+    { id: 14, cat: "corteiz", caja: "conjunto", nombre: "Buzo Corteiz Alcatraz", detalle: "Buzo", etiqueta: "NUEVO",
+      desc: "Buzo con capucha negro, de frisa, con bolsillo canguro y el logo Alcatraz de Corteiz en blanco en el pecho. Es el buzo del conjunto Corteiz Alcatraz Buzo, vendido por separado.",
+      precio: 24500, talles: ["M", "L", "XL"],
+      colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/buzo-corteiz-alcatraz.jpg" }] }
   ]
 });
