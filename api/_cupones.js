@@ -102,7 +102,7 @@ function emailBienvenida(s) {
       titulo: `Bienvenido al club.<br>Tu ${pct}% OFF ya está acá.`,
       cuerpo: `<p style="margin:0 0 16px">Gracias por sumarte a POWER UP. Este es tu código de regalo para tu primera compra:</p>
         <div style="border:3px dashed #000;padding:18px;text-align:center;font-family:'Courier New',monospace;font-size:28px;font-weight:700;letter-spacing:3px">${esc(s.codigo)}</div>
-        <p style="margin:16px 0 0">Ponelo al finalizar la compra, en <b>“¿Tenés un código de descuento?”</b>, y tenés <b>${pct}% OFF</b> en los productos. Se puede usar una sola vez y se suma a los otros descuentos.</p>
+        <p style="margin:16px 0 0">Ponelo al finalizar la compra, en <b>“¿Tenés un código de descuento?”</b>, y tenés <b>${pct}% OFF</b> en los productos. Se puede usar una sola vez (un código por compra) y se suma a los descuentos por monto y por transferencia.</p>
         <p style="margin:12px 0 0">Además, vas a ser el primero en enterarte de los drops nuevos.</p>`,
       boton: "Ir a la tienda", link: SITIO, baja: linkBaja(s)
     })

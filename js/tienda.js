@@ -705,7 +705,7 @@ function pintarCupon() {
   $("#cuponBox").hidden = !bienvenida && !cupon;
   $("#formCupon").hidden = Boolean(cupon);
   $("#cuponOk").hidden = !cupon;
-  if (cupon) $("#cuponOk").innerHTML = `✓ Código <b>${esc(cupon.codigo)}</b> aplicado: ${cupon.porcentaje}% OFF en los productos. <button class="link" id="quitarCupon" type="button">Quitar</button>`;
+  if (cupon) $("#cuponOk").innerHTML = `✓ Código <b>${esc(cupon.codigo)}</b> aplicado: ${cupon.porcentaje}% OFF en los productos (un código por compra). <button class="link" id="quitarCupon" type="button">Quitar</button>`;
 }
 $("#formCupon").addEventListener("submit", async e => {
   e.preventDefault();
