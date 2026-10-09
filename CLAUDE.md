@@ -17,7 +17,7 @@ Tienda online de ropa (conjuntos remera + short) del mismo dueño que Nací Rein
 - 9 productos, todos $29.999, talles S–XL (confirmados por el dueño). Conjunto Jordan unifica negro, blanco y rojo (id 1).
 - 2026-10-09: conjuntos buzo + pantalón (ids 10 Corteiz Alcatraz negro, 11 Jordan gris), $44.500, talles M–XL, paquete "buzo" (1100 g, 35×30×12 cm, estimado por Claude: a confirmar). Fotos propias del dueño sobre un acolchado azul: se recortó la prenda por color y se puso sobre el gris #f2f2f2 del catálogo.
 - 2026-10-09: pantalones sueltos de esos conjuntos (ids 12 Corteiz negro, 13 Jordan gris), $24.500, talles M–XL (supuestos por Claude, como los conjuntos), paquete "conjunto". Buzo Corteiz suelto (id 14), $24.500, M–XL; su foto tenía luz azulada: se pasó a gris y se suavizó el contorno.
-- 2026-10-09: Conjunto Jordan Letras (id 15, remera + short negro), $29.999, S–XL; foto girada 180°. Remera (id 16) y short (id 17) de ese conjunto sueltos a $17.000 cada uno, S–XL.
+- 2026-10-09: Conjunto Jordan Letras (id 15, remera + short negro), $29.999, S–XL; foto girada 180°. Remera (id 16) y short (id 17) de ese conjunto sueltos a $17.000 cada uno, S–XL. Short Syna World suelto (id 18), $17.000, S–XL.
 - Beneficios confirmados por el dueño (2026-10-03): envío gratis desde $119.000 (4 conjuntos), 10% OFF desde $149.000 (5), 5% OFF con transferencia. Paquete 500 g, 30×25×8 cm (confirmado).
 - Proyecto de Vercel creado y configurado por el dueño. Pendiente: compra de prueba real con envío por correo y cargar unidades por talle en el editor.
 - Los productos son de marcas ajenas (Jordan, Trapstar, Sp5der, Corteiz, Syna, Bape, Guess): se le avisó al dueño del riesgo de usar esos nombres si no son originales.

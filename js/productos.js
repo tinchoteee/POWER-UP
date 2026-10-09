@@ -124,6 +124,10 @@
     { id: 17, cat: "jordan", caja: "conjunto", nombre: "Short Jordan Letras", detalle: "Short", etiqueta: "NUEVO",
       desc: "Short negro con cintura elastizada, bolsillos y la palabra JORDAN en letras grandes gastadas con el logo Jumpman. Es el short del Conjunto Jordan Letras, vendido por separado.",
       precio: 17000, talles: ["S", "M", "L", "XL"],
-      colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/short-jordan-letras.jpg" }] }
+      colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/short-jordan-letras.jpg" }] },
+    { id: 18, cat: "syna", caja: "conjunto", nombre: "Short Syna World", detalle: "Short", etiqueta: "NUEVO",
+      desc: "Short negro con cintura elastizada y el logo Syna estilo graffiti en blanco.",
+      precio: 17000, talles: ["S", "M", "L", "XL"],
+      colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/short-syna.jpg" }] }
   ]
 });
