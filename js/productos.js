@@ -112,6 +112,10 @@
     { id: 14, cat: "corteiz", caja: "conjunto", nombre: "Buzo Corteiz Alcatraz", detalle: "Buzo", etiqueta: "NUEVO",
       desc: "Buzo con capucha negro, de frisa, con bolsillo canguro y el logo Alcatraz de Corteiz en blanco en el pecho. Es el buzo del conjunto Corteiz Alcatraz Buzo, vendido por separado.",
       precio: 24500, talles: ["M", "L", "XL"],
-      colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/buzo-corteiz-alcatraz.jpg" }] }
+      colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/buzo-corteiz-alcatraz.jpg" }] },
+    { id: 15, cat: "jordan", caja: "conjunto", nombre: "Conjunto Jordan Letras", detalle: "Remera + short", etiqueta: "NUEVO",
+      desc: "Conjunto negro con la palabra JORDAN en letras grandes gastadas y el logo Jumpman, en la remera y en el short.",
+      precio: 29999, talles: ["S", "M", "L", "XL"],
+      colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/jordan-arco-negro.jpg" }] }
   ]
 });
