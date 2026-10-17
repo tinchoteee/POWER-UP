@@ -131,6 +131,18 @@
     { id: 18, cat: "syna", caja: "conjunto", nombre: "Short Syna World", detalle: "Short", etiqueta: "NUEVO",
       desc: "Short negro con cintura elastizada y el logo Syna estilo graffiti en blanco.",
       precio: 17000, talles: ["S", "M", "L", "XL"],
-      colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/short-syna.jpg" }] }
+      colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/short-syna.jpg" }] },
+    { id: 19, cat: "guess", caja: "conjunto", nombre: "Remera Guess Triángulo", detalle: "Remera", etiqueta: "NUEVO",
+      desc: "Remera negra con el clásico triángulo de Guess al frente: letras y signo de pregunta en rojo con borde blanco.",
+      precio: 17000, talles: ["S", "M", "L", "XL"],
+      colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/remera-guess-triangulo.jpg" }] },
+    { id: 20, cat: "trapstar", caja: "conjunto", nombre: "Remera Trapstar Shooters", detalle: "Remera", etiqueta: "NUEVO",
+      desc: "Remera negra con el logo Trapstar London Shooters y la pantera al frente, en gris con detalles rojos.",
+      precio: 17000, talles: ["S", "M", "L", "XL"],
+      colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/remera-trapstar-shooters.jpg" }] },
+    { id: 21, cat: "jordan", caja: "conjunto", nombre: "Short Jordan Diamond", detalle: "Short", etiqueta: "NUEVO",
+      desc: "Short de básquet negro con cintura elastizada blanca, paneles laterales blancos en diamante y el logo Jumpman.",
+      precio: 17000, talles: ["S", "M", "L", "XL"],
+      colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/short-jordan-diamond.jpg" }] }
   ]
 });
