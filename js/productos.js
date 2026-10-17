@@ -51,7 +51,7 @@
     corteiz: "Corteiz",
     syna: "Syna World",
     bape: "Bape",
-    guess: "Guess"
+    guess: "Guess", diesel: "Diesel"
   },
 
   // detalle: texto chico debajo del nombre · drop: true = aparece en "El Drop" (los primeros 3) · etiqueta: cartelito sobre la foto
@@ -141,8 +141,21 @@
       precio: 17000, talles: ["S", "M", "L", "XL"],
       colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/remera-trapstar-shooters.jpg" }] },
     { id: 21, cat: "jordan", caja: "conjunto", nombre: "Short Jordan Diamond", detalle: "Short", etiqueta: "NUEVO",
-      desc: "Short de básquet negro con cintura elastizada blanca, paneles laterales blancos en diamante y el logo Jumpman.",
+      desc: "Short de básquet con paneles laterales en diamante y el logo Jumpman. En negro y blanco o en rojo y negro.",
       precio: 17000, talles: ["S", "M", "L", "XL"],
-      colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/short-jordan-diamond.jpg" }] }
+      colores: [{ id: "negro", nombre: "Negro y blanco", hex: "#111111", foto: "img/short-jordan-diamond.jpg" },
+                { id: "rojo", nombre: "Rojo y negro", hex: "#d4202c", foto: "img/short-jordan-diamond-rojo.jpg" }] },
+    { id: 22, cat: "corteiz", caja: "conjunto", nombre: "Remera Corteiz 4 Estrellas", detalle: "Remera", etiqueta: "NUEVO",
+      desc: "Remera negra con el logo Alcatraz de Corteiz y cuatro estrellas al frente, en blanco.",
+      precio: 17000, talles: ["S", "M", "L", "XL"],
+      colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/remera-corteiz-estrellas.jpg" }] },
+    { id: 23, cat: "jordan", caja: "conjunto", nombre: "Short Jordan Jumpman", detalle: "Short", etiqueta: "NUEVO",
+      desc: "Short negro de algodón con cintura elastizada, bolsillos y el logo Jumpman bordado en blanco.",
+      precio: 17000, talles: ["S", "M", "L", "XL"],
+      colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/short-jordan-negro.jpg" }] },
+    { id: 24, cat: "diesel", caja: "conjunto", nombre: "Remera Diesel", detalle: "Remera", etiqueta: "NUEVO",
+      desc: "Remera negra con el logo DIESEL en azul tipo denim y la leyenda EST · SINCE debajo.",
+      precio: 17000, talles: ["S", "M", "L", "XL"],
+      colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/remera-diesel.jpg" }] }
   ]
 });
