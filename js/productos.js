@@ -22,7 +22,7 @@
   descuento: { desde: 149000, porcentaje: 10 },   // 5 conjuntos
   // Descuento extra por pagar con transferencia bancaria (sobre los productos, después del de monto). 0 = sin transferencia.
   // Los datos de la cuenta (alias, CBU, titular) se cargan en Vercel: TRANSFERENCIA_ALIAS, TRANSFERENCIA_CBU, TRANSFERENCIA_TITULAR.
-  transferencia: { porcentaje: 5 },
+  transferencia: { porcentaje: 10 },
   // Cartel de bienvenida: el cliente deja su email y recibe un código único de un solo uso con este descuento
   // (sobre los productos, se suma a los otros). Los emails quedan en el editor → Suscriptores. 0 = sin cartel.
   bienvenida: { porcentaje: 5 },
