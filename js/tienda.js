@@ -722,7 +722,7 @@ $("#cuponBox").addEventListener("click", e => { if (e.target.closest("#quitarCup
 const SUSC = "powerup-suscripto", CERRADO = "powerup-bienv-cerrado";
 function abrirBienvenida() {
   if (!bienvenida || leer(SUSC, false) || cupon) return;
-  if (!$("#vista-checkout").hidden || $("#cart").classList.contains("is-open") || !$("#resultado").hidden || !$("#arrepentimiento").hidden || $("#nav").classList.contains("is-open")) return;
+  if (!$("#vista-checkout").hidden || $("#cart").classList.contains("is-open") || !$("#resultado").hidden || $("#nav").classList.contains("is-open")) return;
   $("#bienvenida").hidden = false;
   medir("ViewContent", { content_name: "Cartel de bienvenida" });
 }
@@ -791,7 +791,6 @@ window.addEventListener("hashchange", () => { $("#resultado").hidden = true; cer
 document.addEventListener("keydown", e => {
   if (e.key !== "Escape") return;
   if (!$("#bienvenida").hidden) cerrarBienvenida();
-  else if (!$("#arrepentimiento").hidden) $("#arrepentimiento").hidden = true;
   else if (!$("#resultado").hidden) $("#resultado").hidden = true;
   else { cerrarCarrito(); cerrarMenu(); }
 });
@@ -825,28 +824,6 @@ configPublica.then(c => { if (c && c.transferencia && c.transferencia.porcentaje
   if (!WHATSAPP) $$("[data-wa]").forEach(a => { a.hidden = true; });
   $("#year").textContent = new Date().getFullYear();
 }
-
-// ---------- Botón de arrepentimiento ----------
-const formArrOriginal = $("#arrCuerpo").innerHTML;
-document.addEventListener("click", e => {
-  if (e.target.closest("[data-arrepentimiento]")) {
-    if (!$("#arrNombre")) $("#arrCuerpo").innerHTML = formArrOriginal;   // si ya había mandado una, formulario nuevo
-    $("#arrepentimiento").hidden = false; $("#arrNombre").focus();
-  }
-  if (e.target.closest("[data-cerrar-arr]") || e.target === $("#arrepentimiento")) $("#arrepentimiento").hidden = true;
-});
-$("#formArr").addEventListener("submit", async e => {
-  e.preventDefault();
-  const d = { nombre: $("#arrNombre").value.trim(), email: $("#arrEmail").value.trim(), telefono: $("#arrTel").value.trim(), pedido: $("#arrPedido").value.trim(), motivo: $("#arrMotivo").value.trim() };
-  if (!d.nombre || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email) || !d.pedido) { $("#arrError").textContent = "Completá tu nombre, email y número de pedido."; return; }
-  $("#arrError").textContent = "";
-  try {
-    const r = await api("/api/arrepentimiento", d);
-    $("#arrCuerpo").innerHTML = `<p class="m0">Recibimos tu solicitud. Tu código de trámite es <b>${esc(r.codigo)}</b>: guardalo.</p><p class="m0 gris">Te vamos a contactar en las próximas 24 horas hábiles para coordinar la devolución del producto y el reintegro del dinero.</p><button type="button" class="btn btn--white btn--full" data-cerrar-arr>Cerrar</button>`;
-  } catch (err) {
-    $("#arrError").textContent = err.message + (WHATSAPP ? " También podés pedirlo por WhatsApp." : "");
-  }
-});
 
 // ---------- Vuelta de Mercado Pago ----------
 (function () {
