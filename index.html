@@ -52,7 +52,6 @@
   <header class="header" id="header">
     <a href="#" class="logo" aria-label="POWER UP, inicio">POWER<span>UP</span></a>
     <nav class="nav" id="nav">
-      <a href="#drop">Drop</a>
       <a href="#tienda">Tienda</a>
       <a href="#nosotros">Nosotros</a>
       <a href="#faq">Info</a>
@@ -85,9 +84,8 @@
         <p class="hero__sub reveal">Ropa para los que no bajan el volumen.<br />Blanco. Negro. Sin grises.</p>
         <div class="hero__ctas reveal">
           <a href="#tienda" class="btn btn--white magnet">Comprar ahora</a>
-          <a href="#drop" class="btn btn--ghost magnet">Ver el drop</a>
+          <a href="#club" class="btn btn--ghost magnet" data-club-cta hidden>5% OFF de regalo</a>
         </div>
-        <div class="hero__scroll" aria-hidden="true"><span>SCROLL</span><i></i></div>
         <div class="hero__badge" aria-hidden="true">
           <svg viewBox="0 0 200 200">
             <defs><path id="circle" d="M100,100 m-75,0 a75,75 0 1,1 150,0 a75,75 0 1,1 -150,0"/></defs>
@@ -95,6 +93,18 @@
           </svg>
           <span>⚡</span>
         </div>
+      </section>
+
+
+      <!-- TIENDA -->
+      <section class="shop" id="tienda">
+        <div class="section-head section-head--compacto">
+          <span class="section-head__num">01</span>
+          <h2>TIENDA</h2>
+          <p>Tocá un producto para ver fotos, colores, talles y calcular el envío.</p>
+        </div>
+        <div class="filters" id="filters" role="group" aria-label="Filtrar por marca"></div>
+        <div class="grid" id="productGrid"></div>
       </section>
 
       <!-- Ventajas -->
@@ -112,29 +122,8 @@
         </div>
       </div>
 
-      <!-- DROP DESTACADO -->
-      <section class="drop" id="drop">
-        <div class="section-head reveal">
-          <span class="section-head__num">01</span>
-          <h2>EL DROP</h2>
-          <p>Piezas limitadas. Cuando se van, se van.</p>
-        </div>
-        <div class="drop__grid" id="dropGrid"></div>
-      </section>
 
-      <!-- CATEGORÍAS -->
-      <section class="cats" id="cats"></section>
 
-      <!-- TIENDA -->
-      <section class="shop" id="tienda">
-        <div class="section-head reveal">
-          <span class="section-head__num">02</span>
-          <h2>TIENDA</h2>
-          <p>Tocá un producto para ver fotos, colores, talles y calcular el envío.</p>
-        </div>
-        <div class="filters reveal" id="filters" role="group" aria-label="Filtrar por marca"></div>
-        <div class="grid" id="productGrid"></div>
-      </section>
 
       <!-- MANIFIESTO -->
       <section class="manifesto" id="nosotros">
@@ -188,7 +177,7 @@
       <!-- FAQ -->
       <section class="faq" id="faq">
         <div class="section-head reveal">
-          <span class="section-head__num">03</span>
+          <span class="section-head__num">02</span>
           <h2>INFO</h2>
           <p>Todo lo que necesitás saber antes de comprar.</p>
         </div>

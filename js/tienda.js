@@ -247,14 +247,6 @@ function tarjeta(p) {
 function pintarCatalogo() {
   const lineas = lineasActivas();
   if (catActual !== "todos" && !lineas.includes(catActual)) catActual = "todos";
-  $("#dropGrid").innerHTML = PRODUCTOS.filter(p => p.drop && !p.agotado).slice(0, 3).map(tarjeta).join("");
-  $("#drop").hidden = !$("#dropGrid").innerHTML;
-  $("#cats").innerHTML = [...lineas, "todos"].map((k, i) => `
-    <a href="#cat/${k}" class="cat" data-cat="${k}">
-      <span class="cat__num">/${String(i + 1).padStart(2, "0")}</span>
-      <span class="cat__name">${k === "todos" ? "VER TODO" : esc(nombreLinea(k).toUpperCase())}</span>
-      <span class="cat__arrow">→</span>
-    </a>`).join("");
   $("#filters").innerHTML = ["todos", ...lineas].map(k => `<button class="filter${k === catActual ? " is-active" : ""}" data-filter="${k}" aria-pressed="${k === catActual}">${k === "todos" ? "Todo" : esc(nombreLinea(k))}</button>`).join("");
   $("#footerLineas").innerHTML = lineas.map(k => `<a href="#cat/${k}">${esc(nombreLinea(k))}</a>`).join("");
   // Agrupados por marca; los agotados van al final
@@ -765,6 +757,7 @@ configPublica.then(c => {
   if (!bienvenida) return;
   $$("[data-pct-club]").forEach(el => { el.textContent = bienvenida.porcentaje; });
   $("#club").hidden = leer(SUSC, false);
+  $$("[data-club-cta]").forEach(a => { a.hidden = leer(SUSC, false); });
   animarEntrada($("#club"));
   if (!$("#vista-checkout").hidden) pintarCheckout();
   // Aparece a los pocos segundos de entrar (después de la intro), si no se suscribió ni lo cerró hace poco
@@ -1007,6 +1000,10 @@ if (!SIN_MOVIMIENTO) {
     requestAnimationFrame(loop);
   })();
 }
+
+// Alto del encabezado (para que los filtros de la tienda queden pegados justo debajo)
+const medirHeader = () => document.documentElement.style.setProperty("--alto-header", $("#header").offsetHeight + "px");
+medirHeader(); addEventListener("resize", medirHeader);
 
 pintarCarrito();
 ruta();

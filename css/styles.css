@@ -600,18 +600,18 @@ button.link { font-size: inherit; padding: 0; }
 .intro {
   position: fixed; inset: 0; z-index: 10000; background: var(--black);
   display: grid; place-content: center; justify-items: center; gap: 22px;
-  animation: introSale .9s var(--ease) 1.5s forwards; pointer-events: none;
+  animation: introSale .7s var(--ease) .85s forwards; pointer-events: none;
 }
 .sin-intro .intro { display: none; }
 .intro__logo { font-family: var(--display); font-size: clamp(72px, 16vw, 220px); line-height: .85; display: flex; gap: .08em; overflow: hidden; }
 .intro__logo span { display: block; transform: translateY(105%); animation: rise .8s var(--ease) .1s forwards; }
 .intro__logo .intro__up { color: transparent; -webkit-text-stroke: 2px var(--white); animation-delay: .25s; }
 .intro__barra { width: min(260px, 60vw); height: 2px; background: var(--line); overflow: hidden; }
-.intro__barra i { display: block; height: 100%; background: var(--white); transform-origin: left; transform: scaleX(0); animation: carga 1.2s var(--ease) .2s forwards; }
+.intro__barra i { display: block; height: 100%; background: var(--white); transform-origin: left; transform: scaleX(0); animation: carga .65s var(--ease) .1s forwards; }
 .intro__txt { font-size: 11px; letter-spacing: .5em; color: var(--gray); animation: titila .6s steps(2) infinite; }
 /* Mientras está la intro, la portada espera para animarse */
-html:not(.sin-intro) .hero__title .word { animation-delay: 1.75s; }
-html:not(.sin-intro) .hero__title .line:nth-child(2) .word { animation-delay: 1.9s; }
+html:not(.sin-intro) .hero__title .word { animation-delay: 1s; }
+html:not(.sin-intro) .hero__title .line:nth-child(2) .word { animation-delay: 1.12s; }
 @keyframes introSale { to { clip-path: inset(0 0 100% 0); visibility: hidden; } }
 @keyframes carga { to { transform: scaleX(1); } }
 
@@ -766,4 +766,34 @@ html:not(.sin-intro) .hero__title .line:nth-child(2) .word { animation-delay: 1.
 @media (prefers-reduced-motion: reduce) {
   .intro { display: none; }
   .glitch::before, .glitch::after { display: none; }
+}
+
+/* =========================================================
+   PORTADA COMPACTA (2026-10-20): los productos se ven enseguida
+   ========================================================= */
+.hero { min-height: 0; padding: clamp(28px, 4vw, 52px) var(--gutter) clamp(30px, 4vw, 52px); }
+.hero__title { font-size: clamp(64px, 10vw, 170px); line-height: .9; display: flex; justify-content: center; gap: .18em; flex-wrap: wrap; }
+.hero__title .line { display: inline-block; }
+.hero__kicker { margin-bottom: 12px; }
+.hero__sub { margin-top: 16px; }
+.hero__ctas { margin-top: 22px; }
+.hero__badge { width: 110px; height: 110px; bottom: 24px; }
+.shop { padding-top: clamp(28px, 3.5vw, 48px); }
+.section-head--compacto { margin-bottom: 20px; padding-bottom: 14px; }
+.section-head--compacto h2 { font-size: clamp(44px, 5vw, 76px); }
+/* Filtros fijos arriba mientras se recorre la tienda */
+.shop .filters { position: sticky; top: var(--alto-header, 68px); z-index: 50; background: var(--black); padding: 10px 0; margin-bottom: 18px; }
+@media (max-width: 900px) {
+  .hero__badge { display: none; }
+}
+@media (max-width: 600px) {
+  .hero { padding: 26px var(--gutter) 30px; }
+  .hero__kicker { font-size: 11px; margin-bottom: 8px; }
+  .hero__title { font-size: clamp(52px, 16vw, 90px); }
+  .hero__sub { margin-top: 10px; font-size: 14px; }
+  .hero__sub br { display: none; }
+  .hero__ctas { margin-top: 16px; gap: 10px; }
+  .hero__ctas .btn { padding: 14px 18px; font-size: 12px; }
+  .shop { padding-top: 28px; }
+  .section-head--compacto p { display: none; }
 }
