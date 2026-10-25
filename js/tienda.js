@@ -86,6 +86,7 @@ const subtotal = () => carrito.reduce((a, i) => a + precioDe(producto(i.id), i.c
 const DESCUENTO = CATALOGO.descuento || { desde: 0, porcentaje: 0 };
 // Código de descuento del cartel de bienvenida ({ codigo, porcentaje }); el servidor lo vuelve a revisar al cobrar
 let cupon = leer("powerup-cupon", null);
+if (cupon && cupon.hasta && Date.now() > new Date(cupon.hasta).getTime()) { cupon = null; escribir("powerup-cupon", null); }
 const cuenta = extra => aplicarAjustes.conDescuento(carrito.map(i => ({ precio: precioDe(producto(i.id), i.color), cant: i.cant })), DESCUENTO, extra, cupon ? cupon.porcentaje : 0);
 const totalProductos = () => cuenta().total;
 const hayConsultar = () => carrito.some(problemaItem);
@@ -694,7 +695,8 @@ function ponerCupon(c) {
   if (!$("#vista-checkout").hidden) pintarCheckout();
 }
 function pintarCupon() {
-  $("#cuponBox").hidden = !bienvenida && !cupon;
+  const hayCodigos = Object.values(CATALOGO.codigos || {}).some(c => !c.hasta || Date.now() < new Date(c.hasta).getTime());
+  $("#cuponBox").hidden = !bienvenida && !cupon && !hayCodigos;
   $("#formCupon").hidden = Boolean(cupon);
   $("#cuponOk").hidden = !cupon;
   if (cupon) $("#cuponOk").innerHTML = `✓ Código <b>${esc(cupon.codigo)}</b> aplicado: ${cupon.porcentaje}% OFF en los productos (un código por compra). <button class="link" id="quitarCupon" type="button">Quitar</button>`;
@@ -704,7 +706,7 @@ $("#formCupon").addEventListener("submit", async e => {
   const codigo = $("#inCupon").value.trim();
   if (!codigo) { $("#errCupon").textContent = "Escribí el código."; return; }
   const b = $("#aplicarCupon"); b.disabled = true; $("#errCupon").textContent = "";
-  try { const r = await api("/api/club", { accion: "cupon", codigo }); $("#inCupon").value = ""; ponerCupon({ codigo: r.codigo, porcentaje: r.porcentaje }); toast(`¡${r.porcentaje}% OFF aplicado!`); }
+  try { const r = await api("/api/club", { accion: "cupon", codigo }); $("#inCupon").value = ""; ponerCupon({ codigo: r.codigo, porcentaje: r.porcentaje, ...(r.hasta ? { hasta: r.hasta } : {}) }); toast(`¡${r.porcentaje}% OFF aplicado!`); }
   catch (err) { $("#errCupon").textContent = err.message; }
   b.disabled = false;
 });

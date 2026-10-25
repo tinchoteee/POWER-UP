@@ -57,6 +57,14 @@ async function validarCupon(codigo) {
   const c = normalCodigo(codigo);
   if (!c) return null;
   const err = msj => Object.assign(new Error(msj), { cupon: true });
+  // Códigos para todos (productos.js → codigos), con fecha de vencimiento
+  const pub = Object.entries(CATALOGO.codigos || {}).find(([k]) => normalCodigo(k) === c);
+  if (pub) {
+    const { porcentaje: pct, hasta } = pub[1] || {};
+    if (hasta && Date.now() > new Date(hasta).getTime()) throw err("Ese código ya venció.");
+    if (!(Number(pct) > 0)) throw err("Ese código no existe. Revisá que esté bien escrito.");
+    return { codigo: c, porcentaje: Number(pct), ...(hasta ? { hasta } : {}) };
+  }
   if (!db.hayDB()) throw err("Los códigos de descuento no están disponibles en este momento.");
   const d = await db.leer("powerup:cupon:" + c);
   if (!d) throw err("Ese código no existe. Revisá que esté bien escrito.");

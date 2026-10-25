@@ -26,6 +26,11 @@
   // Cartel de bienvenida: el cliente deja su email y recibe un código único de un solo uso con este descuento
   // (sobre los productos, se suma a los otros). Los emails quedan en el editor → Suscriptores. 0 = sin cartel.
   bienvenida: { porcentaje: 5 },
+  // Códigos de descuento para todos (los escribe el cliente al finalizar la compra). Sirven las veces que sea
+  // hasta la fecha "hasta" (hora de Argentina); después quedan vencidos solos. Un solo código por compra.
+  codigos: {
+    POWER15: { porcentaje: 15, hasta: "2026-10-27T17:35:00-03:00" }   // 48 horas desde el 25/10 a las 17:35
+  },
 
   envio: {
     // Envío gratis cuando los productos suman este monto o más. 0 = sin envío gratis.
