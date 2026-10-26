@@ -26,6 +26,20 @@
   // Cartel de bienvenida: el cliente deja su email y recibe un código único de un solo uso con este descuento
   // (sobre los productos, se suma a los otros). Los emails quedan en el editor → Suscriptores. 0 = sin cartel.
   bienvenida: { porcentaje: 5 },
+  // Emails automáticos a los suscriptores del Club (api/_campana.js; Vercel lo corre todos los días a las 12).
+  // "dia" = días desde que dejó su email. Entre un email y otro pasan por lo menos "separacion" días.
+  // Tipos: recordatorio (le recuerda su código de regalo), vidriera (productos nuevos), codigo (código personal con vencimiento).
+  campana: {
+    activa: true, separacion: 3, maximoPorDia: 80,
+    pasos: [
+      { dia: 2, tipo: "recordatorio" },
+      { dia: 6, tipo: "vidriera" },
+      { dia: 10, tipo: "codigo", porcentaje: 10, horas: 72 },
+      { dia: 15, tipo: "vidriera" }
+    ],
+    // Después, para siempre: uno cada 7 días, alternando productos nuevos y un código chico de 7% por 48 horas
+    repetir: { cada: 7, tipos: ["vidriera", "codigo"], porcentaje: 7, horas: 48 }
+  },
   // Códigos de descuento para todos (los escribe el cliente al finalizar la compra). Sirven las veces que sea
   // hasta la fecha "hasta" (hora de Argentina); después quedan vencidos solos. Un solo código por compra.
   codigos: {

@@ -69,7 +69,8 @@ async function validarCupon(codigo) {
   const d = await db.leer("powerup:cupon:" + c);
   if (!d) throw err("Ese código no existe. Revisá que esté bien escrito.");
   if (d.usado) throw err("Ese código ya se usó en otra compra.");
-  return { codigo: c, porcentaje: Number(d.porcentaje) || porcentaje() };
+  if (d.hasta && Date.now() > new Date(d.hasta).getTime()) throw err("Ese código ya venció.");
+  return { codigo: c, porcentaje: Number(d.porcentaje) || porcentaje(), ...(d.hasta ? { hasta: d.hasta } : {}) };
 }
 // Marca el código como usado por ese pedido (o lo libera si el pedido se cancela)
 async function usarCupon(codigo, pedido) {

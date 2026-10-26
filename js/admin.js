@@ -59,7 +59,7 @@ async function cargar() {
   suscriptores = d.suscriptores || [];
   cfgServidor = d.config || {};
   $("#pantallaLogin").hidden = true; $("#pantallaEditor").hidden = false;
-  pintarStock(); pintarPedidos(); pintarSuscriptores(); pintarEstado(d.config || {});
+  pintarStock(); pintarPedidos(); pintarSuscriptores(); pintarCampana(); pintarEstado(d.config || {});
   if (!d.config.baseDeDatos) mostrarTab("estado");
 }
 
@@ -321,6 +321,27 @@ function pintarSuscriptores() {
     ? `<div style="display:grid;gap:4px;font-size:14px">${suscriptores.map(x => `<div style="display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--borde);padding:6px 0"><span>${esc(x.email)}</span><small style="color:var(--tinta-2)">${new Date(x.fecha).toLocaleDateString("es-AR")}</small></div>`).join("")}</div>`
     : `<p class="ayuda">Todavía nadie se suscribió. El cartel aparece a los pocos segundos de entrar a la tienda.</p>`;
 }
+function pintarCampana() {
+  const c = cfgServidor.campana || {}, u = c.ultima;
+  const cfg = CATALOGO.campana || {};
+  const desc = { recordatorio: "le recuerda su código de regalo", vidriera: "le muestra productos nuevos", codigo: "le regala un código personal" };
+  const pasos = (cfg.pasos || []).map(p => `<li>Día ${p.dia}: ${desc[p.tipo] || p.tipo}${p.tipo === "codigo" ? ` de ${p.porcentaje}% OFF por ${p.horas} horas` : ""}.</li>`).join("");
+  const r = cfg.repetir;
+  $("#campanaBox").innerHTML = `<h3>📬 Emails automáticos ${c.activa && cfgServidor.emailsClientes ? "· activos ✅" : "· en pausa ⚠️"}</h3>
+    <p class="ayuda">Todos los días a las 12 la tienda les escribe sola a los suscriptores para que compren (cada uno recibe uno cada ${cfg.separacion || 3} días como mucho; si compró hace poco, no le llega nada):</p>
+    <ul class="ayuda" style="margin:0;padding-left:18px">${pasos}${r ? `<li>Después, uno cada ${r.cada} días: productos nuevos y un código de ${r.porcentaje}% OFF por ${r.horas} horas, alternados.</li>` : ""}</ul>
+    ${cfgServidor.emailsClientes ? "" : `<p class="aviso-error">Para que salgan falta verificar tu dominio en Resend y cargar RESEND_FROM en Vercel (pestaña Estado).</p>`}
+    <p class="ayuda">${u ? `Última vez: ${new Date(u.fecha).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "short" })} · ${u.enviados ? `se mandaron ${u.enviados} emails` : esc(u.motivo || "no había emails para mandar ese día")}${u.error ? ` · ⚠️ ${esc(u.error)}` : ""}.` : "Todavía no corrió ninguna vez."}</p>
+    <div><button class="btn btn-borde" id="campanaPrueba" style="width:auto">Mandarme un ejemplo de cada email</button></div>
+    <p class="ayuda" id="campanaRes" aria-live="polite"></p>`;
+}
+$("#campanaBox").addEventListener("click", async e => {
+  const b = e.target.closest("#campanaPrueba"); if (!b) return;
+  b.disabled = true; $("#campanaRes").textContent = "Mandando…";
+  try { const d = await api("POST", { accion: "campana-prueba" }); $("#campanaRes").textContent = d.ok ? `✓ Te mandamos ${d.enviados} emails de ejemplo a ${d.para}.` : `⚠️ ${d.error}`; }
+  catch (err) { $("#campanaRes").textContent = "⚠️ " + err.message; }
+  b.disabled = false;
+});
 $("#resumenSusc").addEventListener("click", e => {
   if (!e.target.closest("#bajarCsv")) return;
   const csv = "email,fecha\n" + suscriptores.map(x => `${x.email},${new Date(x.fecha).toLocaleDateString("es-AR")}`).join("\n");

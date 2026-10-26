@@ -77,7 +77,8 @@ module.exports = async function handler(req, res) {
           envioAutomatico: process.env.ZIPNOVA_CREAR_ENVIOS !== "no",
           emails: Boolean(process.env.RESEND_API_KEY && process.env.AVISOS_EMAIL),
           transferencia: Boolean(process.env.TRANSFERENCIA_ALIAS || process.env.TRANSFERENCIA_CBU),
-          emailsClientes: Boolean(process.env.RESEND_API_KEY && process.env.RESEND_FROM)
+          emailsClientes: Boolean(process.env.RESEND_API_KEY && process.env.RESEND_FROM),
+          campana: { activa: Boolean((CATALOGO.campana || {}).activa), ultima: await db.leer("powerup:campana:ultima") }
         },
         suscriptores: (await listarSuscriptores()).map(x => ({ email: x.email, fecha: x.fecha, codigo: x.codigo }))
       });
@@ -155,6 +156,13 @@ module.exports = async function handler(req, res) {
       }
       await db.actualizarPedido(numero, cambios);
       return res.status(200).json({ ok: true, pedido: { ...pedido, ...cambios }, aviso });
+    }
+    // Ejemplo de cada email automático, a AVISOS_EMAIL
+    if (body.accion === "campana-prueba") {
+      if (!process.env.RESEND_API_KEY || !process.env.RESEND_FROM) return res.status(400).json({ error: "Para mandar emails a los clientes falta verificar tu dominio en Resend y cargar RESEND_FROM en Vercel (mirá la pestaña Estado)." });
+      if (!process.env.AVISOS_EMAIL) return res.status(400).json({ error: "Falta AVISOS_EMAIL en Vercel." });
+      const r = await require("./_campana.js").prueba();
+      return res.status(200).json({ ok: !r.error, ...r, para: process.env.AVISOS_EMAIL });
     }
     // Novedad por email a todos los suscriptores (o solo a AVISOS_EMAIL si es una prueba)
     if (body.accion === "novedad") {

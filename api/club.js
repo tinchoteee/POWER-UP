@@ -4,6 +4,7 @@
 //        Si Resend no puede escribirle al cliente (falta RESEND_FROM con el dominio verificado), el código se muestra en pantalla.
 //   POST { accion: "cupon", codigo }            → revisa un código antes de pagar (el servidor lo vuelve a revisar al cobrar)
 //   GET  ?baja=1&e=email&t=token                → link "Darte de baja" de los emails
+//   GET  ?campana=1                             → emails automáticos del día (lo llama el cron de Vercel, ver vercel.json)
 const db = require("./_db.js");
 const cup = require("./_cupones.js");
 const { leerBody } = require("./_pedido.js");
@@ -60,10 +61,31 @@ async function darDeBaja(req, res, q) {
 <a href="/" style="color:#fff">Volver a la tienda</a></div></body></html>`);
 }
 
+// Solo el cron de Vercel (con CRON_SECRET, si está cargado). Además corre una sola vez por día.
+async function campanaDiaria(req, res) {
+  res.setHeader("Cache-Control", "no-store");
+  const secreto = process.env.CRON_SECRET;
+  const autorizado = secreto ? req.headers.authorization === `Bearer ${secreto}` : /vercel-cron/i.test(String(req.headers["user-agent"] || ""));
+  if (!autorizado) return res.status(401).json({ error: "No autorizado" });
+  if (!db.hayDB()) return res.status(200).json({ enviados: 0, motivo: "sin base de datos" });
+  const hoy = new Date().toLocaleDateString("en-CA", { timeZone: "America/Argentina/Buenos_Aires" });
+  if (!(await db.guardarSiNoExiste("powerup:campana:" + hoy, { fecha: new Date().toISOString() }))) return res.status(200).json({ enviados: 0, motivo: "ya corrió hoy" });
+  try {
+    const r = await require("./_campana.js").correr();
+    await db.guardar("powerup:campana:ultima", { fecha: new Date().toISOString(), ...r });
+    return res.status(200).json(r);
+  } catch (e) {
+    console.error("Error en la campaña de emails", e);
+    await db.comando("DEL", "powerup:campana:" + hoy).catch(() => {});   // que pueda reintentarse
+    return res.status(500).json({ error: "Falló la campaña" });
+  }
+}
+
 module.exports = async function handler(req, res) {
   const q = req.query || Object.fromEntries(new URL(req.url, "http://x").searchParams);
   // Los programas de email pueden pedir la baja con POST (List-Unsubscribe)
   if (q.baja) return darDeBaja(req, res, q);
+  if (q.campana) return campanaDiaria(req, res);
   res.setHeader("Cache-Control", "no-store");
   if (req.method !== "POST") return res.status(405).json({ error: "Método no permitido" });
   let body; try { body = leerBody(req); } catch (e) { body = {}; }
