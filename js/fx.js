@@ -30,11 +30,14 @@
       antes = n;
     }).observe(cuenta, { childList: true, characterData: true, subtree: true });
   }
+  // Íconos dibujados (el mismo rayo de la portada y un destello de 4 puntas), no emojis
+  const RAYO = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.2 1 4 13.6h6.4L8.6 23 20 9.4h-6.6z" fill="currentColor"/></svg>';
+  const CHISPA = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c.7 5 2.9 7.3 8 8-5.1.7-7.3 3-8 8-.7-5-2.9-7.3-8-8 5.1-.7 7.3-3 8-8z" fill="currentColor"/></svg>';
   function cargarCarrito() {
     const r = boton.getBoundingClientRect(), fx = r.left + r.width / 2, fy = r.top + r.height / 2;
     for (let i = 0; i < 9; i++) {
       const c = document.createElement("span");
-      c.className = "fx-chispa"; c.textContent = i % 3 ? "✦" : "⚡";
+      c.className = "fx-chispa"; c.innerHTML = i % 3 ? CHISPA : RAYO;
       document.body.appendChild(c);
       const abreX = (Math.random() - 0.5) * 220, abreY = -60 - Math.random() * 160;
       c.animate([

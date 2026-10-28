@@ -257,7 +257,7 @@ function iniciar() {
   hero.classList.add("hero--3d");
   const ayuda = document.createElement("p");
   ayuda.className = "hero__ayuda3d"; ayuda.setAttribute("aria-hidden", "true");
-  ayuda.textContent = movil ? "TOCÁ EL RAYO ⚡" : "ARRASTRÁ PARA GIRAR · TOCÁ EL RAYO O UNA PRENDA";
+  ayuda.textContent = movil ? "TOCÁ EL RAYO" : "ARRASTRÁ PARA GIRAR · TOCÁ EL RAYO O UNA PRENDA";
   hero.appendChild(ayuda);
   // Control de fluidez: si los cuadros tardan mucho, baja la resolución (y como último paso apaga el reflejo y el polvo)
   let muestras = 0, sumaMs = 0, nivel = 0;

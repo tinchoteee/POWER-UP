@@ -18,10 +18,10 @@
 
   /* ---------- Tarjetas: capas con profundidad ---------- */
   @media (hover: hover) and (pointer: fine) {
-    .card__info { transition: transform .4s cubic-bezier(.2, .9, .3, 1.2); }
+    .card__info { transition: transform .4s cubic-bezier(.16, 1, .3, 1); }
     .card:hover .card__info { transform: translateZ(38px); }
     .card:hover { box-shadow: 0 40px 70px -30px rgba(255,255,255,.22), 0 0 0 1px rgba(255,255,255,.35); }
-    .card__price { display: inline-block; transition: transform .4s cubic-bezier(.2, .9, .3, 1.4); }
+    .card__price { display: inline-block; transition: transform .4s cubic-bezier(.16, 1, .3, 1); }
     .card:hover .card__price { transform: translateZ(20px) scale(1.08); }
   }
 
@@ -68,7 +68,7 @@
   #vista-checkout:not([hidden]) .paso, #vista-checkout:not([hidden]) .resumen { animation: entraInfo .7s cubic-bezier(.2, .9, .25, 1) both; }
 
   /* ---------- Filtros y botones: se hunden al tocarlos ---------- */
-  .filters button, .btn { transition: transform .25s cubic-bezier(.2, .9, .3, 1.4), background-color .3s, color .3s, box-shadow .3s; }
+  .filters button, .btn { transition: transform .25s cubic-bezier(.16, 1, .3, 1), background-color .3s, color .3s, box-shadow .3s; }
   .filters button:active, .btn:active { transform: perspective(400px) translateZ(-24px) !important; }
   .btn--white:hover { box-shadow: 0 0 0 4px rgba(255,255,255,.18), 0 0 40px rgba(255,255,255,.35); }
 
@@ -87,13 +87,27 @@
 /* ---------- Carrito: rayitos que vuelan hasta el ícono al sumar una prenda ---------- */
 .fx-chispa {
   position: fixed; left: 0; top: 0; z-index: 9999; pointer-events: none; width: 18px; height: 18px;
-  display: grid; place-items: center; font-size: 16px; line-height: 1; color: #fff;
+  display: grid; place-items: center; color: #fff;
   filter: drop-shadow(0 0 6px #fff);
 }
-.cart-btn.is-power { animation: cargaCarrito .7s cubic-bezier(.2, .9, .3, 1.4); }
+.fx-chispa svg { width: 100%; height: 100%; display: block; }
+.cart-btn.is-power { animation: cargaCarrito .7s cubic-bezier(.16, 1, .3, 1); }
 .cart-btn.is-power::after {
   content: ""; position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px;
   border-radius: 50%; border: 2px solid #fff; animation: onda .7s ease-out forwards; pointer-events: none;
 }
 @keyframes cargaCarrito { 30% { transform: scale(1.35) rotate(-8deg); } 60% { transform: scale(.92) rotate(4deg); } }
 @keyframes onda { to { transform: scale(7); opacity: 0; } }
+
+/* ---------- Detalles del navegador con la estética de la marca ---------- */
+::selection { background: var(--white); color: var(--black); }
+html { scrollbar-color: #3a3a3a var(--black); accent-color: var(--white); }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--black); }
+::-webkit-scrollbar-thumb { background: #333; border: 2px solid var(--black); }
+::-webkit-scrollbar-thumb:hover { background: #555; }
+input, textarea { caret-color: var(--white); }
+/* Navegando con el teclado se ve claro dónde estás parado (con el mouse no aparece) */
+:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+.btn--white:focus-visible, .filter.is-active:focus-visible, .size.is-active:focus-visible { outline-color: var(--white); outline-offset: 4px; }
+.in:focus-visible { outline: none; border-color: var(--white); }

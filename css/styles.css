@@ -1,6 +1,6 @@
 /* =========================================================
    POWER UP — STORE
-   Paleta: negro y blanco puro. Tipografía: Anton + Space Grotesk
+   Paleta: negro y blanco puro. Tipografía: Anton + Archivo
    ========================================================= */
 
 :root {
@@ -11,7 +11,7 @@
   --gray: #8a8a8a;
   --line: rgba(255, 255, 255, 0.14);
   --display: "Anton", "Arial Black", Impact, sans-serif;
-  --body: "Space Grotesk", system-ui, -apple-system, sans-serif;
+  --body: "Archivo", system-ui, -apple-system, sans-serif;
   --ease: cubic-bezier(0.76, 0, 0.24, 1);
   --gutter: clamp(16px, 4vw, 56px);
 }
@@ -568,7 +568,7 @@ button.link { font-size: inherit; padding: 0; }
   .card__info { flex-direction: column; padding: 12px 12px 16px; gap: 6px; }
   .card__name { font-size: 12px; }
   .card__price { font-size: 18px; }
-  .card__quick { font-size: 10px; letter-spacing: .12em; }
+  .card__quick { font-size: 11px; letter-spacing: .1em; }
   .section-head { grid-template-columns: 1fr; }
   .section-head__num { grid-row: auto; padding-top: 0; }
   .cat { grid-template-columns: 44px 1fr auto; padding: 14px 4px; }
@@ -582,7 +582,7 @@ button.link { font-size: inherit; padding: 0; }
   .fila2, .fila3 { grid-template-columns: 1fr; }
   .calc .fila { grid-template-columns: 1fr 1fr; }
   .calc .fila .btn { grid-column: 1 / -1; }
-  .pasos-ck li { font-size: 10px; letter-spacing: .06em; }
+  .pasos-ck li { font-size: 11px; letter-spacing: .04em; }
   .paso { padding: 16px; }
   .vista { padding-top: 12px; }
 }
@@ -652,7 +652,7 @@ html:not(.sin-intro) .hero__title .line:nth-child(2) .word { animation-delay: 1.
   background: radial-gradient(circle 320px at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,.16), transparent 70%);
 }
 .hero:hover .hero__luz { opacity: 1; }
-.magnet { transition: color .4s var(--ease), transform .35s cubic-bezier(.2, .9, .3, 1.3); }
+.magnet { transition: color .4s var(--ease), transform .35s cubic-bezier(.16, 1, .3, 1); }
 
 /* ---------- Marquesinas: se inclinan con la velocidad del scroll ---------- */
 .marquee span { display: inline-block; transform: skewX(var(--skew, 0deg)); }
@@ -717,7 +717,7 @@ html:not(.sin-intro) .hero__title .line:nth-child(2) .word { animation-delay: 1.
 .bienv__caja {
   position: relative; width: min(820px, 100%); max-height: 94vh; overflow-y: auto;
   display: grid; grid-template-columns: 1fr 1.25fr; background: var(--black); border: 2px solid var(--white);
-  animation: golpe .7s cubic-bezier(.2, .9, .3, 1.2);
+  animation: golpe .7s cubic-bezier(.16, 1, .3, 1);
 }
 .bienv__cerrar { position: absolute; top: 12px; right: 12px; z-index: 2; background: var(--black); }
 .bienv__lado {
