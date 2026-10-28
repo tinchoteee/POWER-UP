@@ -1,0 +1,99 @@
+/* =========================================================
+   POWER UP — EFECTOS 3D (2026-10-28)
+   Se suma a styles.css. Todo lo que se mueve respeta "reducir movimiento" del sistema.
+   ========================================================= */
+
+/* ---------- Portada: destello cuando se toca el rayo ---------- */
+.hero::after {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0;
+  background: radial-gradient(circle at 50% 38%, rgba(255,255,255,.55), rgba(255,255,255,.08) 40%, transparent 70%);
+}
+.hero--descarga::after { animation: descargaFlash .7s ease-out; }
+@keyframes descargaFlash { 0% { opacity: 0; } 12% { opacity: 1; } 100% { opacity: 0; } }
+.hero--descarga .hero__title { animation: sacudon .45s cubic-bezier(.3, .7, .4, 1); }
+@keyframes sacudon { 20% { transform: translate(-6px, 3px); } 40% { transform: translate(5px, -2px); } 60% { transform: translate(-3px, 1px); } 80% { transform: translate(2px, 0); } }
+.hero--3d .hero__title .word { text-shadow: none; }
+
+@media (prefers-reduced-motion: no-preference) {
+
+  /* ---------- Tarjetas: capas con profundidad ---------- */
+  @media (hover: hover) and (pointer: fine) {
+    .card__info { transition: transform .4s cubic-bezier(.2, .9, .3, 1.2); }
+    .card:hover .card__info { transform: translateZ(38px); }
+    .card:hover { box-shadow: 0 40px 70px -30px rgba(255,255,255,.22), 0 0 0 1px rgba(255,255,255,.35); }
+    .card__price { display: inline-block; transition: transform .4s cubic-bezier(.2, .9, .3, 1.4); }
+    .card:hover .card__price { transform: translateZ(20px) scale(1.08); }
+  }
+
+  /* ---------- Manifiesto: las palabras se paran en 3D una por una ---------- */
+  .manifesto__text { perspective: 900px; }
+  .manifesto__text .palabra {
+    display: inline-block; transform-origin: 50% 100%;
+    transform: rotateX(-95deg) translateY(.25em); opacity: 0;
+    transition: transform .9s cubic-bezier(.2, .9, .25, 1), opacity .5s ease;
+    transition-delay: calc(var(--i) * 45ms);
+  }
+  .manifesto__text.is-in .palabra { transform: none; opacity: 1; }
+
+  /* ---------- Bloques que se inclinan hacia el mouse ---------- */
+  .fx-tilt { transition: transform .3s ease-out; transform-style: preserve-3d; will-change: transform; }
+  .fx-tilt > * { transition: transform .3s ease-out; }
+  .fx-tilt.is-tilt > * { transform: translateZ(26px); }
+
+  /* ---------- Marquesinas: una cinta que pasa en diagonal y en profundidad ---------- */
+  .marquee { transform: perspective(1200px) rotateX(var(--cinta-x, 0deg)) rotateZ(var(--cinta-z, 0deg)); transition: transform .2s linear; }
+  .marquee--white { --cinta-z: -1.6deg; }
+  .marquee--reverse { --cinta-z: 1.6deg; }
+
+  /* ---------- Footer: POWER UP gigante con volumen ---------- */
+  .footer { perspective: 1100px; }
+  .footer__big {
+    transform: rotateX(var(--fx-rx, 12deg)) rotateY(var(--fx-ry, 0deg)); transform-style: preserve-3d;
+    transition: transform .5s cubic-bezier(.2, .9, .3, 1);
+    text-shadow: 1px 1px 0 #1a1a1a, 2px 2px 0 #171717, 3px 3px 0 #141414, 4px 4px 0 #111, 5px 5px 0 #0e0e0e,
+                 6px 6px 0 #0c0c0c, 7px 7px 0 #0a0a0a, 8px 8px 0 #080808, 14px 18px 30px rgba(255,255,255,.06);
+  }
+
+  /* ---------- Página de producto: entra girando y la foto tiene volumen ---------- */
+  #vista-producto:not([hidden]) .galeria { animation: entraGaleria .9s cubic-bezier(.2, .9, .25, 1) both; transform-origin: 0 50%; }
+  #vista-producto:not([hidden]) .info-prod > * { animation: entraInfo .7s cubic-bezier(.2, .9, .25, 1) both; }
+  #vista-producto:not([hidden]) .info-prod > *:nth-child(2) { animation-delay: .06s; }
+  #vista-producto:not([hidden]) .info-prod > *:nth-child(3) { animation-delay: .12s; }
+  #vista-producto:not([hidden]) .info-prod > *:nth-child(n+4) { animation-delay: .18s; }
+  @keyframes entraGaleria { from { opacity: 0; transform: perspective(1200px) rotateY(18deg) translateX(-30px) scale(.94); } }
+  @keyframes entraInfo { from { opacity: 0; transform: translateY(26px); } }
+  .galeria { perspective: 1200px; }
+  .foto-grande { transition: transform .35s ease-out, box-shadow .35s; transform: rotateX(var(--fg-rx, 0deg)) rotateY(var(--fg-ry, 0deg)); }
+  .foto-grande.zoom { box-shadow: 0 50px 90px -40px rgba(255,255,255,.3); }
+  #vista-checkout:not([hidden]) .paso, #vista-checkout:not([hidden]) .resumen { animation: entraInfo .7s cubic-bezier(.2, .9, .25, 1) both; }
+
+  /* ---------- Filtros y botones: se hunden al tocarlos ---------- */
+  .filters button, .btn { transition: transform .25s cubic-bezier(.2, .9, .3, 1.4), background-color .3s, color .3s, box-shadow .3s; }
+  .filters button:active, .btn:active { transform: perspective(400px) translateZ(-24px) !important; }
+  .btn--white:hover { box-shadow: 0 0 0 4px rgba(255,255,255,.18), 0 0 40px rgba(255,255,255,.35); }
+
+  /* ---------- Secciones que entran en 3D al scrollear (Chrome/Edge) ---------- */
+  @supports (animation-timeline: view()) {
+    .perk, .stat, .faq details, .insta__inner, .club__box {
+      animation: entraBloque linear backwards; animation-timeline: view(); animation-range: entry 0% cover 30%;
+      transform-origin: 50% 100%;
+    }
+    @keyframes entraBloque { from { transform: perspective(900px) rotateX(38deg) translateY(60px); opacity: 0; } }
+    .footer__big { animation: subeFooter linear both; animation-timeline: view(); animation-range: entry 0% cover 60%; }
+    @keyframes subeFooter { from { transform: rotateX(70deg) translateY(30%); opacity: .2; } }
+  }
+}
+
+/* ---------- Carrito: rayitos que vuelan hasta el ícono al sumar una prenda ---------- */
+.fx-chispa {
+  position: fixed; left: 0; top: 0; z-index: 9999; pointer-events: none; width: 18px; height: 18px;
+  display: grid; place-items: center; font-size: 16px; line-height: 1; color: #fff;
+  filter: drop-shadow(0 0 6px #fff);
+}
+.cart-btn.is-power { animation: cargaCarrito .7s cubic-bezier(.2, .9, .3, 1.4); }
+.cart-btn.is-power::after {
+  content: ""; position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px;
+  border-radius: 50%; border: 2px solid #fff; animation: onda .7s ease-out forwards; pointer-events: none;
+}
+@keyframes cargaCarrito { 30% { transform: scale(1.35) rotate(-8deg); } 60% { transform: scale(.92) rotate(4deg); } }
+@keyframes onda { to { transform: scale(7); opacity: 0; } }
