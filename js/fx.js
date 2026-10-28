@@ -8,6 +8,16 @@
   const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
   const compu = matchMedia("(hover: hover) and (pointer: fine)").matches;
 
+  // ---------- Portada: se deja con el tamaño del 3D desde el principio, así no salta cuando aparece el rayo ----------
+  // (hero3d.js lo carga tienda.js al terminar la página; si no llega a armarse, la portada vuelve a la de siempre)
+  const hero = $(".hero");
+  const hayProductos = () => ((window.CATALOGO && CATALOGO.productos) || []).filter(p => !p.oculto && (p.colores || []).some(c => c.foto)).length >= 4;
+  if (hero && "WebGLRenderingContext" in window && hayProductos()) {
+    hero.classList.add("hero--3d");
+    const revisar = () => setTimeout(() => { if (!hero.querySelector(".hero__3d")) hero.classList.remove("hero--3d"); }, 8000);
+    if (document.readyState === "complete") revisar(); else addEventListener("load", revisar);
+  }
+
   // ---------- Carrito: al sumar una prenda salen rayitos desde donde tocaste hasta el ícono ----------
   let tocadoX = innerWidth / 2, tocadoY = innerHeight / 2;
   addEventListener("pointerdown", e => { tocadoX = e.clientX; tocadoY = e.clientY; }, { passive: true, capture: true });
@@ -61,48 +71,73 @@
   // ---------- Bloques que se inclinan hacia el mouse (ventajas, números, Instagram) ----------
   if (compu) {
     $$(".perk, .stat, .insta__inner, .club__box").forEach(el => el.classList.add("fx-tilt"));
-    let actual = null;
-    document.addEventListener("mousemove", e => {
-      const el = e.target.closest(".fx-tilt");
+    // Se calcula una vez por cuadro como mucho (el mouse manda más eventos que cuadros y medir en cada uno traba)
+    let actual = null, ultimoEv = null, pendiente = false;
+    const inclinar = () => {
+      pendiente = false;
+      const e = ultimoEv, el = e.target.closest && e.target.closest(".fx-tilt");
       if (actual && actual !== el) { actual.style.transform = ""; actual.classList.remove("is-tilt"); actual = null; }
       if (!el) return;
       const r = el.getBoundingClientRect(), px = (e.clientX - r.left) / r.width - 0.5, py = (e.clientY - r.top) / r.height - 0.5;
-      el.style.transform = `perspective(900px) rotateX(${-py * 8}deg) rotateY(${px * 10}deg)`;
+      el.style.transform = `perspective(900px) rotateX(${(-py * 8).toFixed(2)}deg) rotateY(${(px * 10).toFixed(2)}deg)`;
       el.classList.add("is-tilt"); actual = el;
+    };
+    document.addEventListener("mousemove", e => {
+      ultimoEv = e;
+      if (!actual && !(e.target.closest && e.target.closest(".fx-tilt"))) return;   // lejos de los bloques: nada que hacer
+      if (!pendiente) { pendiente = true; requestAnimationFrame(inclinar); }
     }, { passive: true });
 
     // Foto grande del producto: se inclina siguiendo al mouse (el zoom de tienda.js sigue andando adentro)
     const fg = $("#fotoGrande");
     if (fg) {
+      let ev = null, espera = false;
       fg.addEventListener("mousemove", e => {
-        const r = fg.getBoundingClientRect();
-        fg.style.setProperty("--fg-ry", ((e.clientX - r.left) / r.width - 0.5) * 8 + "deg");
-        fg.style.setProperty("--fg-rx", -((e.clientY - r.top) / r.height - 0.5) * 6 + "deg");
-      });
+        ev = e;
+        if (espera) return;
+        espera = true;
+        requestAnimationFrame(() => {
+          espera = false;
+          const r = fg.getBoundingClientRect();
+          fg.style.setProperty("--fg-ry", (((ev.clientX - r.left) / r.width - 0.5) * 8).toFixed(2) + "deg");
+          fg.style.setProperty("--fg-rx", (-((ev.clientY - r.top) / r.height - 0.5) * 6).toFixed(2) + "deg");
+        });
+      }, { passive: true });
       fg.addEventListener("mouseleave", () => { fg.style.removeProperty("--fg-ry"); fg.style.removeProperty("--fg-rx"); });
     }
   }
 
-  // ---------- Footer: el POWER UP gigante mira hacia el mouse ----------
+  // ---------- Footer: el POWER UP gigante mira hacia el mouse (solo mientras se ve) ----------
   const grande = $(".footer__big");
   if (grande && compu) {
+    let seVe = false, x = 0, y = 0, espera = false;
+    new IntersectionObserver(es => { seVe = es[0].isIntersecting; }).observe(grande);
     document.addEventListener("mousemove", e => {
-      const r = grande.getBoundingClientRect();
-      if (r.bottom < 0 || r.top > innerHeight) return;
-      grande.style.setProperty("--fx-ry", ((e.clientX / innerWidth) - 0.5) * 18 + "deg");
-      grande.style.setProperty("--fx-rx", 12 - ((e.clientY / innerHeight) - 0.5) * 14 + "deg");
+      if (!seVe) return;
+      x = e.clientX; y = e.clientY;
+      if (espera) return;
+      espera = true;
+      requestAnimationFrame(() => {
+        espera = false;
+        grande.style.setProperty("--fx-ry", (((x / innerWidth) - 0.5) * 18).toFixed(2) + "deg");
+        grande.style.setProperty("--fx-rx", (12 - ((y / innerHeight) - 0.5) * 14).toFixed(2) + "deg");
+      });
     }, { passive: true });
   }
 
   // ---------- Marquesinas: se doblan hacia atrás según la velocidad del scroll ----------
+  // Solo trabaja mientras se scrollea; cuando la cinta vuelve a quedar derecha, se detiene
   const cintas = $$(".marquee");
   if (cintas.length) {
-    let ultimo = scrollY, inclinacion = 0;
-    (function loop() {
+    let ultimo = scrollY, inclinacion = 0, andando = false;
+    const loop = () => {
       const v = scrollY - ultimo; ultimo = scrollY;
       inclinacion += (Math.max(-25, Math.min(25, v * 0.6)) - inclinacion) * 0.1;
-      if (Math.abs(inclinacion) > 0.05 || inclinacion !== 0) cintas.forEach(c => c.style.setProperty("--cinta-x", inclinacion.toFixed(2) + "deg"));
+      if (Math.abs(inclinacion) < 0.05 && v === 0) inclinacion = 0;
+      cintas.forEach(c => c.style.setProperty("--cinta-x", inclinacion.toFixed(2) + "deg"));
+      if (inclinacion === 0) { andando = false; return; }
       requestAnimationFrame(loop);
-    })();
+    };
+    addEventListener("scroll", () => { if (!andando) { andando = true; requestAnimationFrame(loop); } }, { passive: true });
   }
 })();

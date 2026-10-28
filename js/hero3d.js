@@ -7,6 +7,9 @@ import * as THREE from "./vendor/three.module.min.js";
 
 const hero = document.querySelector(".hero");
 const movil = matchMedia("(max-width: 700px)").matches;
+const tactil = !matchMedia("(hover: hover) and (pointer: fine)").matches;
+// Equipos flojos (pocos núcleos o poca memoria): menos partículas y menos resolución desde el arranque
+const flojo = (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 3;
 
 function productosParaAnillo() {
   const lista = (window.CATALOGO && CATALOGO.productos || []).filter(p => !p.oculto && (p.colores || []).some(c => c.foto));
@@ -57,12 +60,14 @@ function geometriaRayo() {
 
 function iniciar() {
   const productos = productosParaAnillo();
-  if (!hero || productos.length < 4) return;
+  if (!hero || productos.length < 4) return false;
   let renderer;
   try {
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
-  } catch (e) { return; }   // sin WebGL: queda la portada normal
-  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, movil ? 1.5 : 1.75));
+    renderer = new THREE.WebGLRenderer({ antialias: !flojo, alpha: true, powerPreference: "high-performance" });
+  } catch (e) { return false; }   // sin WebGL: queda la portada normal
+  // Resolución: arranca según el equipo y baja sola si los cuadros vienen lentos (ver cuadro())
+  let resolucion = Math.min(devicePixelRatio || 1, flojo ? 1 : movil ? 1.5 : 1.75);
+  renderer.setPixelRatio(resolucion);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.15;
@@ -130,7 +135,7 @@ function iniciar() {
   escena.add(velo);
 
   // ---- Polvo de fondo ----
-  const cantPolvo = movil ? 220 : 480;
+  const cantPolvo = flojo ? 140 : movil ? 220 : 480;
   const pos = new Float32Array(cantPolvo * 3);
   for (let i = 0; i < cantPolvo; i++) { pos[i * 3] = (Math.random() - 0.5) * 28; pos[i * 3 + 1] = (Math.random() - 0.3) * 11; pos[i * 3 + 2] = (Math.random() - 0.5) * 24; }
   const pgeo = new THREE.BufferGeometry(); pgeo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
@@ -138,7 +143,7 @@ function iniciar() {
   escena.add(polvo);
 
   // ---- Chispas que suben en espiral alrededor del rayo ----
-  const cantChispas = movil ? 140 : 300;
+  const cantChispas = flojo ? 90 : movil ? 140 : 300;
   const chispas = Array.from({ length: cantChispas }, () => ({ a: Math.random() * Math.PI * 2, r: 0.6 + Math.random() * (radio - 1), y: piso + Math.random() * 6, v: 0.25 + Math.random() * 0.7 }));
   const cpos = new Float32Array(cantChispas * 3);
   const cgeo = new THREE.BufferGeometry(); cgeo.setAttribute("position", new THREE.BufferAttribute(cpos, 3));
@@ -146,41 +151,65 @@ function iniciar() {
   escena.add(new THREE.Points(cgeo, chispasMat));
 
   // ---- Descargas eléctricas: del rayo a una prenda ----
-  const descargas = [];
-  const tmp = new THREE.Vector3();
-  function descarga(destino, fuerza = 1) {
-    const desde = new THREE.Vector3((Math.random() - 0.5) * 0.5, (Math.random() - 0.5) * 2, 0);
+  // Líneas armadas una sola vez y reusadas (crear y tirar geometrías cada segundo traba en celulares)
+  const PUNTOS = 16, descargas = [];
+  for (let i = 0; i < N * 2 + 6; i++) {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(PUNTOS * 3), 3));
+    const linea = new THREE.Line(g, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
+    linea.visible = false; linea.frustumCulled = false;
+    escena.add(linea);
+    descargas.push({ linea, vida: 0, total: 1, brillo: 1 });
+  }
+  const tmp = new THREE.Vector3(), desde = new THREE.Vector3(), destino = new THREE.Vector3();
+  function descarga(fuerza = 1) {
+    desde.set((Math.random() - 0.5) * 0.5, (Math.random() - 0.5) * 2, 0);
     nucleo.localToWorld(desde);
     for (let k = 0; k < 2; k++) {
-      const n = 16, pts = [];
-      for (let i = 0; i < n; i++) {
-        const t = i / (n - 1), s = Math.sin(Math.PI * t) * 0.45 * fuerza;
-        pts.push(new THREE.Vector3().lerpVectors(desde, destino, t).add(tmp.set((Math.random() - 0.5) * s, (Math.random() - 0.5) * s, (Math.random() - 0.5) * s)));
+      const d = descargas.find(x => x.vida <= 0);
+      if (!d) return;
+      const arr = d.linea.geometry.attributes.position;
+      for (let i = 0; i < PUNTOS; i++) {
+        const t = i / (PUNTOS - 1), s = Math.sin(Math.PI * t) * 0.45 * fuerza;
+        tmp.lerpVectors(desde, destino, t);
+        arr.setXYZ(i, tmp.x + (Math.random() - 0.5) * s, tmp.y + (Math.random() - 0.5) * s, tmp.z + (Math.random() - 0.5) * s);
       }
-      const linea = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: k ? 0.45 : 1, blending: THREE.AdditiveBlending, depthWrite: false }));
-      escena.add(linea);
-      descargas.push({ linea, vida: 0.22 + k * 0.06, total: 0.22 + k * 0.06 });
+      arr.needsUpdate = true;
+      d.total = d.vida = 0.22 + k * 0.06; d.brillo = k ? 0.45 : 1;
+      d.linea.visible = true;
     }
   }
-  function descargaAPanel(p, fuerza) { p.foto.getWorldPosition(tmp); descarga(tmp.clone(), fuerza); p.brillo = 1; }
+  function descargaAPanel(p, fuerza) { p.foto.getWorldPosition(destino); descarga(fuerza); p.brillo = 1; }
 
-  // ---- Tamaño ----
+  // ---- Tamaño (solo cuando cambia de verdad el tamaño de la portada, no en cada scroll del celular) ----
+  let caja = lienzo.getBoundingClientRect(), anchoPrev = 0, altoPrev = 0, altoHero = hero.offsetHeight || 1;
   function medir() {
     const w = hero.clientWidth, h = hero.clientHeight;
+    altoHero = hero.offsetHeight || 1;
+    caja = lienzo.getBoundingClientRect();
+    if (!w || !h || (w === anchoPrev && h === altoPrev)) return;
+    anchoPrev = w; altoPrev = h;
     renderer.setSize(w, h, false);
     camara.aspect = w / h;
     // Más lejos en pantallas angostas para que entre el anillo
     camara.userData.z = radio + (movil ? 6.6 : Math.max(7, 10.4 - camara.aspect * 1.3));
     camara.updateProjectionMatrix();
   }
-  medir(); addEventListener("resize", medir);
+  medir();
+  if ("ResizeObserver" in window) new ResizeObserver(() => medir()).observe(hero); else addEventListener("resize", medir);
 
   // ---- Interacción: arrastrar, mouse, tocar una foto o el rayo ----
-  let giro = 0, vel = 0.0025, arrastrando = false, ultimoX = 0, movio = 0, carga = 0, scroll = 0;
+  let giro = 0, vel = 0.0025, arrastrando = false, ultimoX = 0, movio = 0, carga = 0, scroll = 0, mouseMovido = true;
   const mouse = new THREE.Vector2(9, 9), objetivo = { x: 0, y: 0 };
   const raycaster = new THREE.Raycaster();
-  let encima = null;
-  const aPunto = e => { const r = lienzo.getBoundingClientRect(); return { x: ((e.clientX - r.left) / r.width) * 2 - 1, y: -((e.clientY - r.top) / r.height) * 2 + 1 }; };
+  let encima = null, cursor = "";
+  // La caja del lienzo se guarda y se actualiza al scrollear: medirla en cada movimiento del mouse fuerza al navegador a recalcular todo
+  const aPunto = e => ({ x: ((e.clientX - caja.left) / caja.width) * 2 - 1, y: -((e.clientY - caja.top) / caja.height) * 2 + 1 });
+  const queHay = () => {
+    raycaster.setFromCamera(mouse, camara);
+    const hit = raycaster.intersectObjects(objetivosToque, false)[0];
+    return hit && (hit.object === rayo3d || hit.object.material.opacity > 0.5) ? hit.object : null;
+  };
   function sobrecarga() {
     carga = 1;
     paneles.forEach((p, i) => setTimeout(() => descargaAPanel(p, 1.4), i * 35));
@@ -188,35 +217,66 @@ function iniciar() {
   }
   hero.addEventListener("pointerdown", e => {
     if (e.target.closest("a, button")) return;
+    caja = lienzo.getBoundingClientRect();
     arrastrando = true; ultimoX = e.clientX; movio = 0;
-    const p = aPunto(e); mouse.set(p.x, p.y);
+    const p = aPunto(e); mouse.set(p.x, p.y); mouseMovido = true;
   });
   addEventListener("pointerup", e => {
     if (!arrastrando) return;
     arrastrando = false;
-    if (movio >= 6 || !encima || e.target.closest("a, button")) return;
-    if (encima === rayo3d) sobrecarga();
-    else location.hash = "p/" + encima.userData.id;
-  });
-  addEventListener("pointermove", e => {
+    if (movio >= 6 || e.target.closest("a, button")) return;
     const p = aPunto(e); mouse.set(p.x, p.y);
+    const tocado = queHay();   // se mira en el momento del toque (en el celular no hay "mouse encima")
+    if (!tocado) return;
+    if (tocado === rayo3d) sobrecarga();
+    else location.hash = "p/" + tocado.userData.id;
+  });
+  // En el celular, si el dedo termina scrolleando la página el navegador cancela el toque: sin esto el anillo quedaba frenado
+  addEventListener("pointercancel", () => { arrastrando = false; });
+  addEventListener("pointermove", e => {
+    if (!visible) return;
+    const p = aPunto(e); mouse.set(p.x, p.y); mouseMovido = true;
     objetivo.x = p.x; objetivo.y = p.y;
     if (arrastrando) { const dx = e.clientX - ultimoX; ultimoX = e.clientX; movio += Math.abs(dx); vel = dx * 0.0009; giro += dx * 0.004; }
   }, { passive: true });
-  addEventListener("scroll", () => { scroll = Math.min(1, Math.max(0, scrollY / (hero.offsetHeight || 1))); }, { passive: true });
+  addEventListener("scroll", () => {
+    scroll = Math.min(1, Math.max(0, scrollY / altoHero));
+    if (visible) caja = lienzo.getBoundingClientRect();
+  }, { passive: true });
+
+  // Si la placa de video se reinicia (pasa en celulares), se frena sin romper nada y sigue cuando vuelve
+  let sinContexto = false;
+  lienzo.addEventListener("webglcontextlost", e => { e.preventDefault(); sinContexto = true; });
+  lienzo.addEventListener("webglcontextrestored", () => { sinContexto = false; });
 
   // ---- Animación (solo cuando la portada se ve) ----
-  let visible = true, reloj = new THREE.Clock(), entrada = 0, proxDescarga = 1.2;
-  new IntersectionObserver(es => { visible = es[0].isIntersecting; }).observe(hero);
+  let visible = true, reloj = new THREE.Clock(), entrada = 0, proxDescarga = 1.2, cuadros = 0;
+  new IntersectionObserver(es => { visible = es[0].isIntersecting; if (visible) caja = lienzo.getBoundingClientRect(); }).observe(hero);
+  const inicio = document.getElementById("vista-inicio");
+  const objetivosToque = [rayo3d, ...paneles.map(p => p.foto)];
   hero.classList.add("hero--3d");
   const ayuda = document.createElement("p");
   ayuda.className = "hero__ayuda3d"; ayuda.setAttribute("aria-hidden", "true");
   ayuda.textContent = movil ? "TOCÁ EL RAYO ⚡" : "ARRASTRÁ PARA GIRAR · TOCÁ EL RAYO O UNA PRENDA";
   hero.appendChild(ayuda);
+  // Control de fluidez: si los cuadros tardan mucho, baja la resolución (y como último paso apaga el reflejo y el polvo)
+  let muestras = 0, sumaMs = 0, nivel = 0;
+  function cuidarFluidez(ms) {
+    if (nivel >= 3 || entrada < 1) return;   // la entrada carga texturas: no cuenta
+    muestras++; sumaMs += Math.min(ms, 100);   // un tirón suelto (fotos que se decodifican) no cuenta de más
+    if (muestras < 90) return;
+    const prom = sumaMs / muestras; muestras = sumaMs = 0;
+    if (prom < 24) return;                   // anda a más de ~40 cuadros por segundo: no se toca nada
+    nivel++;
+    if (resolucion > 1) { resolucion = Math.max(1, resolucion - 0.5); renderer.setPixelRatio(resolucion); anchoPrev = 0; medir(); }
+    else if (nivel >= 2) { reflejo.visible = false; polvo.visible = false; nivel = 3; }
+  }
+
   function cuadro() {
     requestAnimationFrame(cuadro);
-    if (!visible || document.hidden || document.getElementById("vista-inicio").hidden) return;
-    const dt = Math.min(reloj.getDelta(), 0.05), t = performance.now() / 1000;
+    if (!visible || sinContexto || document.hidden || (inicio && inicio.hidden)) { reloj.getDelta(); return; }
+    const crudo = reloj.getDelta(), dt = Math.min(crudo, 0.05), t = performance.now() / 1000;
+    cuidarFluidez(crudo * 1000);
     entrada = Math.min(1, entrada + dt * 0.6);
     const suave = 1 - Math.pow(1 - entrada, 3);
     carga = Math.max(0, carga - dt * 0.6);
@@ -257,10 +317,11 @@ function iniciar() {
       descargaAPanel(paneles[(Math.random() * N) | 0], 1);
       proxDescarga = 0.9 + Math.random() * 1.8;
     }
-    for (let i = descargas.length - 1; i >= 0; i--) {
-      const d = descargas[i]; d.vida -= dt;
-      d.linea.material.opacity = Math.max(0, d.vida / d.total) * (Math.random() * 0.4 + 0.6);
-      if (d.vida <= 0) { escena.remove(d.linea); d.linea.geometry.dispose(); d.linea.material.dispose(); descargas.splice(i, 1); }
+    for (const d of descargas) {
+      if (d.vida <= 0) continue;
+      d.vida -= dt;
+      d.linea.material.opacity = Math.max(0, d.vida / d.total) * d.brillo * (Math.random() * 0.4 + 0.6);
+      if (d.vida <= 0) d.linea.visible = false;
     }
 
     // Cámara: sigue al mouse y sube/se acerca al scrollear
@@ -270,10 +331,14 @@ function iniciar() {
     camara.lookAt(0, movil ? 0.2 : 0, 0);   // el rayo al centro, las prendas girando abajo
 
     // Lo que está bajo el mouse: la foto se agranda; el rayo se puede tocar
-    raycaster.setFromCamera(mouse, camara);
-    const hit = raycaster.intersectObjects([rayo3d, ...paneles.map(p => p.foto)])[0];
-    encima = hit && (hit.object === rayo3d || hit.object.material.opacity > 0.5) ? hit.object : null;
-    lienzo.style.cursor = encima ? "pointer" : arrastrando ? "grabbing" : "grab";
+    // (con mouse; en el celular se mira solo al tocar). Cada 2 cuadros alcanza y ahorra trabajo.
+    if (!tactil && (mouseMovido || (cuadros & 1))) {
+      mouseMovido = false;
+      encima = queHay();
+      const c = encima ? "pointer" : arrastrando ? "grabbing" : "grab";
+      if (c !== cursor) lienzo.style.cursor = cursor = c;
+    }
+    cuadros++;
     for (const p of paneles) {
       const meta = p.foto === encima ? 1.12 : 1;
       p.escala += (meta - p.escala) * 0.15;
@@ -288,6 +353,10 @@ function iniciar() {
     renderer.render(escena, camara);
   }
   cuadro();
+  return true;
 }
 
-try { iniciar(); } catch (e) { console.warn("Portada 3D no disponible", e); }
+// fx.js ya dejó la portada lista para el 3D (así no salta de tamaño al cargar); si no se pudo armar, vuelve a la de siempre
+let armada = false;
+try { armada = iniciar(); } catch (e) { console.warn("Portada 3D no disponible", e); }
+if (!armada && hero) { hero.classList.remove("hero--3d"); hero.querySelector(".hero__3d")?.remove(); }

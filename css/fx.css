@@ -36,7 +36,7 @@
   .manifesto__text.is-in .palabra { transform: none; opacity: 1; }
 
   /* ---------- Bloques que se inclinan hacia el mouse ---------- */
-  .fx-tilt { transition: transform .3s ease-out; transform-style: preserve-3d; will-change: transform; }
+  .fx-tilt { transition: transform .3s ease-out; transform-style: preserve-3d; }
   .fx-tilt > * { transition: transform .3s ease-out; }
   .fx-tilt.is-tilt > * { transform: translateZ(26px); }
 
