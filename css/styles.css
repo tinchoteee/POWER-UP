@@ -797,3 +797,29 @@ html:not(.sin-intro) .hero__title .line:nth-child(2) .word { animation-delay: 1.
   .shop { padding-top: 28px; }
   .section-head--compacto p { display: none; }
 }
+
+/* =========================================================
+   PORTADA 3D (2026-10-28): anillo de productos que gira (js/hero3d.js)
+   ========================================================= */
+.hero__3d { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; touch-action: pan-y; opacity: 0; animation: aparece3d 1.2s ease .2s forwards; }
+@keyframes aparece3d { to { opacity: 1; } }
+.hero--3d { min-height: clamp(440px, 66vh, 680px); justify-content: flex-end; padding-bottom: clamp(26px, 3.5vw, 44px); }
+.hero--3d .hero__badge, .hero--3d .hero__sub { display: none; }
+.hero--3d .hero__bg { opacity: .1; }
+.hero--3d .hero__grid { opacity: .35; }
+.hero--3d .hero__title, .hero--3d .hero__kicker, .hero--3d .hero__sub, .hero--3d .hero__ctas, .hero--3d .hero__badge { position: relative; z-index: 2; pointer-events: none; }
+.hero--3d .hero__ctas a, .hero--3d .hero__badge { pointer-events: auto; }
+.hero--3d .hero__title { mix-blend-mode: difference; text-shadow: none; }
+.hero--3d .hero__kicker { position: absolute; top: clamp(18px, 3vw, 30px); left: 0; right: 0; }
+.hero__ayuda3d { position: absolute; left: var(--gutter); bottom: 16px; z-index: 2; font-size: 11px; letter-spacing: .3em; color: var(--gray); pointer-events: none; }
+@media (max-width: 600px) {
+  .hero--3d { min-height: 470px; }
+  .hero__ayuda3d { display: none; }
+}
+/* Tarjetas que "se paran" en 3D al entrar en pantalla mientras se scrollea (Chrome/Edge; en otros navegadores no pasa nada) */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .grid .card { animation: entra3d linear backwards; animation-timeline: view(); animation-range: entry 0% cover 28%; transform-origin: 50% 100%; }
+    @keyframes entra3d { from { transform: perspective(900px) rotateX(32deg) translateY(70px) scale(.9); opacity: .2; } }
+  }
+}
