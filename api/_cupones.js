@@ -98,7 +98,7 @@ function plantilla({ titulo, cuerpo, boton, link, baja }) {
       <div style="font-size:16px;line-height:1.55">${cuerpo}</div></td></tr>
     ${boton ? `<tr><td style="padding:18px 28px 30px"><a href="${esc(link || SITIO)}" style="display:inline-block;background:#000;color:#fff;text-decoration:none;font-weight:700;letter-spacing:2px;text-transform:uppercase;font-size:14px;padding:15px 26px">${esc(boton)}</a></td></tr>` : ""}
     <tr><td style="padding:18px 28px;border-top:1px solid #e5e5e5;font-size:12px;color:#777;line-height:1.5">
-      POWER UP Store · <a href="https://www.instagram.com/powerup.store1/" style="color:#777">@powerup.store1</a> · <a href="${SITIO}" style="color:#777">powerupstore.website</a>
+      POWER UP Store · <a href="https://www.instagram.com/powerupstore.ar/" style="color:#777">@powerupstore.ar</a> · <a href="${SITIO}" style="color:#777">powerupstore.website</a>
       ${baja ? `<br>¿No querés recibir más novedades? <a href="${esc(baja)}" style="color:#777">Darte de baja</a>.` : ""}</td></tr>
   </table></td></tr></table></body></html>`;
 }

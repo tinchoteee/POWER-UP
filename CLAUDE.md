@@ -1,6 +1,6 @@
 # Tienda POWER UP Store
 
-Tienda online de ropa (conjuntos remera + short) del mismo dueño que Nací Reina (repo `tinchoteee/todo20`). Instagram @powerup.store1. WhatsApp 11 3819-6516 (`5491138196516`). El dueño no es técnico: hablale en español rioplatense, simple y paso a paso. Estética: blanco y negro, tipografías Anton + Space Grotesk, efectos (cintas que pasan, cursor, aparecer al scrollear).
+Tienda online de ropa (conjuntos remera + short) del mismo dueño que Nací Reina (repo `tinchoteee/todo20`). Instagram @powerupstore.ar. WhatsApp 11 3819-6516 (`5491138196516`). El dueño no es técnico: hablale en español rioplatense, simple y paso a paso. Estética: blanco y negro, tipografías Anton + Space Grotesk, efectos (cintas que pasan, cursor, aparecer al scrollear).
 
 ## Cómo está armada (misma base que Nací Reina, 2026-10-03)
 - Sitio estático + funciones serverless para **Vercel** (`api/`, CommonJS, Node 20+, sin dependencias). Sin Vercel (ej. GitHub Pages) la página se ve pero no cobra.

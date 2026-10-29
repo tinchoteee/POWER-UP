@@ -1,6 +1,6 @@
 # POWER UP — Store
 
-Tienda online de [@powerup.store1](https://www.instagram.com/powerup.store1/). Blanco y negro, sin grises.
+Tienda online de [@powerupstore.ar](https://www.instagram.com/powerupstore.ar/). Blanco y negro, sin grises.
 
 Sitio estático + funciones serverless para **Vercel** (carpeta `api/`), con la misma base que la tienda de Nací Reina:
 pago con tarjeta y Mercado Pago, transferencia con descuento, envíos con Zipnova, stock y pedidos en Upstash, editor con contraseña (`/admin.html`) y emails con Resend.

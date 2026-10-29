@@ -10,7 +10,7 @@
 })({
   // WhatsApp: 549 + código de área sin 0 + número sin 15
   whatsapp: "5491138196516",
-  instagram: "https://www.instagram.com/powerup.store1/",
+  instagram: "https://www.instagram.com/powerupstore.ar/",
   metaPixel: "",   // Píxel de Meta (opcional; en Vercel META_PIXEL_ID lo reemplaza)
 
   // Retiro gratis: con dirección aparece la opción en el checkout (nombre = cómo se muestra). Vacío = solo envíos por correo.
