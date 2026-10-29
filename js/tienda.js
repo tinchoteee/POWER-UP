@@ -34,6 +34,11 @@ const escribir = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); }
 const juntar = l => l.length > 1 ? l.slice(0, -1).join(", ") + " y " + l[l.length - 1] : l[0];
 // Líneas (marcas) con al menos un producto, en el orden de productos.js
 const lineasActivas = () => Object.keys(CATALOGO.lineas || {}).filter(k => PRODUCTOS.some(p => p.cat === k));
+// Tipo de prenda (secciones de la tienda): sale del "detalle" salvo que el producto tenga "tipo"
+const tipoDe = p => p.tipo || (/\+/.test(p.detalle || "") ? "conjuntos" : /remera/i.test(p.detalle || "") ? "remeras"
+  : /short/i.test(p.detalle || "") ? "shorts" : /buzo/i.test(p.detalle || "") ? "buzos" : /pantal/i.test(p.detalle || "") ? "pantalones" : "otros");
+const nombreTipo = id => (CATALOGO.tipos || {})[id] || id;
+const tiposActivos = () => Object.keys(CATALOGO.tipos || {}).filter(k => PRODUCTOS.some(p => tipoDe(p) === k));
 
 // ---------- Datos públicos del servidor y Píxel de Meta ----------
 const configPublica = fetch("/api/config").then(r => r.ok ? r.json() : {}).catch(() => ({}));
@@ -246,13 +251,13 @@ function tarjeta(p) {
   </a>`;
 }
 function pintarCatalogo() {
-  const lineas = lineasActivas();
-  if (catActual !== "todos" && !lineas.includes(catActual)) catActual = "todos";
-  $("#filters").innerHTML = ["todos", ...lineas].map(k => `<button class="filter${k === catActual ? " is-active" : ""}" data-filter="${k}" aria-pressed="${k === catActual}">${k === "todos" ? "Todo" : esc(nombreLinea(k))}</button>`).join("");
-  $("#footerLineas").innerHTML = lineas.map(k => `<a href="#cat/${k}">${esc(nombreLinea(k))}</a>`).join("");
-  // Agrupados por marca; los agotados van al final
-  const orden = p => lineas.indexOf(p.cat);
-  $("#productGrid").innerHTML = PRODUCTOS.filter(p => catActual === "todos" || p.cat === catActual)
+  const tipos = tiposActivos(), lineas = lineasActivas();
+  if (catActual !== "todos" && !tipos.includes(catActual)) catActual = "todos";
+  $("#filters").innerHTML = ["todos", ...tipos].map(k => `<button class="filter${k === catActual ? " is-active" : ""}" data-filter="${k}" aria-pressed="${k === catActual}">${k === "todos" ? "Todo" : esc(nombreTipo(k))}</button>`).join("");
+  $("#footerLineas").innerHTML = tipos.map(k => `<a href="#cat/${k}">${esc(nombreTipo(k))}</a>`).join("");
+  // Agrupados por tipo de prenda y, dentro de cada tipo, por marca; los agotados van al final
+  const orden = p => tipos.indexOf(tipoDe(p)) * 100 + lineas.indexOf(p.cat);
+  $("#productGrid").innerHTML = PRODUCTOS.filter(p => catActual === "todos" || tipoDe(p) === catActual)
     .sort((a, b) => a.agotado - b.agotado || orden(a) - orden(b)).map(tarjeta).join("");
   animarEntrada($("#vista-inicio"));
 }
@@ -270,7 +275,7 @@ function mostrarProducto(id) {
   if (sel.id !== id) medir("ViewContent", { content_ids: [String(id)], content_name: p.nombre, content_type: "product", value: (rangoDe(p) || {}).min || 0 });
   if (sel.id !== id) Object.assign(sel, { id, color: p.colores && p.colores.length === 1 ? p.colores[0].id : null, talle: null, foto: null });
   document.title = `${p.nombre} · POWER UP Store`;
-  $("#migas").innerHTML = `<a href="#">Inicio</a> / <a href="#cat/${esc(p.cat)}">${esc(nombreLinea(p.cat))}</a> / ${esc(p.nombre)}`;
+  $("#migas").innerHTML = `<a href="#">Inicio</a> / <a href="#cat/${esc(tipoDe(p))}">${esc(nombreTipo(tipoDe(p)))}</a> / ${esc(p.nombre)}`;
   $("#pCat").textContent = [nombreLinea(p.cat), p.detalle].filter(Boolean).join(" · ");
   $("#pNombre").textContent = p.nombre;
   $("#pDesc").textContent = p.desc || "";
@@ -279,8 +284,9 @@ function mostrarProducto(id) {
   $("#calcRes").innerHTML = "";
   pintarProducto();
 
+  // Sugeridos: primero la misma marca (para armar el conjunto), después el mismo tipo de prenda
   const rel = PRODUCTOS.filter(x => x.id !== p.id && x.cat === p.cat);
-  const otros = PRODUCTOS.filter(x => x.id !== p.id && x.cat !== p.cat);
+  const otros = PRODUCTOS.filter(x => x.id !== p.id && x.cat !== p.cat).sort((a, b) => (tipoDe(b) === tipoDe(p)) - (tipoDe(a) === tipoDe(p)));
   const sugeridos = [...rel, ...otros].filter(x => !x.agotado).slice(0, 4);
   $("#grillaRel").innerHTML = sugeridos.map(tarjeta).join("");
   $("#relacionados").hidden = !sugeridos.length;
