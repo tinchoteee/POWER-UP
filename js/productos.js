@@ -175,6 +175,13 @@
     { id: 24, cat: "diesel", caja: "conjunto", nombre: "Remera Diesel", detalle: "Remera", etiqueta: "NUEVO",
       desc: "Remera negra con el logo DIESEL en azul tipo denim y la leyenda EST · SINCE debajo.",
       precio: 8000, talles: ["S", "M", "L", "XL"],
-      colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/remera-diesel.jpg" }] }
+      colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/remera-diesel.jpg" }] },
+    { id: 25, cat: "jordan", caja: "conjunto", nombre: "Remera Jordan Jumpman", detalle: "Remera", etiqueta: "NUEVO",
+      desc: "Remera con el logo Jumpman grande al frente: negra con Jumpman blanco o blanca con Jumpman negro.",
+      precio: 8000, talles: ["S", "M", "L", "XL"],
+      colores: [
+        { id: "negro", nombre: "Negro", hex: "#111111", foto: "img/remera-jordan-jumpman-negro.jpg" },
+        { id: "blanco", nombre: "Blanco", hex: "#F4F4F4", foto: "img/remera-jordan-jumpman-blanco.jpg" }
+      ] }
   ]
 });
