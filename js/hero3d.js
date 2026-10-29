@@ -18,7 +18,7 @@ function productosParaAnillo() {
   for (const p of [...lista].sort((a, b) => b.id - a.id)) {
     const foto = p.colores.find(c => c.foto).foto;
     if (vistos.has(foto)) continue;
-    vistos.add(foto); out.push({ id: p.id, nombre: p.nombre, foto: foto.replace(/^img\//, "img/mini/") });
+    vistos.add(foto); out.push({ id: p.id, nombre: p.nombre, foto });   // la misma foto de la tienda: si cambia, cambia acá también
   }
   return out.slice(0, movil ? 10 : 14);
 }
@@ -56,6 +56,26 @@ function geometriaRayo() {
   const g = new THREE.ExtrudeGeometry(f, { depth: 0.22, bevelEnabled: true, bevelThickness: 0.07, bevelSize: 0.05, bevelSegments: 5, curveSegments: 4 });
   g.center();
   return g;
+}
+
+// Foto de producto como textura, achicada en el navegador al tamaño que hace falta (nítida sin gastar memoria de más)
+const anchoTextura = flojo ? 480 : movil ? 640 : 900;
+async function texturaFoto(url) {
+  const img = new Image();
+  img.decoding = "async";
+  img.src = url;
+  await img.decode();
+  try {
+    const bmp = await createImageBitmap(img, { resizeWidth: anchoTextura, resizeHeight: Math.round(anchoTextura * img.naturalHeight / img.naturalWidth), resizeQuality: "high", imageOrientation: "flipY" });
+    const t = new THREE.Texture(bmp);
+    t.flipY = false;   // ya viene dada vuelta
+    t.needsUpdate = true;
+    return t;
+  } catch (e) {
+    const t = new THREE.Texture(img);   // navegadores sin esas opciones: la foto entera
+    t.needsUpdate = true;
+    return t;
+  }
 }
 
 function iniciar() {
@@ -102,7 +122,7 @@ function iniciar() {
   const radio = Math.max(3.6, (N * (ancho + 0.45)) / (2 * Math.PI));
   const altura = -1.1, piso = altura - alto / 2 - 0.5;   // el anillo abajo, como un escenario alrededor del rayo
   reflejo.scale.y = -1; reflejo.position.y = piso * 2; reflejo.rotation.x = -0.1;
-  const cargador = new THREE.TextureLoader();
+  const anisotropia = Math.min(8, renderer.capabilities.getMaxAnisotropy());
   const geo = new THREE.PlaneGeometry(ancho, alto);
   const bordeGeo = new THREE.EdgesGeometry(geo);
   const paneles = [];
@@ -111,7 +131,7 @@ function iniciar() {
     const ubicar = g => { g.position.set(Math.sin(a) * radio, 0, Math.cos(a) * radio); g.rotation.y = a; return g; };
     const mat = new THREE.MeshBasicMaterial({ color: 0x222222, transparent: true, opacity: 0, side: THREE.DoubleSide, toneMapped: false });
     const matRef = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, side: THREE.DoubleSide, toneMapped: false, depthWrite: false });
-    cargador.load(p.foto, tex => { tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4; mat.map = tex; matRef.map = tex; mat.color.set(0xffffff); mat.needsUpdate = matRef.needsUpdate = true; });
+    texturaFoto(p.foto).then(tex => { tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = anisotropia; mat.map = tex; matRef.map = tex; mat.color.set(0xffffff); mat.needsUpdate = matRef.needsUpdate = true; }).catch(() => {});
     const foto = new THREE.Mesh(geo, mat);
     foto.userData = p;
     const borde = new THREE.LineSegments(bordeGeo, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55 }));
