@@ -253,8 +253,8 @@
       desc: "Buzo gris melange con capucha y el Jumpman grande en blanco al frente. Es el buzo del Conjunto Jordan Buzo Gris, vendido por separado.",
       precio: 22000, talles: ["M", "L", "XL"],
       colores: [{ id: "gris", nombre: "Gris", hex: "#C8C8C8", foto: "img/buzo-jordan-gris.jpg" }] },
-    { id: 39, cat: "nike", tipo: "zapatillas", caja: "zapatillas", nombre: "Zapatillas Air Force 1 Plataforma", detalle: "Zapatillas", etiqueta: "NUEVO",
-      desc: "Zapatillas blancas de cuero sintético con plataforma alta, swoosh y detalles en el mismo tono. Total white, combinan con todo.",
+    { id: 39, cat: "nike", tipo: "zapatillas", caja: "zapatillas", nombre: "Zapatillas Air Force 1", detalle: "Zapatillas", etiqueta: "NUEVO",
+      desc: "Zapatillas blancas de cuero sintético, con swoosh y detalles en el mismo tono. Total white, combinan con todo.",
       precio: 30000, talles: ["35", "36", "37", "38", "39", "40"],
       colores: [{ id: "blanco", nombre: "Blanco", hex: "#F4F4F4", foto: "img/zapatillas-air-force-plataforma.jpg" }] }
   ]
