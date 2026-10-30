@@ -55,7 +55,8 @@
     // Un producto puede usar otro paquete con  caja: "nombre".
     cajas: {
       "conjunto": { peso: 500, alto: 8, ancho: 25, largo: 30 },
-      "buzo":     { peso: 1100, alto: 12, ancho: 30, largo: 35 }   // buzo + pantalón (a confirmar con el dueño)
+      "buzo":     { peso: 1100, alto: 12, ancho: 30, largo: 35 },  // buzo + pantalón (a confirmar con el dueño)
+      "zapatillas": { peso: 1300, alto: 13, ancho: 22, largo: 33 }   // caja de zapatillas (a confirmar con el dueño)
     },
     // Solo se usa mientras Zipnova no esté configurado: costo fijo por zona.
     zonasDeRespaldo: { "CABA": 5000, "Buenos Aires": 6500, "resto": 9500 }
@@ -70,7 +71,7 @@
     corteiz: "Corteiz",
     syna: "Syna World",
     bape: "Bape",
-    guess: "Guess", diesel: "Diesel"
+    guess: "Guess", diesel: "Diesel", nike: "Nike"
   },
 
   // Secciones de la tienda por tipo de prenda (el orden de acá es el orden de los filtros).
@@ -81,7 +82,8 @@
     remeras: "Remeras",
     shorts: "Shorts",
     buzos: "Buzos",
-    pantalones: "Pantalones"
+    pantalones: "Pantalones",
+    zapatillas: "Zapatillas"
   },
 
   // detalle: texto chico debajo del nombre · drop: true = aparece en "El Drop" (los primeros 3) · etiqueta: cartelito sobre la foto
@@ -250,6 +252,10 @@
     { id: 38, cat: "jordan", caja: "conjunto", nombre: "Buzo Jordan Gris", detalle: "Buzo", etiqueta: "NUEVO",
       desc: "Buzo gris melange con capucha y el Jumpman grande en blanco al frente. Es el buzo del Conjunto Jordan Buzo Gris, vendido por separado.",
       precio: 22000, talles: ["M", "L", "XL"],
-      colores: [{ id: "gris", nombre: "Gris", hex: "#C8C8C8", foto: "img/buzo-jordan-gris.jpg" }] }
+      colores: [{ id: "gris", nombre: "Gris", hex: "#C8C8C8", foto: "img/buzo-jordan-gris.jpg" }] },
+    { id: 39, cat: "nike", tipo: "zapatillas", caja: "zapatillas", nombre: "Zapatillas Air Force 1 Plataforma", detalle: "Zapatillas", etiqueta: "NUEVO",
+      desc: "Zapatillas blancas de cuero sintético con plataforma alta, swoosh y detalles en el mismo tono. Total white, combinan con todo.",
+      precio: 30000, talles: ["35", "36", "37", "38", "39", "40"],
+      colores: [{ id: "blanco", nombre: "Blanco", hex: "#F4F4F4", foto: "img/zapatillas-air-force-plataforma.jpg" }] }
   ]
 });
