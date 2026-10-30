@@ -11,7 +11,7 @@
   // WhatsApp: 549 + código de área sin 0 + número sin 15
   whatsapp: "5491138196516",
   instagram: "https://www.instagram.com/powerupstore.ar/",
-  metaPixel: "",   // Píxel de Meta (opcional; en Vercel META_PIXEL_ID lo reemplaza)
+  metaPixel: "1177442774809587",   // Píxel de Meta "PowerUp Event Data" (portfolio vaperprimes) (opcional; en Vercel META_PIXEL_ID lo reemplaza)
 
   // Retiro gratis: con dirección aparece la opción en el checkout (nombre = cómo se muestra). Vacío = solo envíos por correo.
   // Es el local de calzados del mismo dueño (pedido del dueño 2026-10-03: mostrar la dirección exacta).
