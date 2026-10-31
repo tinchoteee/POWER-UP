@@ -19,7 +19,7 @@
 
   // Descuento por monto: cuando los productos suman "desde" o más, se descuenta "porcentaje" a cada producto.
   // (No se aplica al envío.) desde: 0 = sin descuento.
-  descuento: { desde: 149000, porcentaje: 10 },   // 5 conjuntos
+  descuento: { desde: 120000, porcentaje: 10 },   // pedido del dueño 2026-10-31
   // Descuento extra por pagar con transferencia bancaria (sobre los productos, después del de monto). 0 = sin transferencia.
   // Los datos de la cuenta (alias, CBU, titular) se cargan en Vercel: TRANSFERENCIA_ALIAS, TRANSFERENCIA_CBU, TRANSFERENCIA_TITULAR.
   transferencia: { porcentaje: 10 },
@@ -48,7 +48,7 @@
 
   envio: {
     // Envío gratis cuando los productos suman este monto o más. 0 = sin envío gratis.
-    gratisDesde: 119000,   // 4 conjuntos
+    gratisDesde: 79999,   // 5 conjuntos (pedido del dueño 2026-10-31)
     // Transportista preferido: si ese correo cotiza, se muestran solo sus opciones. Vacío = todos los activos en Zipnova.
     transportista: "",
     // Paquete de cada producto (peso en gramos, medidas en cm). El correo cobra según peso y tamaño.

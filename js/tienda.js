@@ -194,6 +194,7 @@ function pintarBarraBeneficios(sub) {
   if (DESCUENTO.desde > 0 && DESCUENTO.porcentaje > 0) metas.push({ monto: DESCUENTO.desde, texto: `${DESCUENTO.porcentaje}% OFF`, logrado: `¡Tenés ${DESCUENTO.porcentaje}% OFF en tu compra!`, ic: "🏷️" });
   metas.sort((a, b) => a.monto - b.monto);
   $("#barraGratis").hidden = !metas.length;
+  pintarDock(sub, metas);
   if (!metas.length) return;
   const tope = metas[metas.length - 1].monto;
   const proxima = metas.find(m => sub < m.monto);
@@ -207,8 +208,50 @@ function pintarBarraBeneficios(sub) {
       ${metas.map(m => `<span class="meta${sub >= m.monto ? " ok" : ""}" style="left:${m.monto / tope * 100}%" title="${esc(m.texto)} desde ${pesos(m.monto)}">${m.ic}</span>`).join("")}</div>
     <div class="barra-metas">${metas.map(m => `<span style="left:${m.monto / tope * 100}%">${esc(m.texto)}<br>${pesos(m.monto)}</span>`).join("")}</div>`;
 }
+// La misma barra, fija abajo de la pantalla mientras se recorre la tienda, para que el cliente siempre vea cuánto le falta.
+// Se esconde con el carrito abierto y en el checkout (ver .dock en styles.css). Tocarla abre el carrito.
+var dockAntes = 0;
+function pintarDock(sub, metas) {
+  const d = $("#dock");
+  const REMERA_MIN = Math.min(...PRODUCTOS.filter(p => tipoDe(p) === "remeras" && !p.agotado).map(p => precioDe(p)).filter(n => n > 0));
+  d.hidden = !carrito.length || !metas.length || !(sub > 0);
+  document.body.classList.toggle("con-dock", !d.hidden);
+  if (d.hidden) { dockAntes = 0; return; }
+  const tope = metas[metas.length - 1].monto;
+  const proxima = metas.find(m => sub < m.monto);
+  const logradas = metas.filter(m => sub >= m.monto);
+  let msj, pista = "";
+  if (!proxima) msj = `<b>¡Tenés ${metas.map(m => m.texto).join(" + ")}!</b>`;
+  else {
+    const falta = proxima.monto - sub;
+    const ya = logradas.length ? logradas[logradas.length - 1].texto : "";
+    msj = (ya ? `<span class="ok">✓ ${esc(ya[0].toUpperCase() + ya.slice(1))}</span> · Faltan` : "Te faltan")
+      + ` <b>${pesos(falta)}</b> para <b class="up">${esc(proxima.texto)}</b>`;
+    const n = REMERA_MIN > 0 ? Math.ceil(falta / REMERA_MIN) : 0;
+    if (n > 0 && n <= 3) pista = `Con ${n === 1 ? "una remera más" : n + " remeras más"} llegás`;
+  }
+  d.innerHTML = `<span class="dock__ic" aria-hidden="true">${proxima ? proxima.ic : "🔥"}</span>
+    <span class="dock__txt"><span class="dock__msj">${msj}</span>${pista ? `<span class="dock__pista">${pista}</span>` : ""}
+      <span class="dock__barra"><i style="width:${Math.min(100, sub / tope * 100)}%"></i>${metas.slice(0, -1).map(m => `<em class="${sub >= m.monto ? "ok" : ""}" style="left:${m.monto / tope * 100}%"></em>`).join("")}</span></span>
+    <span class="dock__ver">Ver carrito</span>`;
+  d.setAttribute("aria-label", `${d.querySelector(".dock__msj").textContent}. Ver carrito`);
+  d.classList.toggle("is-listo", !proxima);
+  // Cada vez que sube el monto, la barra late para que se note el avance
+  // (con el carrito abierto, late cuando se cierra)
+  if (sub > dockAntes && !SIN_MOVIMIENTO) { dockLatir = true; if (!$("#cart").classList.contains("is-open")) latirDock(); }
+  dockAntes = sub;
+}
+var dockLatir = false;
+function latirDock() {
+  if (!dockLatir) return;
+  dockLatir = false;
+  const d = $("#dock"); d.classList.remove("late"); void d.offsetWidth;
+  setTimeout(() => d.classList.add("late"), 450);
+}
+$("#dock").addEventListener("click", abrirCarrito);
+
 function abrirCarrito() { $("#cart").classList.add("is-open"); $("#overlay").classList.add("is-open"); $("#cartClose").focus(); }
-function cerrarCarrito() { $("#cart").classList.remove("is-open"); $("#overlay").classList.remove("is-open"); }
+function cerrarCarrito() { $("#cart").classList.remove("is-open"); $("#overlay").classList.remove("is-open"); latirDock(); }
 
 $("#cartOpen").addEventListener("click", abrirCarrito);
 $("#cartClose").addEventListener("click", cerrarCarrito);
@@ -778,6 +821,7 @@ function ruta() {
   const h = decodeURIComponent(location.hash.slice(1));
   const vista = h.startsWith("p/") ? "producto" : h === "checkout" ? "checkout" : "inicio";
   ["inicio", "producto", "checkout"].forEach(v => { $("#vista-" + v).hidden = v !== vista; });
+  document.body.classList.toggle("en-checkout", vista === "checkout");
   $("#flotante").hidden = !WHATSAPP || vista === "checkout";
   if (vista === "producto") { mostrarProducto(+h.slice(2)); window.scrollTo(0, 0); return; }
   if (vista === "checkout") { mostrarCheckout(); window.scrollTo(0, 0); return; }

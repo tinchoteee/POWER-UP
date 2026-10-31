@@ -365,6 +365,47 @@ section { padding: clamp(80px, 12vw, 160px) var(--gutter); }
 }
 .toast.is-show { transform: translate(-50%, 0); visibility: visible; transition: transform .5s var(--ease); }
 
+/* ---------- Barrita fija de beneficios (envío gratis / % OFF) ---------- */
+.dock {
+  position: fixed; left: 50%; bottom: 20px; z-index: 155; width: min(560px, calc(100% - 200px));
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px; padding: 12px 14px 12px 16px;
+  background: var(--black); color: var(--white); border: 2px solid var(--white); box-shadow: 0 0 0 2px var(--black), 0 18px 40px rgba(0,0,0,.6);
+  font: inherit; text-align: left; cursor: pointer;
+  transform: translate(-50%, 0); transition: transform .5s var(--ease), visibility 0s;
+}
+.cart.is-open ~ .dock, .en-checkout .dock { transform: translate(-50%, 160%); visibility: hidden; transition: transform .5s var(--ease), visibility 0s .5s; }
+.dock__ic { font-size: 22px; line-height: 1; }
+.dock__txt { display: grid; gap: 7px; min-width: 0; }
+.dock__msj { font-size: 13px; line-height: 1.3; }
+.dock__msj b { font-weight: 800; }
+.dock__msj .up { text-transform: uppercase; letter-spacing: .04em; }
+.dock__msj .ok { color: var(--ok); font-weight: 700; }
+.dock__pista { color: var(--gray); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; margin-top: -3px; }
+.dock__barra { position: relative; height: 6px; background: var(--line); }
+.dock__barra > i { position: absolute; inset: 0 auto 0 0; background: var(--white); transition: width .8s var(--ease); }
+.dock__barra > i::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(0,0,0,.35), transparent); background-size: 60px 100%; animation: dockBrillo 1.6s linear infinite; }
+.dock__barra em { position: absolute; top: -3px; width: 2px; height: 12px; background: var(--gray); transform: translateX(-1px); }
+.dock__barra em.ok { background: var(--ok); }
+.dock__ver { font-weight: 700; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; border-left: 1px solid var(--line); padding-left: 14px; white-space: nowrap; }
+.dock.is-listo { border-color: var(--ok); }
+.dock.is-listo .dock__barra > i { background: var(--ok); }
+.dock.late { animation: dockLate .7s var(--ease); }
+@keyframes dockLate { 0% { transform: translate(-50%, 0) scale(1); } 35% { transform: translate(-50%, -6px) scale(1.04); } 100% { transform: translate(-50%, 0) scale(1); } }
+@keyframes dockBrillo { from { background-position: -60px 0; } to { background-position: 600px 0; } }
+.con-dock .toast { bottom: 110px; }
+@media (max-width: 900px) {
+  .dock { left: 0; right: 0; bottom: 0; width: auto; transform: none; border-width: 2px 0 0; box-shadow: 0 -10px 30px rgba(0,0,0,.6);
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); gap: 12px; }
+  .cart.is-open ~ .dock, .en-checkout .dock { transform: translateY(110%); }
+  .dock.late { animation-name: dockLateMovil; }
+  @keyframes dockLateMovil { 0% { transform: none; } 35% { transform: translateY(-6px); } 100% { transform: none; } }
+  .dock__ver { padding-left: 12px; font-size: 10px; }
+  .con-dock .wa-float { bottom: calc(96px + env(safe-area-inset-bottom)); }
+  .con-dock .footer { padding-bottom: 110px; }
+  .con-dock .toast { bottom: calc(100px + env(safe-area-inset-bottom)); }
+}
+@media (max-width: 380px) { .dock__ver { display: none; } }
+
 /* ---------- Ventajas ---------- */
 .perks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; background: var(--line); border-block: 2px solid var(--line); padding: 0; }
 .perk { background: var(--black); display: flex; gap: 18px; align-items: flex-start; padding: 32px var(--gutter); }
