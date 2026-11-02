@@ -48,6 +48,20 @@ module.exports = async function handler(req, res) {
     if (req.method !== "POST") return res.status(405).json({ error: "Método no permitido." });
 
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
+    // Desde la página (con el link de lectura) solo se puede marcar un problema como resuelto
+    if (body.accion === "resuelto") {
+      if (!puedeLeer(body.k)) return res.status(401).json({ error: "Link inválido." });
+      const ofi = await db.leer(OFICINA, { empleados: {}, informes: {} });
+      const e = ofi.empleados[texto(body.empleado, 40)];
+      if (!e) return res.status(404).json({ error: "Ese empleado no existe." });
+      if (e.estado !== "error") return res.status(200).json({ ok: true });
+      e.estado = "esperando";
+      e.tarea = "Problema resuelto por Martín. Vuelve a trabajar en su próximo horario.";
+      await db.guardar(OFICINA, ofi);
+      await db.comando("LPUSH", ACTIVIDAD, JSON.stringify({ empleado: texto(body.empleado, 40), cuando: new Date().toISOString(), texto: "quedó destrabado: Martín resolvió el problema.", tipo: "info" }));
+      await db.comando("LTRIM", ACTIVIDAD, 0, 199);
+      return res.status(200).json({ ok: true });
+    }
     if (!puedeEscribir(body.k)) return res.status(401).json({ error: "Clave inválida." });
     const id = texto(body.empleado, 40).toLowerCase().replace(/[^a-z0-9-]/g, "");
     if (!id) return res.status(400).json({ error: "Falta el empleado." });

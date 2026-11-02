@@ -142,6 +142,13 @@ h1 em { font-style: normal; color: transparent; -webkit-text-stroke: 1.5px var(-
 .enlaces a { color: var(--fg); border: 1px solid var(--line); padding: 7px 12px; text-decoration: none; font-weight: 600; font-size: 13px; }
 .enlaces a:hover { border-color: var(--fg); }
 .vacio span { display: block; }
+.problema { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid #ff5a5a66; background: #ff5a5a12; padding: 12px 14px; }
+.problema b { display: block; color: var(--bad); }
+.problema span { color: #dfe2e5; font-size: 13px; }
+.problema > div { min-width: 0; flex: 1 1 260px; }
+.problema button { font: inherit; font-weight: 800; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; background: var(--fg); color: var(--bg); border: 0; padding: 10px 14px; cursor: pointer; }
+.problema button:focus-visible, .actualizar:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.actualizar { font: inherit; cursor: pointer; color: var(--fg); }
 /* Piso de la oficina: dibujo pixelado de los escritorios */
 .piso { border: 1px solid var(--line); background: #0c0e11; line-height: 0; }
 .piso canvas { width: 100%; height: auto; display: block; image-rendering: pixelated; cursor: pointer; }
@@ -161,6 +168,7 @@ h1 em { font-style: normal; color: transparent; -webkit-text-stroke: 1.5px var(-
       <span class="chip reloj" id="reloj">--:--</span>
       <span class="chip"><b id="cTrabajando">0</b><span>trabajando</span></span>
       <span class="chip"><b id="cHoy">0</b><span>tareas hoy</span></span>
+      <button type="button" class="chip actualizar" id="actualizar" title="Traer lo último ahora"><span id="frescura">Cargando…</span><b>↻</b></button>
     </div>
   </header>
   <div class="aviso" id="aviso" hidden></div>
@@ -231,8 +239,10 @@ function pintarInforme() {
   const e = estado.empleados[sel];
   if (!e) { $("#informe").innerHTML = ""; return; }
   const inf = estado.informes[sel];
+  const problema = e.estado === "error" ? `<div class="problema"><div><b>Este empleado tuvo un problema</b><span>${esc(e.tarea)}</span></div>
+    <button type="button" id="resuelto" data-id="${esc(sel)}">Ya lo resolví</button></div>` : "";
   if (!inf) {
-    $("#informe").innerHTML = `<div class="inf-h"><h2>${esc(e.nombre)}</h2></div>
+    $("#informe").innerHTML = `<div class="inf-h"><h2>${esc(e.nombre)}</h2></div>${problema}
       <div class="vacio"><b>Todavía no hay informe.</b><span>Aparece acá después de su primera tarea (${esc((e.horario || "").toLowerCase())}).</span></div>`;
     return;
   }
@@ -241,6 +251,7 @@ function pintarInforme() {
   const enlaces = (inf.enlaces || []).filter(l => /^https:\/\//.test(l.url)).map(l => `<a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.texto || "Abrir")} ↗</a>`).join("");
   $("#informe").innerHTML = `
     <div class="inf-h"><h2>${esc(inf.titulo || e.nombre)}</h2><span class="inf-cuando">${esc(e.nombre)}${inf.cuando ? " · " + esc(diaTxt(new Date(inf.cuando)) + " · " + hora(new Date(inf.cuando))) : ""}</span></div>
+    ${problema}
     ${cifras ? `<div class="cifras">${cifras}</div>` : ""}
     ${inf.puntos && inf.puntos.length ? `<div class="bloque"><h3>Qué pasó</h3>${lista(inf.puntos)}</div>` : ""}
     ${inf.acciones && inf.acciones.length ? `<div class="bloque"><h3>Qué te recomiendo</h3>${lista(inf.acciones, "acciones")}</div>` : ""}
@@ -342,6 +353,17 @@ piso.addEventListener("click", ev => {
 addEventListener("resize", () => pintarPiso());
 if (!matchMedia("(prefers-reduced-motion: reduce)").matches) setInterval(() => { if (!document.hidden && celdas.some(c => c.e.estado === "trabajando" || c.e.estado === "error")) { cuadro++; dibujarPiso(); } }, 280);
 
+// "Ya lo resolví": saca el cartel de problema hasta que el empleado vuelva a trabajar
+$("#informe").addEventListener("click", async ev => {
+  const b = ev.target.closest("#resuelto"); if (!b) return;
+  b.disabled = true; b.textContent = "Guardando…";
+  try {
+    const r = await fetch("/api/oficina", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ accion: "resuelto", k: CLAVE, empleado: b.dataset.id }) });
+    if (!r.ok) throw new Error();
+    firma = ""; await cargar();
+  } catch (e) { b.disabled = false; b.textContent = "No se pudo guardar. Probá de nuevo"; }
+});
+
 const aviso = t => { $("#aviso").hidden = !t; $("#aviso").textContent = t || ""; };
 let firma = "";
 async function cargar() {
@@ -350,16 +372,20 @@ async function cargar() {
     const r = await fetch("/api/oficina?k=" + encodeURIComponent(CLAVE), { cache: "no-store" });
     const d = await r.json().catch(() => ({}));
     if (!r.ok) { aviso(d.error === "Link inválido." ? "Este link no es válido. Pedile a Martín el link de la oficina." : (d.error || "No se pudo cargar la oficina.")); return; }
-    aviso("");
+    aviso(""); ultimaCarga = Date.now(); frescura();
     const nueva = JSON.stringify(d);
     if (nueva === firma) { pintarEquipo(); return; }
     firma = nueva; estado = { empleados: d.empleados || {}, informes: d.informes || {}, actividad: d.actividad || [] };
     pintarEquipo(); pintarInforme(); pintarLog(); pintarPiso();
   } catch (e) { aviso("Sin conexión. La oficina se actualiza sola cuando vuelva internet."); }
 }
-const tic = () => { $("#reloj").textContent = diaTxt(new Date()) + " · " + hora(new Date()); };
+let ultimaCarga = 0;
+const frescura = () => { if (!ultimaCarga) return; const s = Math.round((Date.now() - ultimaCarga) / 1000); $("#frescura").textContent = s < 10 ? "Al día" : s < 60 ? `Hace ${s} s` : `Hace ${Math.round(s / 60)} min`; };
+const tic = () => { $("#reloj").textContent = diaTxt(new Date()) + " · " + hora(new Date()); frescura(); };
+$("#actualizar").addEventListener("click", async () => { $("#frescura").textContent = "Actualizando…"; firma = ""; await cargar(); tic(); });
 tic(); cargar();
-setInterval(() => { tic(); if (!document.hidden) cargar(); }, 30000);
+setInterval(() => { if (!document.hidden) cargar(); }, 20000);
+setInterval(tic, 5000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden) cargar(); });
 </script>
 </body>
