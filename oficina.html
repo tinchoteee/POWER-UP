@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#07080a">
+<title>Oficina POWER UP</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 110 200%27><polygon fill=%27%23e5121f%27 points=%2762,0 8,112 50,112 28,200 102,72 58,72 84,0%27/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: una sala de control de noche. Arriba la barra de estado; a la izquierda los escritorios de cada empleado,
+   al centro el informe del que está seleccionado, a la derecha el registro de actividad; abajo, la consola para preguntar. */
+:root {
+  color-scheme: dark;
+  --bg: #07080a;
+  --panel: #0f1114;
+  --panel-2: #15181c;
+  --line: #23272d;
+  --fg: #f2f3f4;
+  --muted: #8b929b;
+  --accent: #e5121f;      /* rojo POWER UP */
+  --ok: #3ddc84;
+  --work: #ffb020;
+  --bad: #ff5a5a;
+  --display: "Anton", "Arial Black", Impact, sans-serif;
+  --body: "Archivo", system-ui, -apple-system, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--bg); color: var(--fg); }
+body {
+  font-family: var(--body); font-size: 14px; line-height: 1.45; margin: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 18px 28px;
+  background-image: radial-gradient(circle at 1px 1px, #ffffff0d 1px, transparent 0);
+  background-size: 22px 22px;
+}
+.wrap { max-width: 1320px; margin: 0 auto; display: grid; gap: 14px; }
+
+/* ---------- Barra superior ---------- */
+.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.marca { display: flex; align-items: center; gap: 12px; }
+.marca svg { width: 22px; height: 40px; flex: none; }
+h1 { font-family: var(--display); font-weight: 400; font-size: clamp(30px, 4.6vw, 52px); line-height: .9; margin: 0; letter-spacing: .5px; text-wrap: balance; }
+h1 em { font-style: normal; color: transparent; -webkit-text-stroke: 1.5px var(--fg); }
+.sub { color: var(--muted); font-size: 12px; letter-spacing: .18em; text-transform: uppercase; margin-top: 6px; }
+.estado-gral { display: flex; flex-wrap: wrap; gap: 8px; font-family: var(--mono); font-size: 12px; }
+.chip { border: 1px solid var(--line); background: var(--panel); padding: 6px 10px; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.chip b { color: var(--fg); font-weight: 600; }
+.chip span { color: var(--muted); }
+.reloj { font-variant-numeric: tabular-nums; }
+.aviso { font-family: var(--mono); font-size: 12px; color: var(--work); border: 1px dashed #ffb02066; padding: 8px 12px; }
+
+/* ---------- Grilla principal ---------- */
+.sala { display: grid; grid-template-columns: 300px minmax(0, 1fr) 320px; gap: 14px; align-items: start; }
+@media (max-width: 1100px) { .sala { grid-template-columns: 280px minmax(0, 1fr); } .registro { grid-column: 1 / -1; } }
+@media (max-width: 760px) { .sala { grid-template-columns: minmax(0, 1fr); } }
+.titulo-col { font-family: var(--mono); font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; display: flex; justify-content: space-between; }
+
+/* ---------- Escritorios ---------- */
+.equipo { display: grid; gap: 10px; }
+.escritorio {
+  width: 100%; text-align: left; font: inherit; color: inherit; cursor: pointer;
+  background: var(--panel); border: 1px solid var(--line); padding: 14px; display: grid; gap: 10px;
+  transition: border-color .2s, background .2s;
+}
+.escritorio:hover { border-color: #3a4049; }
+.escritorio[aria-pressed="true"] { border-color: var(--fg); background: var(--panel-2); }
+.escritorio:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.esc-h { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+.avatar { width: 44px; height: 44px; display: grid; place-items: center; background: var(--fg); color: var(--bg); font-family: var(--display); font-size: 22px; position: relative; }
+.escritorio[data-estado="trabajando"] .avatar::after { content: ""; position: absolute; inset: -4px; border: 1px solid var(--work); animation: latido 1.6s ease-in-out infinite; }
+@keyframes latido { 50% { inset: -8px; opacity: 0; } }
+.esc-nombre { font-weight: 800; font-size: 15px; }
+.esc-rol { color: var(--muted); font-size: 12px; }
+.pill { font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; padding: 3px 7px; border: 1px solid currentColor; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.pill.listo { color: var(--ok); }
+.pill.trabajando { color: var(--work); }
+.pill.trabajando::before { animation: parpadeo 1s steps(2) infinite; }
+.pill.esperando { color: var(--muted); }
+.pill.error { color: var(--bad); }
+@keyframes parpadeo { 50% { opacity: 0; } }
+.esc-tarea { color: #c9cdd2; font-size: 13px; min-height: 2.9em; }
+.esc-pie { display: flex; justify-content: space-between; gap: 8px; font-family: var(--mono); font-size: 11px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 8px; }
+
+/* ---------- Informe ---------- */
+.informe { background: var(--panel); border: 1px solid var(--line); padding: clamp(16px, 2.4vw, 26px); display: grid; gap: 20px; min-width: 0; }
+.inf-h { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 16px; }
+.inf-h h2 { font-family: var(--display); font-weight: 400; font-size: clamp(24px, 3vw, 34px); line-height: 1; margin: 0; text-wrap: balance; }
+.inf-cuando { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.cifras { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+.cifra { background: var(--panel-2); padding: 12px 14px; display: grid; gap: 4px; min-width: 0; }
+.cifra small { font-size: 11px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+.cifra b { font-family: var(--display); font-weight: 400; font-size: 28px; line-height: 1; font-variant-numeric: tabular-nums; }
+.cifra i { font-style: normal; font-size: 12px; color: var(--muted); }
+.cifra.alerta b { color: var(--accent); }
+.bloque h3 { font-family: var(--mono); font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; font-weight: 600; }
+.bloque ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.bloque li { padding-left: 18px; position: relative; max-width: 72ch; }
+.bloque li::before { content: "—"; position: absolute; left: 0; color: var(--muted); }
+.acciones li::before { content: "→"; color: var(--accent); }
+.acciones li { font-weight: 600; }
+.vacio { color: var(--muted); border: 1px dashed var(--line); padding: 22px; display: grid; gap: 6px; }
+.vacio b { color: var(--fg); }
+
+/* ---------- Registro de actividad ---------- */
+.registro { background: var(--panel); border: 1px solid var(--line); padding: 14px; min-width: 0; }
+.log { list-style: none; margin: 0; padding: 0; display: grid; max-height: 560px; overflow-y: auto; }
+.log li { display: grid; grid-template-columns: 46px minmax(0, 1fr); gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+.log li:last-child { border-bottom: 0; }
+.log time { font-family: var(--mono); font-size: 11px; color: var(--muted); padding-top: 2px; font-variant-numeric: tabular-nums; }
+.log .quien { font-weight: 700; margin-right: 4px; }
+.log .tipo-alerta .quien { color: var(--accent); }
+.log .dia { grid-template-columns: 1fr; font-family: var(--mono); font-size: 10.5px; letter-spacing: .2em; color: var(--muted); text-transform: uppercase; padding: 12px 0 4px; border-bottom: 0; }
+
+/* ---------- Consola ---------- */
+.consola { background: var(--panel); border: 1px solid var(--line); padding: 14px; display: grid; gap: 12px; }
+.charla { display: grid; gap: 10px; max-height: 360px; overflow-y: auto; }
+.msj { max-width: 78ch; white-space: pre-wrap; }
+.msj.yo { justify-self: end; background: var(--fg); color: var(--bg); padding: 8px 12px; font-weight: 600; }
+.msj.ofi { border-left: 2px solid var(--accent); padding: 2px 0 2px 12px; color: #dfe2e5; }
+.msj.ofi.pensando { color: var(--muted); font-family: var(--mono); font-size: 12px; }
+.sugerencias { display: flex; flex-wrap: wrap; gap: 8px; }
+.sugerencias button, .form button { font: inherit; cursor: pointer; }
+.sugerencias button { background: transparent; color: var(--fg); border: 1px solid var(--line); padding: 6px 10px; font-size: 12.5px; }
+.sugerencias button:hover { border-color: var(--fg); }
+.form { display: flex; gap: 8px; }
+.form input { flex: 1; min-width: 0; background: var(--bg); color: var(--fg); border: 1px solid var(--line); padding: 11px 12px; font: inherit; }
+.form input:focus-visible, .sugerencias button:focus-visible, .form button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.form button { background: var(--accent); color: #fff; border: 0; padding: 0 18px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; font-size: 12px; }
+.form button[disabled] { opacity: .5; cursor: default; }
+.nota { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+.area { font-family: var(--mono); font-size: 10.5px; letter-spacing: .2em; text-transform: uppercase; color: var(--accent); margin-top: 6px; }
+.enlaces { display: flex; flex-wrap: wrap; gap: 8px; }
+.enlaces a { color: var(--fg); border: 1px solid var(--line); padding: 7px 12px; text-decoration: none; font-weight: 600; font-size: 13px; }
+.enlaces a:hover { border-color: var(--fg); }
+.vacio span { display: block; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="marca">
+      <svg viewBox="0 0 110 200" aria-hidden="true"><polygon fill="#f2f3f4" points="62,0 8,112 50,112 28,200 102,72 58,72 84,0"/></svg>
+      <div>
+        <h1>OFICINA <em>POWER UP</em></h1>
+        <div class="sub">Empleados con IA · Ramos Mejía</div>
+      </div>
+    </div>
+    <div class="estado-gral">
+      <span class="chip reloj" id="reloj">--:--</span>
+      <span class="chip"><b id="cTrabajando">0</b><span>trabajando</span></span>
+      <span class="chip"><b id="cHoy">0</b><span>tareas hoy</span></span>
+    </div>
+  </header>
+  <div class="aviso" id="aviso" hidden></div>
+
+  <main class="sala">
+    <section aria-labelledby="tEquipo">
+      <h2 class="titulo-col" id="tEquipo"><span>Equipo</span><span id="cEquipo"></span></h2>
+      <div class="equipo" id="equipo"><div class="vacio"><b>Cargando la oficina…</b></div></div>
+    </section>
+
+    <section class="informe" id="informe" aria-live="polite"></section>
+
+    <section class="registro" aria-labelledby="tLog">
+      <h2 class="titulo-col" id="tLog"><span>Actividad</span><span>se actualiza sola</span></h2>
+      <ul class="log" id="log"><li class="dia">Esperando la primera tarea…</li></ul>
+    </section>
+  </main>
+</div>
+
+<script>
+// La clave viaja en el link (#k=...), nunca se guarda en el código de la página.
+const CLAVE = new URLSearchParams(location.hash.slice(1)).get("k") || "";
+const ESTADOS = { listo: "Listo", trabajando: "Trabajando", esperando: "Esperando", error: "Con problema" };
+const $ = s => document.querySelector(s);
+const esc = t => String(t ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const hora = d => d.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "America/Argentina/Buenos_Aires" });
+const diaTxt = d => d.toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long", timeZone: "America/Argentina/Buenos_Aires" });
+const diaClave = d => d.toLocaleDateString("es-AR", { timeZone: "America/Argentina/Buenos_Aires" });
+const hace = iso => {
+  if (!iso) return "todavía no trabajó";
+  const m = Math.round((Date.now() - new Date(iso)) / 60000);
+  if (m < 1) return "recién"; if (m < 60) return `hace ${m} min`;
+  const h = Math.round(m / 60); if (h < 24) return `hace ${h} h`;
+  return `hace ${Math.round(h / 24)} d`;
+};
+
+let sel = null;
+try { sel = localStorage.getItem("oficina-sel"); } catch (e) {}
+let estado = { empleados: {}, informes: {}, actividad: [] };
+const equipo = () => Object.entries(estado.empleados).map(([id, e]) => ({ id, ...e })).sort((a, b) => (a.orden || 99) - (b.orden || 99));
+
+function pintarEquipo() {
+  const eq = equipo();
+  if (!eq.length) { $("#equipo").innerHTML = `<div class="vacio"><b>Todavía no hay empleados.</b></div>`; return; }
+  if (!sel || !estado.empleados[sel]) sel = eq[0].id;
+  let area = "", html = "";
+  for (const e of eq) {
+    if (e.area && e.area !== area) { area = e.area; html += `<div class="area">${esc(area)}</div>`; }
+    const st = ESTADOS[e.estado] ? e.estado : "esperando";
+    html += `<button type="button" class="escritorio" data-id="${esc(e.id)}" data-estado="${st}" aria-pressed="${sel === e.id}">
+      <div class="esc-h"><div class="avatar" aria-hidden="true">${esc(e.inicial || (e.nombre || "?")[0])}</div>
+        <div><div class="esc-nombre">${esc(e.nombre || e.id)}</div><div class="esc-rol">${esc(e.rol)}</div></div>
+        <span class="pill ${st}">${ESTADOS[st]}</span></div>
+      <div class="esc-tarea">${esc(e.tarea || "Arranca en su próximo horario.")}</div>
+      <div class="esc-pie"><span>${esc(e.horario)}</span><span>${esc(hace(e.ultimaVez))}</span></div>
+    </button>`;
+  }
+  $("#equipo").innerHTML = html;
+  $("#cEquipo").textContent = eq.length;
+  $("#cTrabajando").textContent = eq.filter(e => e.estado === "trabajando").length;
+}
+
+function pintarInforme() {
+  const e = estado.empleados[sel];
+  if (!e) { $("#informe").innerHTML = ""; return; }
+  const inf = estado.informes[sel];
+  if (!inf) {
+    $("#informe").innerHTML = `<div class="inf-h"><h2>${esc(e.nombre)}</h2></div>
+      <div class="vacio"><b>Todavía no hay informe.</b><span>Aparece acá después de su primera tarea (${esc((e.horario || "").toLowerCase())}).</span></div>`;
+    return;
+  }
+  const cifras = (inf.cifras || []).map(c => `<div class="cifra${c.alerta ? " alerta" : ""}"><small>${esc(c.label)}</small><b>${esc(c.valor)}</b>${c.nota ? `<i>${esc(c.nota)}</i>` : ""}</div>`).join("");
+  const lista = (a, cls) => a && a.length ? `<ul${cls ? ` class="${cls}"` : ""}>${a.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : "";
+  const enlaces = (inf.enlaces || []).filter(l => /^https:\/\//.test(l.url)).map(l => `<a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.texto || "Abrir")} ↗</a>`).join("");
+  $("#informe").innerHTML = `
+    <div class="inf-h"><h2>${esc(inf.titulo || e.nombre)}</h2><span class="inf-cuando">${esc(e.nombre)}${inf.cuando ? " · " + esc(diaTxt(new Date(inf.cuando)) + " · " + hora(new Date(inf.cuando))) : ""}</span></div>
+    ${cifras ? `<div class="cifras">${cifras}</div>` : ""}
+    ${inf.puntos && inf.puntos.length ? `<div class="bloque"><h3>Qué pasó</h3>${lista(inf.puntos)}</div>` : ""}
+    ${inf.acciones && inf.acciones.length ? `<div class="bloque"><h3>Qué te recomiendo</h3>${lista(inf.acciones, "acciones")}</div>` : ""}
+    ${enlaces ? `<div class="enlaces">${enlaces}</div>` : ""}`;
+}
+
+function pintarLog() {
+  const items = estado.actividad;
+  if (!items.length) { $("#log").innerHTML = `<li class="dia">Esperando la primera tarea…</li>`; $("#cHoy").textContent = 0; return; }
+  let ultimo = "", html = "";
+  const hoy = diaClave(new Date());
+  for (const a of items) {
+    const d = new Date(a.cuando);
+    if (diaClave(d) !== ultimo) { ultimo = diaClave(d); html += `<li class="dia">${ultimo === hoy ? "Hoy" : esc(diaTxt(d))}</li>`; }
+    const e = estado.empleados[a.empleado];
+    html += `<li class="${a.tipo === "alerta" ? "tipo-alerta" : ""}"><time>${hora(d)}</time><div><span class="quien">${esc(e ? e.nombre : a.empleado)}</span>${esc(a.texto)}</div></li>`;
+  }
+  $("#log").innerHTML = html;
+  $("#cHoy").textContent = items.filter(a => diaClave(new Date(a.cuando)) === hoy).length;
+}
+
+$("#equipo").addEventListener("click", ev => {
+  const b = ev.target.closest(".escritorio"); if (!b) return;
+  sel = b.dataset.id;
+  try { localStorage.setItem("oficina-sel", sel); } catch (e) {}
+  pintarEquipo(); pintarInforme();
+  if (matchMedia("(max-width: 760px)").matches) $("#informe").scrollIntoView({ behavior: "smooth", block: "start" });
+});
+
+const aviso = t => { $("#aviso").hidden = !t; $("#aviso").textContent = t || ""; };
+let firma = "";
+async function cargar() {
+  if (!CLAVE) { aviso("Este link no tiene la clave. Pedile a Martín el link completo de la oficina."); return; }
+  try {
+    const r = await fetch("/api/oficina?k=" + encodeURIComponent(CLAVE), { cache: "no-store" });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) { aviso(d.error === "Link inválido." ? "Este link no es válido. Pedile a Martín el link de la oficina." : (d.error || "No se pudo cargar la oficina.")); return; }
+    aviso("");
+    const nueva = JSON.stringify(d);
+    if (nueva === firma) { pintarEquipo(); return; }
+    firma = nueva; estado = { empleados: d.empleados || {}, informes: d.informes || {}, actividad: d.actividad || [] };
+    pintarEquipo(); pintarInforme(); pintarLog();
+  } catch (e) { aviso("Sin conexión. La oficina se actualiza sola cuando vuelva internet."); }
+}
+const tic = () => { $("#reloj").textContent = diaTxt(new Date()) + " · " + hora(new Date()); };
+tic(); cargar();
+setInterval(() => { tic(); if (!document.hidden) cargar(); }, 30000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) cargar(); });
+</script>
+</body>
+</html>
