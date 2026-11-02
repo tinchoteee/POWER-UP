@@ -142,6 +142,9 @@ h1 em { font-style: normal; color: transparent; -webkit-text-stroke: 1.5px var(-
 .enlaces a { color: var(--fg); border: 1px solid var(--line); padding: 7px 12px; text-decoration: none; font-weight: 600; font-size: 13px; }
 .enlaces a:hover { border-color: var(--fg); }
 .vacio span { display: block; }
+/* Piso de la oficina: dibujo pixelado de los escritorios */
+.piso { border: 1px solid var(--line); background: #0c0e11; line-height: 0; }
+.piso canvas { width: 100%; height: auto; display: block; image-rendering: pixelated; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -161,6 +164,10 @@ h1 em { font-style: normal; color: transparent; -webkit-text-stroke: 1.5px var(-
     </div>
   </header>
   <div class="aviso" id="aviso" hidden></div>
+
+  <section class="piso" aria-label="La oficina: cada empleado en su escritorio. Tocá uno para ver su informe.">
+    <canvas id="piso"></canvas>
+  </section>
 
   <main class="sala">
     <section aria-labelledby="tEquipo">
@@ -259,9 +266,81 @@ $("#equipo").addEventListener("click", ev => {
   const b = ev.target.closest(".escritorio"); if (!b) return;
   sel = b.dataset.id;
   try { localStorage.setItem("oficina-sel", sel); } catch (e) {}
-  pintarEquipo(); pintarInforme();
+  pintarEquipo(); pintarInforme(); dibujarPiso();
   if (matchMedia("(max-width: 760px)").matches) $("#informe").scrollIntoView({ behavior: "smooth", block: "start" });
 });
+
+// ---------- Piso de la oficina (pixel art) ----------
+// Cada empleado en su escritorio, de espaldas mirando su monitor. La pantalla muestra el estado:
+// trabajando = líneas que se mueven, listo = verde, error = rojo con "!", esperando = apagada.
+const piso = $("#piso"), ctx = piso.getContext("2d");
+const COLOR_EST = { trabajando: "#ffb020", listo: "#3ddc84", error: "#ff5a5a", esperando: "#5b636d" };
+const REMERAS = ["#e5121f", "#f2f3f4", "#3b82f6", "#a855f7", "#22c55e", "#f59e0b", "#ec4899", "#14b8a6"];
+const PELO = ["#1a1a1a", "#5a3a22", "#2b2b2b", "#c9a227", "#1a1a1a", "#7a4b2a", "#111", "#3a2a1a"];
+const CELDA_W = 150, CELDA_H = 128;
+let columnas = 4, celdas = [], cuadro = 0;
+function medirPiso() {
+  const eq = equipo();
+  columnas = piso.clientWidth < 560 ? 2 : 4;
+  const filas = Math.max(1, Math.ceil(eq.length / columnas));
+  piso.width = columnas * CELDA_W; piso.height = filas * CELDA_H + 8;
+  celdas = eq.map((e, i) => ({ e, x: (i % columnas) * CELDA_W, y: Math.floor(i / columnas) * CELDA_H + 4 }));
+}
+function rect(x, y, w, h, c) { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), w, h); }
+function dibujarPiso() {
+  const W = piso.width, H = piso.height;
+  // piso de baldosas
+  for (let y = 0; y < H; y += 16) for (let x = 0; x < W; x += 16) rect(x, y, 16, 16, ((x + y) / 16) % 2 ? "#121418" : "#101215");
+  celdas.forEach((c, i) => {
+    const { e, x, y } = c, st = COLOR_EST[e.estado] ? e.estado : "esperando", elegido = e.id === sel;
+    // alfombra del puesto
+    rect(x + 14, y + 26, CELDA_W - 28, 92, elegido ? "#1d2229" : "#16191e");
+    if (elegido) { ctx.strokeStyle = "#f2f3f4"; ctx.lineWidth = 2; ctx.strokeRect(x + 15, y + 27, CELDA_W - 30, 90); }
+    // planta en la esquina
+    rect(x + 22, y + 96, 10, 10, "#6b4a2f"); rect(x + 19, y + 86, 16, 10, "#1f7a3a"); rect(x + 23, y + 80, 8, 7, "#2a9d4b");
+    // escritorio
+    rect(x + 30, y + 52, 90, 20, "#7a5634"); rect(x + 30, y + 72, 90, 8, "#563a22");
+    rect(x + 34, y + 80, 4, 14, "#3d2917"); rect(x + 112, y + 80, 4, 14, "#3d2917");
+    // monitor
+    rect(x + 55, y + 32, 40, 24, "#0a0c0f"); rect(x + 72, y + 56, 6, 4, "#0a0c0f");
+    const pantalla = { trabajando: "#2a1f08", listo: "#0c2a18", error: "#2e0c0c", esperando: "#14171b" }[st];
+    rect(x + 58, y + 35, 34, 18, pantalla);
+    if (st === "trabajando") for (let l = 0; l < 4; l++) { const largo = 8 + ((cuadro * 3 + l * 7 + i * 5) % 20); rect(x + 61, y + 37 + l * 4, largo, 2, "#ffb020"); }
+    else if (st === "listo") { rect(x + 70, y + 41, 3, 3, "#3ddc84"); rect(x + 73, y + 44, 3, 3, "#3ddc84"); rect(x + 76, y + 41, 3, 3, "#3ddc84"); rect(x + 79, y + 38, 3, 3, "#3ddc84"); }
+    else if (st === "error") { rect(x + 73, y + 37, 4, 9, "#ff5a5a"); rect(x + 73, y + 48, 4, 3, "#ff5a5a"); }
+    // taza
+    rect(x + 102, y + 48, 7, 7, "#e5e7ea"); rect(x + 109, y + 50, 2, 3, "#e5e7ea");
+    // empleado de espaldas (tipea si está trabajando)
+    const bob = st === "trabajando" && (cuadro + i) % 2 ? 1 : 0;
+    rect(x + 62, y + 96, 26, 22, "#24272c");                      // silla
+    rect(x + 64, y + 84 + bob, 22, 16, REMERAS[i % REMERAS.length]); // remera
+    rect(x + 68, y + 70 + bob, 14, 14, "#e2b088");                 // cabeza
+    rect(x + 67, y + 69 + bob, 16, 8, PELO[i % PELO.length]);       // pelo
+    rect(x + 60, y + 86 + bob, 4, 8, "#e2b088"); rect(x + 86, y + 86 + bob, 4, 8, "#e2b088"); // brazos
+    // cartel con el nombre y el estado
+    ctx.font = "600 10px 'JetBrains Mono', ui-monospace, monospace";
+    const nombre = (e.nombre || e.id).toUpperCase();
+    const w = Math.min(CELDA_W - 12, ctx.measureText(nombre).width + 22);
+    const nx = x + (CELDA_W - w) / 2;
+    rect(nx, y + 6, w, 16, "#0a0c0f"); ctx.strokeStyle = "#2e333a"; ctx.lineWidth = 1; ctx.strokeRect(nx + .5, y + 6.5, w - 1, 15);
+    ctx.fillStyle = COLOR_EST[st]; ctx.beginPath(); ctx.arc(nx + 9, y + 14, 3, 0, 7); ctx.fill();
+    ctx.fillStyle = "#f2f3f4"; ctx.textBaseline = "middle";
+    let txt = nombre; while (ctx.measureText(txt).width > w - 22 && txt.length > 3) txt = txt.slice(0, -2) + "…";
+    ctx.fillText(txt, nx + 16, y + 14.5);
+    if (st === "error" && cuadro % 2) { rect(x + 98, y + 60, 12, 14, "#ff5a5a"); rect(x + 103, y + 62, 2, 7, "#fff"); rect(x + 103, y + 71, 2, 2, "#fff"); }
+  });
+}
+function pintarPiso() { medirPiso(); dibujarPiso(); }
+piso.addEventListener("click", ev => {
+  const r = piso.getBoundingClientRect(), px = (ev.clientX - r.left) * piso.width / r.width, py = (ev.clientY - r.top) * piso.height / r.height;
+  const c = celdas.find(c => px >= c.x && px < c.x + CELDA_W && py >= c.y && py < c.y + CELDA_H); if (!c) return;
+  sel = c.e.id;
+  try { localStorage.setItem("oficina-sel", sel); } catch (e) {}
+  pintarEquipo(); pintarInforme(); dibujarPiso();
+  $("#informe").scrollIntoView({ behavior: "smooth", block: "start" });
+});
+addEventListener("resize", () => pintarPiso());
+if (!matchMedia("(prefers-reduced-motion: reduce)").matches) setInterval(() => { if (!document.hidden && celdas.some(c => c.e.estado === "trabajando" || c.e.estado === "error")) { cuadro++; dibujarPiso(); } }, 280);
 
 const aviso = t => { $("#aviso").hidden = !t; $("#aviso").textContent = t || ""; };
 let firma = "";
@@ -275,7 +354,7 @@ async function cargar() {
     const nueva = JSON.stringify(d);
     if (nueva === firma) { pintarEquipo(); return; }
     firma = nueva; estado = { empleados: d.empleados || {}, informes: d.informes || {}, actividad: d.actividad || [] };
-    pintarEquipo(); pintarInforme(); pintarLog();
+    pintarEquipo(); pintarInforme(); pintarLog(); pintarPiso();
   } catch (e) { aviso("Sin conexión. La oficina se actualiza sola cuando vuelva internet."); }
 }
 const tic = () => { $("#reloj").textContent = diaTxt(new Date()) + " · " + hora(new Date()); };
