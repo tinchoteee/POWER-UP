@@ -6,6 +6,8 @@
 :root {
   --ok: #3ddc84;
   --error: #ff5a5a;
+  --oferta: #e5121f;
+  --oferta-claro: #ff4d57;
   --black: #000;
   --white: #fff;
   --gray: #8a8a8a;
@@ -217,7 +219,7 @@ section { padding: clamp(80px, 12vw, 160px) var(--gutter); }
 .card__info { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 18px 18px 22px; }
 .card__name { font-weight: 700; text-transform: uppercase; font-size: 14px; letter-spacing: .06em; }
 .card__cat { color: var(--gray); font-size: 12px; margin-top: 4px; }
-.card__price { font-family: var(--display); font-size: 22px; white-space: nowrap; }
+.card__price { font-family: var(--display); font-size: 22px; white-space: nowrap; text-align: right; }
 
 /* ---------- Drop ---------- */
 .drop__grid { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 2px solid var(--line); border-left: 2px solid var(--line); }
@@ -467,6 +469,22 @@ button.link { font-size: inherit; padding: 0; }
 .cat-lbl { color: var(--gray); letter-spacing: .3em; font-size: 12px; text-transform: uppercase; margin-bottom: 10px; }
 .prod-nombre { font-family: var(--display); font-weight: 400; font-size: clamp(40px, 5vw, 72px); line-height: .92; }
 .prod-precio { font-family: var(--display); font-size: 40px; line-height: 1; }
+/* Oferta: precio anterior real tachado, % y cuánto se ahorra */
+.antes { color: var(--gray); text-decoration-thickness: 2px; font-size: .62em; margin-right: .15em; }
+.prod-precio { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; }
+.prod-precio .antes { font-size: 26px; margin: 0; }
+.off { font-style: normal; font-family: var(--body); font-weight: 800; font-size: 13px; letter-spacing: .12em;
+  background: var(--oferta); color: var(--white); padding: 6px 9px; align-self: center; }
+.card__off { position: absolute; top: 14px; right: 14px; z-index: 2; background: var(--oferta); color: var(--white);
+  font-size: 12px; font-weight: 800; letter-spacing: .08em; padding: 6px 9px; }
+.precio-ahorro { margin-top: -10px; color: #cfcfcf; line-height: 1.5; }
+.precio-ahorro b { color: var(--oferta-claro); }
+.prod-benef { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; margin: -6px 0 0; padding: 0; }
+.prod-benef:empty { display: none; }
+.prod-benef li { border: 1px solid var(--line); padding: 8px 12px; font-size: 13px; color: #cfcfcf; }
+.prod-benef b { color: var(--white); }
+.comprar-fijo .antes { color: #777; font-size: .6em; }
+.card__price .antes { display: block; font-size: .68em; margin: 0 0 2px; }
 .precio-transf { margin-top: -12px; color: var(--gray); }
 .precio-transf b { color: var(--white); }
 .prod-desc { color: #cfcfcf; line-height: 1.6; }

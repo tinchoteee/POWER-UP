@@ -24,6 +24,11 @@ const precioDe = aplicarAjustes.precioDe;   // precio del color elegido (o del m
 const rangoDe = aplicarAjustes.rangoDe;     // { min, max } entre todos los colores, o null si es a consultar
 const paresDe = aplicarAjustes.paresDe;     // unidades que quedan de un talle (null = no se lleva la cuenta)
 const precioTxt = p => { const r = rangoDe(p); return !r ? "Consultar precio" : r.min !== r.max ? "Desde " + pesos(r.min) : pesos(r.min); };
+// Precio tachado: el precio anterior real del producto ("antes" en productos.js), hasta "ofertaHasta"
+const OFERTA_VIGENTE = !CATALOGO.ofertaHasta || Date.now() <= new Date(CATALOGO.ofertaHasta + "T23:59:59-03:00").getTime();
+const antesDe = (p, precio) => OFERTA_VIGENTE && precio > 0 && p.antes > precio ? p.antes : 0;
+const offDe = (antes, precio) => Math.round((1 - precio / antes) * 100);
+const conTachado = (p, precio, txt) => { const a = antesDe(p, precio); return a ? `<s class="antes">${pesos(a)}</s> ${txt}` : txt; };
 const colorDe = (p, cid) => (p.colores || []).find(c => c.id === cid);
 const nombreLinea = id => (CATALOGO.lineas || {})[id] || id;
 const fotoDe = (p, cid) => (colorDe(p, cid) || {}).foto || p.foto || ((p.colores || []).find(c => c.foto) || {}).foto || "";
@@ -277,9 +282,11 @@ function tarjeta(p) {
     ? fotos.map((f, i) => `<img src="${esc(f)}" alt="${i ? "" : esc(p.nombre)}" loading="lazy"${i ? "" : ' class="on"'}>`).join("")
     : img(fotoDe(p), p.nombre);
   const tag = p.agotado ? "AGOTADO" : !rangoDe(p) ? "CONSULTAR" : p.etiqueta;
+  const min = (rangoDe(p) || {}).min || 0, antes = p.agotado ? 0 : antesDe(p, min);
   return `<a class="card${p.agotado ? " is-agotado" : ""}" href="#p/${p.id}" data-cat="${esc(p.cat)}">
     <div class="card__media${carrusel ? " carrusel" : ""}">
       ${tag ? `<span class="card__tag">${esc(tag)}</span>` : ""}
+      ${antes ? `<span class="card__off">-${offDe(antes, min)}%</span>` : ""}
       ${fotoHtml}
       <span class="card__quick">+ VER PRODUCTO</span>
     </div>
@@ -289,7 +296,7 @@ function tarjeta(p) {
         <p class="card__cat">${esc(p.detalle || nombreLinea(p.cat))}${cols.length > 1 ? ` · ${cols.length} colores` : ""}</p>
         ${cols.length > 1 ? `<div class="puntos">${cols.map(c => `<i style="--sw:${esc(c.hex)}" title="${esc(c.nombre)}"${carrusel && c.foto ? ` data-foto="${fotos.indexOf(c.foto)}"${c.foto === fotos[0] ? ' class="on"' : ""}` : ""}></i>`).join("")}</div>` : ""}
       </div>
-      <span class="card__price">${precioTxt(p)}</span>
+      <span class="card__price">${antes ? conTachado(p, min, precioTxt(p)) : precioTxt(p)}</span>
     </div>
   </a>`;
 }
@@ -359,9 +366,22 @@ function pintarProducto() {
 
   // Precio: el del color elegido; si todavía no eligió color, "Desde $X" cuando los colores cuestan distinto
   const precioSel = colSel ? precioDe(p, colSel.id) : 0;
-  $("#pPrecio").textContent = colSel ? (precioSel > 0 ? pesos(precioSel) : "Consultar precio") : precioTxt(p);
   const tienePrecio = colSel ? precioSel > 0 : Boolean(rangoDe(p));
   const base = colSel ? precioSel : (rangoDe(p) || {}).min;
+  const antes = p.agotado ? 0 : antesDe(p, base);
+  const txtPrecio = colSel ? (precioSel > 0 ? pesos(precioSel) : "Consultar precio") : precioTxt(p);
+  $("#pPrecio").innerHTML = antes ? `${conTachado(p, base, `<span>${txtPrecio}</span>`)} <em class="off">-${offDe(antes, base)}% OFF</em>` : txtPrecio;
+  // Ahorro: contra el precio anterior y, en los conjuntos, contra comprar la remera y el short por separado
+  const ahorros = [];
+  if (antes) ahorros.push(`Ahorrás <b>${pesos(antes - base)}</b> sobre el precio anterior`);
+  if (tipoDe(p) === "conjuntos" && base > 0) {
+    const resto = p.nombre.replace(/^Conjunto /, "");
+    const partes = ["Remera ", "Short "].map(pre => PRODUCTOS.find(x => x.nombre === pre + resto && !x.oculto));
+    const separado = partes.every(Boolean) ? partes.reduce((a, x) => a + ((rangoDe(x) || {}).min || 0), 0) : 0;
+    if (separado > base) ahorros.push(`Remera + short por separado: ${pesos(separado)}. Con el conjunto ahorrás <b>${pesos(separado - base)}</b>`);
+  }
+  $("#pAhorro").hidden = !ahorros.length;
+  $("#pAhorro").innerHTML = ahorros.join("<br>");
   $("#pTransf").hidden = !(transf && transf.porcentaje && base > 0);
   if (!$("#pTransf").hidden) $("#pTransf").innerHTML = `${colSel || !rangoDe(p) || rangoDe(p).min === rangoDe(p).max ? "" : "Desde "}<b>${pesos(Math.round(base * (100 - transf.porcentaje) / 100))}</b> con transferencia (${transf.porcentaje}% OFF)`;
 
@@ -385,7 +405,7 @@ function pintarComprarFijo() {
   const precio = precioDe(p, sel.color) || (rangoDe(p) || {}).min || 0;
   const faltaColor = (p.colores || []).length > 1 && !sel.color;
   const txt = faltaColor ? (sel.talle ? "Elegí el color" : "Elegí color y talle") : sel.talle ? `Agregar · talle ${esc(sel.talle)}` : "Elegí tu talle";
-  b.innerHTML = `<span>${txt}</span><b>${pesos(precio)}</b>`;
+  b.innerHTML = `<span>${txt}</span><b>${conTachado(p, precio, pesos(precio))}</b>`;
 }
 if ("IntersectionObserver" in window) new IntersectionObserver(es => { accionesSeVen = es[0].isIntersecting; pintarComprarFijo(); }).observe($("#pAcciones"));
 $("#comprarFijo").addEventListener("click", () => {
@@ -920,6 +940,11 @@ function pintarFranja(pctTransf) {
   $("#topbar").innerHTML = vuelta + vuelta;
 }
 pintarFranja(0);
+// Beneficios a la vista en cada producto (los mismos montos que la barrita del carrito)
+$("#pBenef").innerHTML = [
+  ENVIO.gratisDesde > 0 && `<b>Envío gratis</b> desde ${pesos(ENVIO.gratisDesde)}`,
+  DESCUENTO.desde > 0 && DESCUENTO.porcentaje > 0 && `<b>${DESCUENTO.porcentaje}% OFF extra</b> desde ${pesos(DESCUENTO.desde)}`
+].filter(Boolean).map(t => `<li>${t}</li>`).join("");
 configPublica.then(c => { if (c && c.transferencia && c.transferencia.porcentaje) pintarFranja(c.transferencia.porcentaje); });
 {
   if (ENVIO.gratisDesde > 0) {
