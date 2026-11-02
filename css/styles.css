@@ -709,8 +709,8 @@ html:not(.sin-intro) .hero__title .line:nth-child(2) .word { animation-delay: 1.
 
 /* ---------- Tarjetas: inclinación 3D y brillo ---------- */
 @media (hover: hover) and (pointer: fine) {
-  .card { transition: transform .25s ease-out; transform-style: preserve-3d; will-change: transform; }
-  .card:hover { z-index: 3; }
+  .card { transition: transform .25s ease-out; transform-style: preserve-3d; }
+  .card:hover { z-index: 3; will-change: transform; }
   .card__media::after {
     content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 1; opacity: 0; transition: opacity .3s;
     background: radial-gradient(circle at var(--gx, 50%) var(--gy, 50%), rgba(255,255,255,.45), transparent 55%);
@@ -718,8 +718,9 @@ html:not(.sin-intro) .hero__title .line:nth-child(2) .word { animation-delay: 1.
   }
   .card:hover .card__media::after { opacity: 1; }
 }
-.card__tag { animation: latido 2.4s ease-in-out infinite; }
-@keyframes latido { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,.0); } 50% { box-shadow: 0 0 0 6px rgba(255,255,255,.18); } }
+/* Latido del cartelito: un halo aparte que solo cambia tamaño y transparencia (no repinta la tarjeta en cada cuadro) */
+.card__tag::after { content: ""; position: absolute; inset: 0; outline: 6px solid rgba(255,255,255,.18); opacity: 0; pointer-events: none; animation: latido 2.4s ease-in-out infinite; }
+@keyframes latido { 0%, 100% { opacity: 0; transform: scale(.92); } 50% { opacity: 1; transform: scale(1); } }
 /* Las fotos aparecen con una cortina al entrar en pantalla */
 .card.al-entrar:not(.is-in) .card__media img { clip-path: inset(100% 0 0 0); }
 .card.al-entrar.is-in .card__media img { animation: cortina 1s var(--ease) both; }
@@ -863,4 +864,38 @@ html:not(.sin-intro) .hero__title .line:nth-child(2) .word { animation-delay: 1.
     .grid .card { animation: entra3d linear backwards; animation-timeline: view(); animation-range: entry 0% cover 28%; transform-origin: 50% 100%; }
     @keyframes entra3d { from { transform: perspective(900px) rotateX(32deg) translateY(70px) scale(.9); opacity: .2; } }
   }
+}
+
+/* ---------- Transición entre vistas (tienda ⇄ producto ⇄ checkout) ----------
+   La página se funde rápido y la foto del producto viaja de la tarjeta a la foto grande (ver conTransicion en tienda.js) */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) { animation: vt-sale .22s ease-in both; }
+  ::view-transition-new(root) { animation: vt-entra .38s cubic-bezier(.16, 1, .3, 1) both; }
+  ::view-transition-group(foto-prod) { animation-duration: .55s; animation-timing-function: cubic-bezier(.76, 0, .24, 1); z-index: 50; }
+  ::view-transition-old(foto-prod), ::view-transition-new(foto-prod) { animation-duration: .55s; height: 100%; object-fit: cover; }
+}
+@keyframes vt-sale { to { opacity: 0; } }
+@keyframes vt-entra { from { opacity: 0; } }
+
+/* ---------- Botón "Agregar" fijo abajo (celular, página de producto) ---------- */
+.comprar-fijo { display: none; }
+@media (max-width: 900px) {
+  .comprar-fijo:not([hidden]) {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 156; display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 16px 20px calc(16px + env(safe-area-inset-bottom)); background: var(--white); color: var(--black); border: 0;
+    font: inherit; font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; cursor: pointer;
+    box-shadow: 0 -10px 30px rgba(0,0,0,.5); animation: sube .4s cubic-bezier(.16, 1, .3, 1);
+  }
+  .comprar-fijo b { font-family: var(--display); font-weight: 400; font-size: 24px; letter-spacing: 0; }
+  .con-comprar .dock { transform: translateY(110%); visibility: hidden; }
+  .con-comprar .wa-float { bottom: calc(84px + env(safe-area-inset-bottom)); }
+  .con-comprar .toast { bottom: calc(90px + env(safe-area-inset-bottom)); }
+}
+@keyframes sube { from { transform: translateY(100%); } }
+
+/* ---------- Respuesta al tocar (celular): las cosas se hunden apenas al apretarlas ---------- */
+@media (hover: none) {
+  .card, .btn, .filter, .swatch, .sizes button, .comprar-fijo, .cart-btn { -webkit-tap-highlight-color: transparent; transition: transform .15s ease-out; }
+  .card:active { transform: scale(.97); }
+  .btn:active, .filter:active, .swatch:active, .sizes button:active, .comprar-fijo:active, .cart-btn:active { transform: scale(.95); }
 }

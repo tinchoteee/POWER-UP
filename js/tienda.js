@@ -27,7 +27,7 @@ const precioTxt = p => { const r = rangoDe(p); return !r ? "Consultar precio" : 
 const colorDe = (p, cid) => (p.colores || []).find(c => c.id === cid);
 const nombreLinea = id => (CATALOGO.lineas || {})[id] || id;
 const fotoDe = (p, cid) => (colorDe(p, cid) || {}).foto || p.foto || ((p.colores || []).find(c => c.foto) || {}).foto || "";
-const img = (src, alt = "") => src ? `<img src="${esc(src)}" alt="${esc(alt)}" loading="lazy">` : "";
+const img = (src, alt = "") => src ? `<img src="${esc(src)}" alt="${esc(alt)}" loading="lazy" decoding="async">` : "";
 const wa = texto => (WHATSAPP ? `https://wa.me/${WHATSAPP}` : "https://wa.me/") + (texto ? "?text=" + encodeURIComponent(texto) : "");
 const leer = (k, def) => { try { return JSON.parse(localStorage.getItem(k)) ?? def; } catch (e) { return def; } };
 const escribir = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
@@ -371,7 +371,29 @@ function pintarProducto() {
   else if (colSel && colAgotado(colSel)) $("#pAcciones").innerHTML = `<button class="btn btn--white btn--full" disabled>Agotado en ${esc(colSel.nombre)}</button>` + botonWa("Consultar por WhatsApp");
   else if (tienePrecio) $("#pAcciones").innerHTML = `<button class="btn btn--white btn--full" id="agregarBtn">Agregar al carrito</button>` + botonWa("Consultar por WhatsApp");
   else $("#pAcciones").innerHTML = botonWa("Consultar precio por WhatsApp");
+  pintarComprarFijo();
 }
+
+// Botón "Agregar" fijo abajo en el celular mientras el botón de verdad no se ve (la foto ocupa toda la pantalla al entrar)
+let accionesSeVen = true;
+function pintarComprarFijo() {
+  const b = $("#comprarFijo"), p = producto(sel.id), boton = $("#agregarBtn");
+  const ver = Boolean(p && boton && !$("#vista-producto").hidden && !accionesSeVen);
+  b.hidden = !ver;
+  document.body.classList.toggle("con-comprar", ver);
+  if (!ver) return;
+  const precio = precioDe(p, sel.color) || (rangoDe(p) || {}).min || 0;
+  const faltaColor = (p.colores || []).length > 1 && !sel.color;
+  const txt = faltaColor ? (sel.talle ? "Elegí el color" : "Elegí color y talle") : sel.talle ? `Agregar · talle ${esc(sel.talle)}` : "Elegí tu talle";
+  b.innerHTML = `<span>${txt}</span><b>${pesos(precio)}</b>`;
+}
+if ("IntersectionObserver" in window) new IntersectionObserver(es => { accionesSeVen = es[0].isIntersecting; pintarComprarFijo(); }).observe($("#pAcciones"));
+$("#comprarFijo").addEventListener("click", () => {
+  const p = producto(sel.id);
+  if (p && sel.talle && (!(p.colores || []).length || sel.color)) { $("#agregarBtn").click(); return; }
+  $("#pTalles").scrollIntoView({ behavior: SIN_MOVIMIENTO ? "auto" : "smooth", block: "center" });
+  setTimeout(() => $("#agregarBtn") && $("#agregarBtn").click(), SIN_MOVIMIENTO ? 0 : 450);   // muestra "Elegí tu talle" y sacude los talles
+});
 $("#vista-producto").addEventListener("click", e => {
   const p = producto(sel.id); if (!p) return;
   const f = e.target.closest("[data-foto]");
@@ -392,6 +414,7 @@ $("#vista-producto").addEventListener("click", e => {
       return;
     }
     agregar(p.id, sel.color, sel.talle);
+    if (navigator.vibrate) try { navigator.vibrate(12); } catch (e) {}   // toquecito en el celular (Android)
     toast(`${p.nombre} (${sel.talle}) agregado`);
     setTimeout(abrirCarrito, SIN_MOVIMIENTO ? 0 : 350);
   }
@@ -817,22 +840,67 @@ configPublica.then(c => {
 });
 
 // ---------- Navegación entre vistas ----------
+// Al volver de un producto a la tienda, se vuelve al mismo lugar donde estaba (antes saltaba arriba de todo)
+let vistaActual = null, hashActual = "", posTienda = null;
+// Al cambiar de vista se salta directo (sin el scroll suave de la página, que se veía como un tirón)
+const irA = y => window.scrollTo({ top: y, behavior: "instant" });
 function ruta() {
   const h = decodeURIComponent(location.hash.slice(1));
   const vista = h.startsWith("p/") ? "producto" : h === "checkout" ? "checkout" : "inicio";
+  if (vistaActual === "inicio" && vista === "producto") posTienda = { y: scrollY, h: hashActual };
+  const volver = vistaActual === "producto" && vista === "inicio" && posTienda && posTienda.h === h ? posTienda.y : null;
+  if (vista === "inicio") posTienda = null;
+  vistaActual = vista; hashActual = h;
   ["inicio", "producto", "checkout"].forEach(v => { $("#vista-" + v).hidden = v !== vista; });
   document.body.classList.toggle("en-checkout", vista === "checkout");
+  pintarComprarFijo();
   $("#flotante").hidden = !WHATSAPP || vista === "checkout";
-  if (vista === "producto") { mostrarProducto(+h.slice(2)); window.scrollTo(0, 0); return; }
-  if (vista === "checkout") { mostrarCheckout(); window.scrollTo(0, 0); return; }
+  if (vista === "producto") { mostrarProducto(+h.slice(2)); irA(0); return; }
+  if (vista === "checkout") { mostrarCheckout(); irA(0); return; }
   document.title = "POWER UP Store | Conjuntos urbanos con envío a todo el país";
-  if (h.startsWith("cat/")) { catActual = h.slice(4); pintarCatalogo(); $("#tienda").scrollIntoView(); return; }
+  if (h.startsWith("cat/")) catActual = h.slice(4);
+  if (volver != null) { pintarCatalogo(); irA(volver); return; }
+  if (h.startsWith("cat/")) { pintarCatalogo(); $("#tienda").scrollIntoView(); return; }
   pintarCatalogo();
   const destino = h && document.getElementById(h);
   if (destino && destino.tagName === "DETAILS") destino.open = true;
-  if (destino) destino.scrollIntoView(); else window.scrollTo(0, 0);
+  if (destino) destino.scrollIntoView(); else irA(0);
 }
-window.addEventListener("hashchange", () => { $("#resultado").hidden = true; cerrarCarrito(); cerrarMenu(); ruta(); });
+window.addEventListener("hashchange", () => { $("#resultado").hidden = true; cerrarCarrito(); cerrarMenu(); conTransicion(ruta); });
+
+// Transición entre vistas (navegadores nuevos; en los demás cambia de golpe como siempre):
+// la foto "vuela" de la tarjeta a la página del producto y, al volver, de nuevo a su tarjeta. El resto se funde.
+let fotoTocada = null;
+document.addEventListener("click", e => {
+  const c = e.target.closest && e.target.closest("a.card");
+  fotoTocada = c ? c.querySelector(".card__media img.on") || c.querySelector(".card__media img") : null;
+}, true);
+const fotoDeLaTarjeta = id => [...$$(`a.card[href="#p/${id}"] .card__media img`)].find(i => {
+  if (i.closest(".carrusel") && !i.classList.contains("on")) return false;
+  const r = i.getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight && r.width > 0;
+});
+function conTransicion(cambio) {
+  const tocada = fotoTocada; fotoTocada = null;
+  if (SIN_MOVIMIENTO || !document.startViewTransition) return cambio();
+  const nombrar = el => { if (el) el.style.viewTransitionName = "foto-prod"; return el; };
+  const idAntes = vistaActual === "producto" ? sel.id : null;
+  const viejo = nombrar(tocada && tocada.isConnected ? tocada : vistaActual === "producto" ? $("#fotoGrande img") : null);
+  let nuevo = null, hecho = false;
+  const hacer = () => {
+    if (hecho) return;
+    hecho = true;
+    if (viejo) viejo.style.viewTransitionName = "";
+    cambio();
+    if (!viejo) return;
+    if (vistaActual === "producto") nuevo = nombrar($("#fotoGrande img"));
+    else if (vistaActual === "inicio" && idAntes) nuevo = nombrar(fotoDeLaTarjeta(idAntes));
+  };
+  const t = document.startViewTransition(hacer);
+  // Si la página no está dibujando (pestaña de fondo, equipo trabado), no se espera: cambia de golpe
+  setTimeout(() => { if (!hecho) { hacer(); t.skipTransition(); } }, 300);
+  t.ready.catch(() => {}); t.updateCallbackDone.catch(() => {});
+  t.finished.finally(() => { if (viejo) viejo.style.viewTransitionName = ""; if (nuevo) nuevo.style.viewTransitionName = ""; });
+}
 document.addEventListener("keydown", e => {
   if (e.key !== "Escape") return;
   if (!$("#bienvenida").hidden) cerrarBienvenida();
@@ -997,13 +1065,18 @@ function animarEntrada(raiz) {
 // ---------- Cursor (solo compu) ----------
 if (matchMedia("(hover: hover) and (pointer: fine)").matches && !SIN_MOVIMIENTO) {
   const cursor = $(".cursor");
-  let x = -100, y = -100, cx = x, cy = y;
-  document.addEventListener("mousemove", e => { x = e.clientX; y = e.clientY; });
-  (function loop() {
+  let x = -100, y = -100, cx = x, cy = y, siguiendo = false;
+  // Se mueve solo mientras el cursor no llegó al mouse (quieto = no gasta nada)
+  const seguir = () => {
     cx += (x - cx) * 0.2; cy += (y - cy) * 0.2;
+    if (Math.abs(x - cx) < 0.3 && Math.abs(y - cy) < 0.3) { cx = x; cy = y; siguiendo = false; }
     cursor.style.transform = `translate(${cx}px, ${cy}px) translate(-50%, -50%)`;
-    requestAnimationFrame(loop);
-  })();
+    if (siguiendo) requestAnimationFrame(seguir);
+  };
+  document.addEventListener("mousemove", e => {
+    x = e.clientX; y = e.clientY;
+    if (!siguiendo) { siguiendo = true; requestAnimationFrame(seguir); }
+  }, { passive: true });
   document.addEventListener("mouseover", e => {
     const card = e.target.closest(".card");
     cursor.classList.toggle("is-hover", !!e.target.closest("a, button, .card, summary, label"));
@@ -1012,45 +1085,56 @@ if (matchMedia("(hover: hover) and (pointer: fine)").matches && !SIN_MOVIMIENTO)
 
   // Luz que sigue al mouse en la portada
   const hero = $(".hero");
-  hero.addEventListener("mousemove", e => {
-    const r = hero.getBoundingClientRect();
-    hero.style.setProperty("--mx", (e.clientX - r.left) + "px");
-    hero.style.setProperty("--my", (e.clientY - r.top) + "px");
-  });
-
-  // Botones "imán": se van un poco hacia el mouse
-  document.addEventListener("mousemove", e => {
-    const b = e.target.closest(".magnet");
-    $$(".magnet.is-mag").forEach(x => { if (x !== b) { x.classList.remove("is-mag"); x.style.transform = ""; } });
-    if (!b) return;
-    const r = b.getBoundingClientRect();
-    b.classList.add("is-mag");
-    b.style.transform = `translate(${(e.clientX - r.left - r.width / 2) * 0.25}px, ${(e.clientY - r.top - r.height / 2) * 0.35}px)`;
-  });
-
-  // Tarjetas que se inclinan en 3D con un brillo
-  document.addEventListener("mousemove", e => {
-    const card = e.target.closest(".card");
-    if (window._cardTilt && window._cardTilt !== card) { window._cardTilt.style.transform = ""; window._cardTilt = null; }
-    if (!card) return;
-    const r = card.getBoundingClientRect(), px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
-    card.style.transform = `perspective(900px) rotateX(${(0.5 - py) * 7}deg) rotateY(${(px - 0.5) * 9}deg)`;
-    card.style.setProperty("--gx", px * 100 + "%"); card.style.setProperty("--gy", py * 100 + "%");
-    window._cardTilt = card;
-  });
+  // Luz de la portada, botones "imán" y tarjetas que se inclinan en 3D con un brillo.
+  // Todo junto y una vez por cuadro como mucho: el mouse manda más eventos que cuadros, y medir en cada uno traba.
+  let ev = null, pendiente = false, iman = null, tilt = null;
+  const mover = () => {
+    pendiente = false;
+    const e = ev, t = e.target.closest ? e.target : document.body;
+    if (t.closest(".hero")) {
+      const r = hero.getBoundingClientRect();
+      hero.style.setProperty("--mx", (e.clientX - r.left) + "px");
+      hero.style.setProperty("--my", (e.clientY - r.top) + "px");
+    }
+    const b = t.closest(".magnet");
+    if (iman && iman !== b) { iman.classList.remove("is-mag"); iman.style.transform = ""; iman = null; }
+    if (b) {
+      const r = b.getBoundingClientRect();
+      b.classList.add("is-mag"); iman = b;
+      b.style.transform = `translate(${(e.clientX - r.left - r.width / 2) * 0.25}px, ${(e.clientY - r.top - r.height / 2) * 0.35}px)`;
+    }
+    const card = t.closest(".card");
+    if (tilt && tilt !== card) { tilt.style.transform = ""; tilt = null; }
+    if (card) {
+      const r = card.getBoundingClientRect(), px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+      card.style.transform = `perspective(900px) rotateX(${(0.5 - py) * 7}deg) rotateY(${(px - 0.5) * 9}deg)`;
+      card.style.setProperty("--gx", px * 100 + "%"); card.style.setProperty("--gy", py * 100 + "%");
+      tilt = card;
+    }
+  };
+  document.addEventListener("mousemove", e => { ev = e; if (!pendiente) { pendiente = true; requestAnimationFrame(mover); } }, { passive: true });
 }
 
 // ---------- Barra de avance y textos que se inclinan con la velocidad del scroll ----------
+// Solo trabaja mientras se scrollea (antes corría 60 veces por segundo siempre y recalculaba toda la página).
+// La inclinación va solo en las marquesinas, no en toda la página.
 if (!SIN_MOVIMIENTO) {
-  let ultimoY = scrollY, skew = 0;
-  (function loop() {
-    const max = document.documentElement.scrollHeight - innerHeight;
-    $("#progreso").style.transform = `scaleX(${max > 0 ? Math.min(1, scrollY / max) : 0})`;
+  const barra = $("#progreso"), cintas = $$(".marquee");
+  let ultimoY = scrollY, skew = 0, andando = false, max = 1;
+  const medirMax = () => { max = Math.max(1, document.documentElement.scrollHeight - innerHeight); };
+  medirMax(); addEventListener("resize", medirMax); addEventListener("load", medirMax);
+  if ("ResizeObserver" in window) new ResizeObserver(medirMax).observe(document.body);
+  const loop = () => {
+    barra.style.transform = `scaleX(${Math.min(1, scrollY / max)})`;
     const v = scrollY - ultimoY; ultimoY = scrollY;
     skew += (Math.max(-12, Math.min(12, v * 0.25)) - skew) * 0.12;
-    document.documentElement.style.setProperty("--skew", skew.toFixed(2) + "deg");
+    if (Math.abs(skew) < 0.05 && v === 0) skew = 0;
+    cintas.forEach(c => c.style.setProperty("--skew", skew.toFixed(2) + "deg"));
+    if (skew === 0 && v === 0) { andando = false; return; }
     requestAnimationFrame(loop);
-  })();
+  };
+  addEventListener("scroll", () => { if (!andando) { andando = true; requestAnimationFrame(loop); } }, { passive: true });
+  requestAnimationFrame(loop);
 }
 
 // Alto del encabezado (para que los filtros de la tienda queden pegados justo debajo)
