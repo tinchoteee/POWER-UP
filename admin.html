@@ -46,6 +46,10 @@
   .ficha-h small{color:var(--tinta-2)}
   .fila-precio{display:flex;align-items:center;gap:8px}
   .fila-precio input{max-width:160px}
+  .fila-precio > span:first-child{min-width:118px}
+  .oferta-nota{margin:-4px 0 0;font-size:14px;color:var(--tinta-2)}
+  .oferta-nota s{color:var(--tinta-2)}
+  .oferta-nota b{color:#e5121f}
   .interruptor{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:600;font-size:15px}
   .sw{appearance:none;width:46px;height:28px;border-radius:99px;background:#ccc;position:relative;cursor:pointer;flex:none;transition:background .15s;margin:0}
   .sw::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
@@ -122,6 +126,7 @@
 
     <section id="tab-stock">
       <p class="ayuda" style="margin-bottom:12px">En el cuadradito de abajo de cada talle poné <b>cuántas unidades hay</b>: con cada venta se descuentan solas y, cuando llegan a 0, el talle aparece <b>agotado</b> en la tienda. Si lo dejás vacío (–), no se lleva la cuenta y podés tocar el talle para marcarlo agotado (tachado) o disponible (verde). Los cambios se ven en la tienda unos segundos después de guardar.</p>
+      <p class="ayuda" style="margin-bottom:12px"><b>Ofertas:</b> en <b>Oferta</b> poné el precio rebajado y en <b>Precio normal</b> el precio de siempre: la tienda cobra la oferta y muestra el normal tachado con el % de descuento. Para sacar la oferta, borrá el casillero Oferta. Ojo: el precio normal tiene que ser uno que cobraste de verdad (lo exige la ley de Lealtad Comercial).</p>
       <input class="in" id="buscar" placeholder="Buscar producto…" aria-label="Buscar producto" style="margin-bottom:12px">
       <div class="lista-prod" id="listaProd"></div>
     </section>

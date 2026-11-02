@@ -2,7 +2,7 @@
 // Lo usan la página y el servidor, así los dos ven exactamente lo mismo.
 //
 // Forma de los ajustes guardados:
-// { productos: { "1": { precio: 32000, agotado: false,
+// { productos: { "1": { precio: 32000, antes: 40000, agotado: false,     ← antes: precio normal tachado (oferta)
 //                       colores: { "negro": { precio: 34000, agotado: false, sinTalle: ["S", "XL"] } } } },
 //   pares: { "1|negro|M": 3 } }   ← unidades que hay de cada talle (se descuentan solas con cada venta).
 //                                  Un talle sin número no lleva la cuenta; con 0 queda agotado.
@@ -19,6 +19,8 @@
       const a = aj[original.id] || {};
       const p = { ...original, talles: (original.talles || []).map(String), colores: (original.colores || []).filter(c => !c.oculto).map(c => ({ ...c })) };
       if (a.precio > 0) p.precio = a.precio;
+      // Oferta cargada desde el editor: "antes" es el precio normal que se muestra tachado (0 = sin oferta)
+      if (a.antes != null && a.antes >= 0) { p.antes = a.antes; p.antesEditor = true; }
       p.agotado = Boolean(a.agotado);
       for (const c of p.colores) {
         const ac = (a.colores && a.colores[c.id]) || {};

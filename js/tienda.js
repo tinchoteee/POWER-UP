@@ -26,7 +26,7 @@ const paresDe = aplicarAjustes.paresDe;     // unidades que quedan de un talle (
 const precioTxt = p => { const r = rangoDe(p); return !r ? "Consultar precio" : r.min !== r.max ? "Desde " + pesos(r.min) : pesos(r.min); };
 // Precio tachado: el precio anterior real del producto ("antes" en productos.js), hasta "ofertaHasta"
 const OFERTA_VIGENTE = !CATALOGO.ofertaHasta || Date.now() <= new Date(CATALOGO.ofertaHasta + "T23:59:59-03:00").getTime();
-const antesDe = (p, precio) => OFERTA_VIGENTE && precio > 0 && p.antes > precio ? p.antes : 0;
+const antesDe = (p, precio) => (OFERTA_VIGENTE || p.antesEditor) && precio > 0 && p.antes > precio ? p.antes : 0;
 const offDe = (antes, precio) => Math.round((1 - precio / antes) * 100);
 const conTachado = (p, precio, txt) => { const a = antesDe(p, precio); return a ? `<s class="antes">${pesos(a)}</s> ${txt}` : txt; };
 const colorDe = (p, cid) => (p.colores || []).find(c => c.id === cid);

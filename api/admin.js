@@ -22,6 +22,8 @@ function limpiarAjustes(entrada) {
     const r = {};
     const precio = Math.round(Number(a.precio));
     if (precio > 0 && precio <= 10000000) r.precio = precio;
+    const antes = Math.round(Number(a.antes));
+    if (a.antes != null && antes >= 0 && antes <= 10000000) r.antes = antes;
     if (a.agotado) r.agotado = true;
     const colores = {};
     for (const c of p.colores || []) {

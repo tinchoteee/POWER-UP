@@ -97,6 +97,7 @@ function limpio(a) {
     const talles = ((PRODUCTOS.find(x => String(x.id) === String(id)) || {}).talles || []).map(String);
     const r = {};
     if (p.precio > 0) r.precio = Math.round(p.precio);
+    if (p.antes != null && p.antes >= 0) r.antes = Math.round(p.antes);
     if (p.agotado) r.agotado = true;
     const cols = {};
     for (const [cid, c] of Object.entries(p.colores || {})) {
@@ -112,13 +113,25 @@ function limpio(a) {
   return { productos: out };
 }
 
-function ficha(p) {
+// Oferta: el precio tachado de productos.js vale hasta "ofertaHasta"; el que se carga acá no vence
+const OFERTA_VIGENTE = !CATALOGO.ofertaHasta || Date.now() <= new Date(CATALOGO.ofertaHasta + "T23:59:59-03:00").getTime();
+const antesBase = p => (OFERTA_VIGENTE && p.antes) || 0;
+function preciosDe(p) {
   const a = ajustes.productos[p.id] || {};
   const precio = a.precio > 0 ? a.precio : p.precio;
+  const antes = a.antes != null ? a.antes : antesBase(p);
+  return antes > precio ? { normal: antes, oferta: precio } : { normal: precio, oferta: 0 };
+}
+function ficha(p) {
+  const a = ajustes.productos[p.id] || {};
+  const { normal, oferta } = preciosDe(p);
   return `<article class="ficha${a.agotado ? " off" : ""}${cambiado(p.id) ? " cambiada" : ""}" data-id="${p.id}">
     <div class="ficha-h"><img src="${esc(fotoDe(p))}" alt=""><div><b>${esc(p.nombre)}</b><small>${esc((CATALOGO.lineas || {})[p.cat] || p.cat)}</small></div></div>
-    <label class="fila-precio"><span style="font-weight:600">Precio $</span>
-      <input class="in" inputmode="numeric" data-precio value="${precio > 0 ? precio : ""}" placeholder="Consultar" aria-label="Precio de ${esc(p.nombre)}"></label>
+    <label class="fila-precio"><span style="font-weight:600">Precio normal $</span>
+      <input class="in" inputmode="numeric" data-precio value="${normal > 0 ? normal : ""}" placeholder="Consultar" aria-label="Precio normal de ${esc(p.nombre)}"></label>
+    <label class="fila-precio"><span style="font-weight:600">Oferta $</span>
+      <input class="in" inputmode="numeric" data-oferta value="${oferta > 0 ? oferta : ""}" placeholder="Sin oferta" aria-label="Precio de oferta de ${esc(p.nombre)}"></label>
+    ${oferta > 0 ? `<p class="oferta-nota">En la tienda: <s>${pesos(normal)}</s> <b>${pesos(oferta)}</b> · -${Math.round((1 - oferta / normal) * 100)}%</p>` : ""}
     <label class="interruptor">Modelo agotado <input type="checkbox" class="sw" data-agotado${a.agotado ? " checked" : ""}></label>
     ${(p.colores || []).map(c => { const ac = (a.colores || {})[c.id] || {}; const sin = (ac.sinTalle || []).map(String);
       const precioColor = ac.precio > 0 ? ac.precio : c.precio > 0 ? c.precio : ""; return `
@@ -184,10 +197,15 @@ $("#listaProd").addEventListener("change", e => {
   const id = +f.dataset.id;
   if (e.target.matches("[data-agotado]")) aj(id).agotado = e.target.checked;
   else if (e.target.matches("[data-color-agotado]")) ajColor(id, e.target.closest(".color-box").dataset.cid).agotado = e.target.checked;
-  else if (e.target.matches("[data-precio]")) {
-    const v = parseInt(e.target.value.replace(/\D/g, ""), 10) || 0;
-    const base = PRODUCTOS.find(p => p.id === id).precio;
-    aj(id).precio = v > 0 && v !== base ? v : undefined;
+  else if (e.target.matches("[data-precio], [data-oferta]")) {
+    // Con oferta menor al precio normal: se cobra la oferta y el normal se muestra tachado
+    const num = sel => parseInt(f.querySelector(sel).value.replace(/\D/g, ""), 10) || 0;
+    const normal = num("[data-precio]"), oferta = num("[data-oferta]");
+    const hayOferta = oferta > 0 && oferta < normal;
+    const precio = hayOferta ? oferta : normal, antes = hayOferta ? normal : 0;
+    const p = PRODUCTOS.find(x => x.id === id);
+    aj(id).precio = precio > 0 && precio !== p.precio ? precio : undefined;
+    aj(id).antes = antes !== antesBase(p) ? antes : undefined;
   } else if (e.target.matches("[data-precio-color]")) {
     const cid = e.target.closest(".color-box").dataset.cid;
     const v = parseInt(e.target.value.replace(/\D/g, ""), 10) || 0;
