@@ -71,7 +71,7 @@
     corteiz: "Corteiz",
     syna: "Syna World",
     bape: "Bape",
-    guess: "Guess", diesel: "Diesel", nike: "Nike"
+    guess: "Guess", diesel: "Diesel", nike: "Nike", adidas: "Adidas"
   },
 
   // Secciones de la tienda por tipo de prenda (el orden de acá es el orden de los filtros).
@@ -262,6 +262,13 @@
     { id: 39, cat: "nike", tipo: "zapatillas", caja: "zapatillas", nombre: "Zapatillas Air Force 1", detalle: "Zapatillas", etiqueta: "NUEVO",
       desc: "Zapatillas blancas de cuero sintético, con swoosh y detalles en el mismo tono. Total white, combinan con todo.",
       precio: 30000, talles: ["35", "36", "37", "38", "39", "40"],
-      colores: [{ id: "blanco", nombre: "Blanco", hex: "#F4F4F4", foto: "img/zapatillas-air-force-plataforma.jpg" }] }
+      colores: [{ id: "blanco", nombre: "Blanco", hex: "#F4F4F4", foto: "img/zapatillas-air-force-plataforma.jpg" }] },
+    { id: 40, cat: "adidas", tipo: "zapatillas", caja: "zapatillas", nombre: "Zapatillas Campus", detalle: "Zapatillas", etiqueta: "NUEVO",
+      desc: "Zapatillas de gamuza con las tres tiras al costado, cordones anchos blancos y suela blanca con borde caramelo. En negro o gris.",
+      precio: 38500, talles: ["35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45"],
+      colores: [
+        { id: "negro", nombre: "Negro", hex: "#111111", foto: "img/zapatillas-campus-negro.jpg" },
+        { id: "gris", nombre: "Gris", hex: "#8E8E8E", foto: "img/zapatillas-campus-gris.jpg" }
+      ] }
   ]
 });
