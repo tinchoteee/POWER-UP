@@ -3,6 +3,7 @@
 // y el Revisor web de la oficina cada hora.
 //   GET /api/salud           → { ok, chequeos: [{ nombre, ok, detalle }] }
 //   GET /api/salud?avisar=1  → además, si algo falla, manda un email a AVISOS_EMAIL (uno cada 6 horas por problema)
+//   GET /api/salud?avisar=1&prueba=1 → manda un aviso de prueba
 // No devuelve claves ni datos de clientes.
 const { cotizarZipnova } = require("./_envios.js");
 const { productosActuales } = require("./_catalogo.js");
@@ -47,6 +48,8 @@ module.exports = async function handler(req, res) {
     return `${opciones.length} opciones, desde $${Math.min(...opciones.map(o => o.precio))}`;
   }));
 
+  // ?prueba=1 simula una falla para comprobar que el email de aviso llega
+  if (req.query && req.query.prueba) chequeos.push({ nombre: "Prueba del aviso", ok: false, detalle: "Esto es una prueba: si te llegó este email, los avisos funcionan. No hay que hacer nada." });
   const fallas = chequeos.filter(c => !c.ok);
   let emailMandado = false;
   if (fallas.length && req.query && req.query.avisar && process.env.AVISOS_EMAIL && process.env.RESEND_API_KEY) {
