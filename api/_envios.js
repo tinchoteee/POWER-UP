@@ -63,7 +63,9 @@ async function cotizarZipnova({ cp, provincia, localidad, lineas, valor }) {
   const data = await r.json().catch(() => ({}));
   if (!r.ok) {
     console.error("Zipnova no cotizó", r.status, JSON.stringify(data).slice(0, 500));
-    throw new Error("No pudimos calcular el envío para ese código postal. Revisá el código postal y la provincia.");
+    const e = new Error("No pudimos calcular el envío para ese código postal. Revisá el código postal y la provincia.");
+    e.motivo = `${r.status} ${String(data.message || data.error || "").slice(0, 150)}`;
+    throw e;
   }
 
   const preferido = (CATALOGO.envio.transportista || "").toLowerCase();
@@ -113,10 +115,15 @@ async function cotizar({ cp, provincia, localidad, lineas, subtotal }) {
   if (!lineas.length) throw new Error("No hay productos para cotizar.");
 
   const conZipnova = process.env.ZIPNOVA_API_TOKEN && process.env.ZIPNOVA_API_SECRET && process.env.ZIPNOVA_ACCOUNT_ID;
-  const opciones = conZipnova
-    ? await cotizarZipnova({ cp: codigo, provincia, localidad, lineas, valor: subtotal })
-    : cotizarPorZona({ provincia });
-  if (!opciones.length) throw new Error("No hay envíos disponibles para ese código postal.");
+  // Si Zipnova falla o no tiene opciones, se cobra con los precios por zona para no frenar la venta
+  // (esas opciones no traen datos de Zipnova, así que el envío se crea a mano desde su panel).
+  let opciones = [], motivoCorreo = null;
+  if (conZipnova) {
+    try { opciones = await cotizarZipnova({ cp: codigo, provincia, localidad, lineas, valor: subtotal }); }
+    catch (e) { motivoCorreo = e.motivo || e.message; }
+    if (!opciones.length && !motivoCorreo) motivoCorreo = "sin opciones";
+  }
+  if (!opciones.length) opciones = cotizarPorZona({ provincia });
 
   const gratisDesde = CATALOGO.envio.gratisDesde || 0;
   const gratis = gratisDesde > 0 && subtotal >= gratisDesde;
@@ -125,7 +132,7 @@ async function cotizar({ cp, provincia, localidad, lineas, subtotal }) {
 
   if (CATALOGO.local && CATALOGO.local.direccion) opciones.push({ id: "local", tipo: "local", nombre: CATALOGO.local.nombre || "Retiro en persona", transportista: null, precio: 0, precioOriginal: 0,
     detalle: CATALOGO.local.direccion, dias: { min: null, max: null } });
-  return { cp: codigo, provincia, opciones, gratisDesde, gratis };
+  return { cp: codigo, provincia, opciones, gratisDesde, gratis, motivoCorreo };
 }
 
 // Arma las líneas del pedido a partir de lo que manda el navegador, validando todo contra el catálogo
