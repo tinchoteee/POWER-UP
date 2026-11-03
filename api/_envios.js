@@ -64,7 +64,7 @@ async function cotizarZipnova({ cp, provincia, localidad, lineas, valor }) {
   if (!r.ok) {
     console.error("Zipnova no cotizó", r.status, JSON.stringify(data).slice(0, 500));
     const e = new Error("No pudimos calcular el envío para ese código postal. Revisá el código postal y la provincia.");
-    e.motivo = `${r.status} ${String(data.message || data.error || "").slice(0, 150)}`;
+    e.motivo = `${r.status} ${String(data.message || data.error || "")} ${data.errors ? JSON.stringify(data.errors) : ""}`.slice(0, 400);
     throw e;
   }
 
