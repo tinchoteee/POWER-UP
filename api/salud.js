@@ -48,6 +48,26 @@ module.exports = async function handler(req, res) {
     return `${opciones.length} opciones, desde $${Math.min(...opciones.map(o => o.precio))}`;
   }));
 
+  // Pagos de las últimas 24 h: si hay varios rechazos o errores y ninguna venta, algo anda mal con los cobros
+  chequeos.push(await chequear("Pagos de clientes (24 h)", async () => {
+    const desde = Date.now() - 24 * 3600 * 1000;
+    const porPedido = new Map();
+    for (const i of await db.listarIntentos()) {
+      if (new Date(i.fecha).getTime() < desde) continue;
+      const clave = i.pedido || i.fecha;
+      if (!porPedido.has(clave) || i.estado === "approved") porPedido.set(clave, i);   // un resultado por pedido
+    }
+    const lista = [...porPedido.values()];
+    const aprobados = lista.filter(i => i.estado === "approved").length;
+    const fallidos = lista.filter(i => i.estado === "rejected" || i.estado === "error");
+    const resumen = `${aprobados} aprobados, ${fallidos.length} rechazados o con error`;
+    if (fallidos.length >= 3 && !aprobados) {
+      const motivos = [...new Set(fallidos.map(i => i.detalle).filter(Boolean))].slice(0, 3).join(", ");
+      throw new Error(`${resumen} y ninguna venta. Motivos de Mercado Pago: ${motivos || "sin detalle"}`);
+    }
+    return lista.length ? resumen : "Sin intentos de pago";
+  }));
+
   // ?prueba=1 simula una falla para comprobar que el email de aviso llega
   if (req.query && req.query.prueba) chequeos.push({ nombre: "Prueba del aviso", ok: false, detalle: "Esto es una prueba: si te llegó este email, los avisos funcionan. No hay que hacer nada." });
   const fallas = chequeos.filter(c => !c.ok);

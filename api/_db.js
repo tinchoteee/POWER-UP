@@ -39,6 +39,19 @@ async function agregarPedido(pedido) {
   await comando("LPUSH", "powerup:pedidos", JSON.stringify(pedido));
   await comando("LTRIM", "powerup:pedidos", 0, 199);
 }
+// Intentos de pago (aprobados, rechazados y errores), los últimos 100: los revisa /api/salud
+async function anotarIntento(intento) {
+  if (!hayDB()) return;
+  try {
+    await comando("LPUSH", "powerup:intentos", JSON.stringify({ fecha: new Date().toISOString(), ...intento }));
+    await comando("LTRIM", "powerup:intentos", 0, 99);
+  } catch (e) { console.error("No se pudo anotar el intento de pago", e.message); }
+}
+async function listarIntentos() {
+  if (!hayDB()) return [];
+  return ((await comando("LRANGE", "powerup:intentos", 0, 99)) || []).map(s => { try { return JSON.parse(s); } catch (e) { return null; } }).filter(Boolean);
+}
+
 async function listarPedidos() {
   if (!hayDB()) return [];
   const lista = await comando("LRANGE", "powerup:pedidos", 0, 199);
@@ -91,4 +104,4 @@ async function buscarPedido(numero) {
   return (await listarPedidos()).find(p => p.numero === numero) || null;
 }
 
-module.exports = { hayDB, leerPares, cambiarPares, descontarPares, devolverPares, buscarPedido, comando, leer, guardar, guardarSiNoExiste, agregarPedido, listarPedidos, actualizarPedido };
+module.exports = { hayDB, leerPares, cambiarPares, descontarPares, devolverPares, buscarPedido, comando, leer, guardar, guardarSiNoExiste, agregarPedido, listarPedidos, actualizarPedido, anotarIntento, listarIntentos };

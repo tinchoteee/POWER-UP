@@ -4,6 +4,7 @@
 // Variables de entorno en Vercel: MP_ACCESS_TOKEN (cobra) y MP_PUBLIC_KEY (la usa el formulario).
 const { armarPedido, leerBody, baseDe } = require("./_pedido.js");
 const { procesarPagoAprobado } = require("./_procesar.js");
+const { anotarIntento } = require("./_db.js");
 
 // Motivos de rechazo de Mercado Pago, explicados para el cliente
 const MOTIVOS = {
@@ -69,8 +70,10 @@ module.exports = async function handler(req, res) {
   const pago = await r.json().catch(() => ({}));
   if (!r.ok || !pago.id) {
     console.error("Mercado Pago no pudo crear el pago", r.status, JSON.stringify(pago).slice(0, 500));
+    await anotarIntento({ medio: "tarjeta", pedido: pedido.numero, total: pedido.total, estado: "error", detalle: `${r.status} ${String(pago.message || pago.error || "").slice(0, 150)}` });
     return res.status(502).json({ error: "No pudimos procesar el pago. Revisá los datos de la tarjeta o probá con otra." });
   }
+  await anotarIntento({ medio: "tarjeta", pedido: pedido.numero, total: pedido.total, estado: pago.status, detalle: pago.status_detail || "" });
 
   if (pago.status === "approved") {
     // Se procesa ya (pedido, envío y email); si después llega el aviso de Mercado Pago, no se repite

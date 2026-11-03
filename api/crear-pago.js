@@ -1,6 +1,7 @@
 // Crea el cobro en Mercado Pago (Checkout Pro) para el pedido del carrito: el cliente paga en la página de Mercado Pago.
 // Variable de entorno necesaria en Vercel: MP_ACCESS_TOKEN (credencial de producción de Mercado Pago).
 const { armarPedido, leerBody, baseDe } = require("./_pedido.js");
+const { anotarIntento } = require("./_db.js");
 
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Método no permitido" });
@@ -33,6 +34,7 @@ module.exports = async function handler(req, res) {
   const data = await r.json().catch(() => ({}));
   if (!r.ok || !data.init_point) {
     console.error("Mercado Pago rechazó la preferencia", r.status, JSON.stringify(data));
+    await anotarIntento({ medio: "mercadopago", pedido: pedido.numero, total: pedido.total, estado: "error", detalle: `${r.status} ${String(data.message || data.error || "").slice(0, 150)}` });
     return res.status(502).json({ error: "No pudimos conectar con Mercado Pago. Probá de nuevo en un momento." });
   }
   return res.status(200).json({ url: data.init_point, pedido: pedido.numero });

@@ -22,6 +22,10 @@ module.exports = async function handler(req, res) {
   const r = await fetch(`https://api.mercadopago.com/v1/payments/${encodeURIComponent(id)}`, { headers: { Authorization: `Bearer ${token}` } });
   if (!r.ok) { console.error("No se pudo leer el pago", id, r.status); return res.status(500).send("error"); }
   const pago = await r.json();
+  // Rechazos (sobre todo los de la página de Mercado Pago); /api/salud cuenta una vez cada pedido
+  if (pago.status === "rejected" || pago.status === "approved") {
+    await require("./_db.js").anotarIntento({ medio: "mercadopago", pedido: pago.external_reference || "", total: pago.transaction_amount, estado: pago.status, detalle: pago.status_detail || "", pago: String(pago.id) });
+  }
   if (pago.status !== "approved") return res.status(200).send("ok");
 
   await procesarPagoAprobado(pago);
