@@ -171,4 +171,4 @@ function lineasDelPedido(items, productos, { exigirPrecio = true, exigirTalle = 
   return lineas;
 }
 
-module.exports = { cotizar, lineasDelPedido, PROVINCIAS };
+module.exports = { cotizar, cotizarZipnova, lineasDelPedido, PROVINCIAS };

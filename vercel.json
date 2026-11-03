@@ -76,6 +76,18 @@
     {
       "path": "/api/club?campana=1",
       "schedule": "0 15 * * *"
+    },
+    {
+      "path": "/api/salud?avisar=1&h=9",
+      "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/salud?avisar=1&h=15",
+      "schedule": "0 18 * * *"
+    },
+    {
+      "path": "/api/salud?avisar=1&h=21",
+      "schedule": "0 0 * * *"
     }
   ]
 }
