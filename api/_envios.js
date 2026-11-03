@@ -42,7 +42,9 @@ async function cotizarZipnova({ cp, provincia, localidad, lineas, valor }) {
     account_id: Number(process.env.ZIPNOVA_ACCOUNT_ID),
     ...(process.env.ZIPNOVA_ORIGIN_ID ? { origin_id: Number(process.env.ZIPNOVA_ORIGIN_ID) } : {}),
     source: "powerup-web",
-    destination: { zipcode: cp, state: provincia, ...(localidad ? { city: localidad } : {}) },
+    // Zipnova exige la localidad junto con la provincia; si no la escribieron (calculadora de la página de producto)
+    // va la provincia: Zipnova se guía por el código postal.
+    destination: { zipcode: cp, state: provincia, city: localidad || provincia },
     declared_value: valor,
     items,
     type_packaging: "none",
