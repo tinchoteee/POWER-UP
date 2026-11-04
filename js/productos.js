@@ -267,8 +267,8 @@
       desc: "Zapatillas de gamuza con las tres tiras al costado, cordones anchos blancos y suela blanca con borde caramelo. En negro o gris.",
       precio: 38500, talles: ["35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45"],
       colores: [
-        { id: "negro", nombre: "Negro", hex: "#111111", foto: "img/zapatillas-campus-negro.jpg", fotos: ["img/zapatillas-campus-negro-modelo.jpg"] },
-        { id: "gris", nombre: "Gris", hex: "#8E8E8E", foto: "img/zapatillas-campus-gris.jpg", fotos: ["img/zapatillas-campus-gris-modelo.jpg"] }
+        { id: "negro", nombre: "Negro", hex: "#111111", foto: "img/zapatillas-campus-negro-piernas.jpg" },
+        { id: "gris", nombre: "Gris", hex: "#8E8E8E", foto: "img/zapatillas-campus-gris-piernas.jpg" }
       ] }
   ]
 });
