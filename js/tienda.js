@@ -345,9 +345,12 @@ function pintarProducto() {
   const p = producto(sel.id);
   if (!p) return;
   const cols = p.colores || [];
-  // Galería: una foto por color (y la foto general si la hay)
+  // Galería: una foto por color, sus fotos extra (fotos: [...]) y la foto general si la hay
   const fotos = [];
-  cols.forEach(c => { if (c.foto) fotos.push({ src: c.foto, color: c.id }); });
+  cols.forEach(c => {
+    if (c.foto) fotos.push({ src: c.foto, color: c.id });
+    (c.fotos || []).forEach(src => fotos.push({ src, color: c.id }));
+  });
   if (p.foto && !fotos.some(f => f.src === p.foto)) fotos.unshift({ src: p.foto, color: null });
   const actual = sel.foto || fotoDe(p, sel.color);
   $("#fotoGrande").innerHTML = img(actual, p.nombre).replace(' loading="lazy"', "");
