@@ -56,6 +56,8 @@ const pixelListo = configPublica.then(c => {
   return true;
 });
 const medir = (evento, datos, id) => pixelListo.then(ok => { if (ok) fbq("track", evento, { currency: "ARS", ...datos }, id ? { eventID: id } : undefined); });
+// Pasos del checkout que el Píxel no trae de fábrica (para ver en qué paso abandonan)
+const medirPaso = (evento, datos) => pixelListo.then(ok => { if (ok) fbq("trackCustom", evento, { currency: "ARS", ...datos }); });
 
 async function api(ruta, datos) {
   let r;
@@ -564,7 +566,16 @@ $("#form1").addEventListener("submit", e => {
   guardarDatos();
   irPaso(2);
   if (!ck.cot && val("ckCP") && $("#ckProv").value) cotizarCheckout();
+  medirPaso("CheckoutEntrega", { value: cuenta().total });
+  anotarCarrito(2);
 });
+// Rescate de carritos: si no termina de pagar, al local le llega su WhatsApp para escribirle (api/_abandonos.js)
+function anotarCarrito(paso) {
+  fetch("/api/club", { method: "POST", headers: { "Content-Type": "application/json" }, keepalive: true,
+    body: JSON.stringify({ accion: "abandono", paso, nombre: val("ckNombre"), telefono: val("ckTel"), email: val("ckEmail"),
+      envio: ck.opcion ? ck.opcion.precio : null, items: carrito.map(i => ({ id: i.id, color: i.color, talle: i.talle, cant: i.cant })) })
+  }).catch(() => {});
+}
 function guardarDatos() {
   escribir("powerup-datos", { email: val("ckEmail"), nombre: val("ckNombre"), telefono: val("ckTel"), dni: val("ckDni"),
     calle: val("ckCalle"), numero: val("ckNum"), piso: val("ckPiso"), localidad: val("ckLoc") });
@@ -631,6 +642,8 @@ $("#continuar2").addEventListener("click", () => {
   $("#falta2").textContent = "";
   guardarDatos();
   irPaso(3);
+  medirPaso("CheckoutPago", { value: cuenta().total + (o.precio || 0), envio: o.precio || 0, tipo_envio: o.tipo });
+  anotarCarrito(3);
 });
 
 // Paso 3: pago

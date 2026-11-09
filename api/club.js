@@ -3,6 +3,7 @@
 //   POST { accion: "suscribir", email, origen } → guarda el email y le manda su código único. { codigo?, enviado, nuevo, usado }
 //        Si Resend no puede escribirle al cliente (falta RESEND_FROM con el dominio verificado), el código se muestra en pantalla.
 //   POST { accion: "cupon", codigo }            → revisa un código antes de pagar (el servidor lo vuelve a revisar al cobrar)
+//   POST { accion: "abandono", nombre, telefono, email, paso, envio, items } → anota el carrito para rescatarlo (_abandonos.js)
 //   GET  ?baja=1&e=email&t=token                → link "Darte de baja" de los emails
 //   GET  ?campana=1                             → emails automáticos del día (lo llama el cron de Vercel, ver vercel.json)
 const db = require("./_db.js");
@@ -91,5 +92,10 @@ module.exports = async function handler(req, res) {
   let body; try { body = leerBody(req); } catch (e) { body = {}; }
   if (body.accion === "suscribir") return suscribir(req, res, body);
   if (body.accion === "cupon") return revisarCupon(req, res, body);
+  if (body.accion === "abandono") {
+    // No es crítico: si falla, el checkout sigue igual
+    try { await require("./_abandonos.js").anotar(body); } catch (e) { console.error("No se pudo anotar el carrito", e.message); }
+    return res.status(200).json({ ok: true });
+  }
   return res.status(400).json({ error: "Acción desconocida." });
 };

@@ -96,6 +96,7 @@ async function procesarPagoAprobado(pago) {
   const m = pago.metadata || {};
   const cliente = m.cliente || {};
   const entrega = m.entrega || {};
+  await require("./_abandonos.js").borrar(cliente);   // compró: ya no hay carrito para rescatar
   const detalle = [...(Array.isArray(m.detalle) ? m.detalle : []), ...(m.descuento ? [`Descuento ${m.descuento}`] : [])];
   const numero = m.pedido || pago.external_reference || String(pago.id);
   const pedido = {

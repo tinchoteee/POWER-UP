@@ -48,6 +48,7 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ error: "No pudimos registrar el pedido. Probá de nuevo en un momento." });
   }
   console.log("Pedido por transferencia", pedido.numero, pedido.total);
+  await require("./_abandonos.js").borrar(pedido.cliente);   // hizo el pedido: ya no hay carrito para rescatar
   if (m.cupon) await usarCupon(m.cupon, pedido.numero).catch(err => console.error("No se pudo marcar el código", m.cupon, err.message));
 
   if (process.env.RESEND_API_KEY) {

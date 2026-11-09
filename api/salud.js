@@ -88,6 +88,32 @@ module.exports = async function handler(req, res) {
     }
   }
 
+  // Rescate de carritos: los que dejaron sus datos y no pagaron hace más de 45 minutos, con su WhatsApp listo
+  let carritos = 0;
+  if (req.query && req.query.avisar && process.env.AVISOS_EMAIL && process.env.RESEND_API_KEY) {
+    try {
+      const ab = require("./_abandonos.js");
+      const lista = await ab.pendientes();
+      if (lista.length) {
+        const fila = a => {
+          const wa = ab.whatsapp(a.telefono);
+          const link = wa ? `https://wa.me/${wa}?text=${encodeURIComponent(ab.mensaje(a))}` : null;
+          return `<tr><td style="padding:12px 0;border-bottom:1px solid #ddd"><b>${esc(a.nombre)}</b> · ${esc(a.telefono)} · ${esc(a.email)}<br>
+            ${a.detalle.map(esc).join("<br>")}<br><small>Productos $${a.total.toLocaleString("es-AR")}${a.envio ? ` + envío $${a.envio.toLocaleString("es-AR")}` : ""} · llegó al paso ${a.paso === 3 ? "de pago" : "de envío"}</small><br>
+            ${link ? `<a href="${link}" style="display:inline-block;margin-top:8px;background:#25D366;color:#fff;text-decoration:none;font-weight:700;padding:10px 16px;border-radius:6px">Escribirle por WhatsApp</a>` : "<small>(revisá el número: no parece de Argentina)</small>"}</td></tr>`;
+        };
+        await mandarEmail({
+          para: process.env.AVISOS_EMAIL,
+          asunto: `🛒 ${lista.length === 1 ? "1 persona dejó" : lista.length + " personas dejaron"} el carrito sin pagar`,
+          html: `<p>Estas personas completaron sus datos en el checkout y no terminaron la compra. Tocá el botón y se abre WhatsApp con el mensaje ya escrito (revisalo antes de mandarlo).</p><table width="100%">${lista.map(fila).join("")}</table>`,
+          clave: "abandonos:" + lista.map(a => a.telefono + a.actualizado).join("|").slice(0, 200)
+        });
+        await ab.marcarAvisados(lista);
+        carritos = lista.length;
+      }
+    } catch (e) { console.error("No se pudo avisar los carritos abandonados", e.message); }
+  }
+
   res.setHeader("Cache-Control", "no-store");
-  return res.status(200).json({ ok: !fallas.length, cuando: new Date().toISOString(), chequeos, emailMandado });
+  return res.status(200).json({ ok: !fallas.length, cuando: new Date().toISOString(), chequeos, emailMandado, carritos });
 };
