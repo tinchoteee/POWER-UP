@@ -277,7 +277,7 @@ function pintarPedidos() {
       <ul>${(p.detalle || []).map(d => `<li>${esc(d)}</li>`).join("")}</ul>
       ${p.metodo === "transferencia" ? `<div>💸 <b>Pago por transferencia</b>${p.estado === "esperando-transferencia" ? " · cuando veas la plata en tu cuenta, pasalo a <b>Pagado</b> (se crea el envío). Si no paga, pasalo a <b>Cancelado</b> y las unidades vuelven al stock." : ""}</div>` : ""}
       <div><b>Entrega:</b> ${entrega}</div>
-      ${p.envio ? `<div>✅ Envío creado en Zipnova${p.envio.seguimiento ? ` · seguimiento <b>${esc(p.envio.seguimiento)}</b>` : ""}. Imprimí la etiqueta desde el panel de Zipnova.</div>` : ""}
+      ${p.envio && p.envio.pendiente ? `<div>🟡 <b>Envío cargado en Zipnova pero PENDIENTE</b>: Zipnova no lo pudo procesar en este momento (feriado, sin retiro o sin saldo). Entrá al panel de Zipnova, buscá el envío en Pendientes y tocá Procesar cuando se pueda.<br><small>Motivo: ${esc(p.envio.motivoPendiente || "")}</small></div>` : ""}${p.envio && !p.envio.pendiente ? `<div>✅ Envío creado en Zipnova${p.envio.seguimiento ? ` · seguimiento <b>${esc(p.envio.seguimiento)}</b>` : ""}. Imprimí la etiqueta desde el panel de Zipnova.</div>` : ""}
       ${p.envioError ? `<div class="aviso-error">⚠️ ${esc(p.envioError)}${p.envioDetalle ? `<br><small>Motivo de Zipnova: ${esc(p.envioDetalle)}</small>` : ""}
         <br><button class="btn btn-borde" data-reintentar="${esc(p.numero)}" style="width:auto;margin-top:8px">Reintentar envío</button></div>` : ""}
       <div class="acc">

@@ -142,7 +142,7 @@ module.exports = async function handler(req, res) {
         const envio = await crearEnvioZipnova(numero, d);
         const cambios = { envio, estado: "envio-creado", envioError: undefined, envioDetalle: undefined, datos: d };
         await db.actualizarPedido(numero, cambios);
-        return res.status(200).json({ ok: true, pedido: { ...pedido, ...cambios }, aviso: "✅ Envío creado en Zipnova." });
+        return res.status(200).json({ ok: true, pedido: { ...pedido, ...cambios }, aviso: envio.pendiente ? "🟡 Quedó cargado en Zipnova como PENDIENTE: procesalo desde el panel de Zipnova cuando se pueda." : "✅ Envío creado en Zipnova." });
       } catch (err) {
         const detalle = String(err.message || err).slice(0, 400);
         console.error("Reintento de envío falló", numero, detalle);

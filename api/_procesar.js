@@ -38,15 +38,30 @@ async function crearEnvioZipnova(numero, m) {
     destination: destino,
     items
   };
-  const r = await fetch("https://api.zipnova.com.ar/v2/shipments", {
-    method: "POST",
-    headers: { Authorization: `Basic ${auth}`, Accept: "application/json", "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-    signal: AbortSignal.timeout(15000)
-  });
-  const d = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(`Zipnova respondió ${r.status}: ${JSON.stringify(d).slice(0, 300)}`);
-  return { id: d.id, seguimiento: d.tracking || d.carrier_tracking_id || null, codigoCorreo: d.carrier_tracking_id || null };
+  const mandar = async cuerpo => {
+    const r = await fetch("https://api.zipnova.com.ar/v2/shipments", {
+      method: "POST",
+      headers: { Authorization: `Basic ${auth}`, Accept: "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify(cuerpo),
+      signal: AbortSignal.timeout(15000)
+    });
+    const d = await r.json().catch(() => ({}));
+    return { r, d };
+  };
+  let { r, d } = await mandar(body);
+  let pendiente = false;
+  // Si Zipnova no puede procesarlo ahora (feriado, sin retiro disponible, sin saldo…), se crea igual sin procesar:
+  // queda "pendiente" en el panel de Zipnova y se procesa desde ahí cuando se pueda.
+  if (!r.ok && body.process_immediately) {
+    const primerError = `${r.status}: ${JSON.stringify(d).slice(0, 250)}`;
+    ({ r, d } = await mandar({ ...body, process_immediately: 0 }));
+    if (!r.ok) throw new Error(`Zipnova respondió ${primerError} · sin procesar: ${r.status}: ${JSON.stringify(d).slice(0, 200)}`);
+    pendiente = primerError;
+  } else if (!r.ok) {
+    throw new Error(`Zipnova respondió ${r.status}: ${JSON.stringify(d).slice(0, 300)}`);
+  }
+  return { id: d.id, seguimiento: d.tracking || d.carrier_tracking_id || null, codigoCorreo: d.carrier_tracking_id || null,
+           ...(pendiente ? { pendiente: true, motivoPendiente: pendiente } : {}) };
 }
 
 async function mandarEmail({ para, asunto, html, clave }) {
