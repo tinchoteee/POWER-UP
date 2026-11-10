@@ -26,7 +26,8 @@ async function crearEnvioZipnova(numero, m) {
   if (e.tipo === "sucursal") destino.point_id = Number(e.sucursal_id) || e.sucursal_id;
   const body = {
     account_id: Number(process.env.ZIPNOVA_ACCOUNT_ID),
-    origin_id: process.env.ZIPNOVA_ORIGIN_ID || "auto",
+    // El origen (la dirección desde donde sale el paquete): si no está cargado en Vercel, se averigua con una cotización
+    ...(process.env.ZIPNOVA_ORIGIN_ID ? { origin_id: Number(process.env.ZIPNOVA_ORIGIN_ID) } : {}),
     external_id: numero.slice(0, 30),
     source: "powerup-web",
     declared_value: Number(m.subtotal) || 0,
@@ -48,7 +49,30 @@ async function crearEnvioZipnova(numero, m) {
     const d = await r.json().catch(() => ({}));
     return { r, d };
   };
+  // Busca el id del origen en la respuesta de una cotización (la cotización usa el origen por defecto de la cuenta)
+  const buscarOrigen = async () => {
+    const q = await fetch("https://api.zipnova.com.ar/v2/shipments/quote", {
+      method: "POST",
+      headers: { Authorization: `Basic ${auth}`, Accept: "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify({ account_id: body.account_id, destination: { zipcode: destino.zipcode, state: destino.state, city: destino.city || destino.state },
+                             declared_value: body.declared_value, items, type_packaging: "none" }),
+      signal: AbortSignal.timeout(10000)
+    });
+    const j = await q.json().catch(() => ({}));
+    let hallado = null;
+    (function buscar(o) {
+      if (hallado || !o || typeof o !== "object") return;
+      if (o.origin_id != null && Number(o.origin_id)) { hallado = Number(o.origin_id); return; }
+      if (o.origin && typeof o.origin === "object" && Number(o.origin.id)) { hallado = Number(o.origin.id); return; }
+      for (const v of Object.values(o)) buscar(v);
+    })(j);
+    return hallado;
+  };
   let { r, d } = await mandar(body);
+  if (!r.ok && /origin/i.test(JSON.stringify(d))) {
+    const origen = await buscarOrigen().catch(() => null);
+    if (origen) { body.origin_id = origen; ({ r, d } = await mandar(body)); }
+  }
   let pendiente = false;
   // Si Zipnova no puede procesarlo ahora (feriado, sin retiro disponible, sin saldo…), se crea igual sin procesar:
   // queda "pendiente" en el panel de Zipnova y se procesa desde ahí cuando se pueda.
