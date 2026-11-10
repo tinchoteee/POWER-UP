@@ -16,6 +16,23 @@ async function chequear(nombre, fn) {
 }
 
 module.exports = async function handler(req, res) {
+  // ?origenes=1 → pregunta a Zipnova qué direcciones de origen tiene la cuenta (solo ids, nombres y direcciones; sin claves)
+  if (req.query && req.query.origenes) {
+    const auth = Buffer.from(`${process.env.ZIPNOVA_API_TOKEN}:${process.env.ZIPNOVA_API_SECRET}`).toString("base64");
+    const cuenta = process.env.ZIPNOVA_ACCOUNT_ID;
+    const rutas = [`/v2/accounts/${cuenta}/origins`, `/v2/origins?account_id=${cuenta}`, `/v2/addresses?account_id=${cuenta}`,
+                   `/v2/accounts/${cuenta}/addresses`, `/v2/accounts/${cuenta}`, `/v2/accounts`];
+    const salida = [];
+    for (const r of rutas) {
+      try {
+        const x = await fetch("https://api.zipnova.com.ar" + r, { headers: { Authorization: `Basic ${auth}`, Accept: "application/json" }, signal: AbortSignal.timeout(8000) });
+        const t = (await x.text()).replace(/"(token|secret|api_key|password)"\s*:\s*"[^"]*"/gi, '"$1":"***"');
+        salida.push({ ruta: r.replace(String(cuenta), "{cuenta}"), status: x.status, cuerpo: t.slice(0, 1500) });
+      } catch (e) { salida.push({ ruta: r, error: e.message }); }
+    }
+    res.setHeader("Cache-Control", "no-store");
+    return res.status(200).json({ origenEnVercel: process.env.ZIPNOVA_ORIGIN_ID || null, salida });
+  }
   let productos = [];
   const chequeos = await Promise.all([
     chequear("Catálogo", async () => {
