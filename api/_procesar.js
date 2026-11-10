@@ -49,30 +49,16 @@ async function crearEnvioZipnova(numero, m) {
     const d = await r.json().catch(() => ({}));
     return { r, d };
   };
-  // Busca el id del origen en la respuesta de una cotización (la cotización usa el origen por defecto de la cuenta)
-  const buscarOrigen = async () => {
-    const q = await fetch("https://api.zipnova.com.ar/v2/shipments/quote", {
-      method: "POST",
-      headers: { Authorization: `Basic ${auth}`, Accept: "application/json", "Content-Type": "application/json" },
-      body: JSON.stringify({ account_id: body.account_id, destination: { zipcode: destino.zipcode, state: destino.state, city: destino.city || destino.state },
-                             declared_value: body.declared_value, items, type_packaging: "none" }),
-      signal: AbortSignal.timeout(10000)
-    });
-    const j = await q.json().catch(() => ({}));
-    let hallado = null;
-    (function buscar(o) {
-      if (hallado || !o || typeof o !== "object") return;
-      if (o.origin_id != null && Number(o.origin_id)) { hallado = Number(o.origin_id); return; }
-      if (o.origin && typeof o.origin === "object" && Number(o.origin.id)) { hallado = Number(o.origin.id); return; }
-      for (const v of Object.values(o)) buscar(v);
-    })(j);
-    return hallado;
-  };
-  let { r, d } = await mandar(body);
-  if (!r.ok && /origin/i.test(JSON.stringify(d))) {
-    const origen = await buscarOrigen().catch(() => null);
-    if (origen) { body.origin_id = origen; ({ r, d } = await mandar(body)); }
+  // El origen es la dirección del local cargada en Zipnova (GET /v2/addresses; hoy: id 381259, Cangallo 471, Ramos Mejía)
+  if (!body.origin_id) {
+    try {
+      const q = await fetch(`https://api.zipnova.com.ar/v2/addresses?account_id=${body.account_id}`, { headers: { Authorization: `Basic ${auth}`, Accept: "application/json" }, signal: AbortSignal.timeout(8000) });
+      const lista = ((await q.json().catch(() => ({}))).data) || [];
+      const dir = lista.find(a => a.use_for_shipping && (a.accounts || []).some(x => Number(x.id) === body.account_id)) || lista.find(a => a.use_for_shipping) || lista[0];
+      body.origin_id = dir ? Number(dir.id) : 381259;
+    } catch (err) { body.origin_id = 381259; }
   }
+  let { r, d } = await mandar(body);
   let pendiente = false;
   // Si Zipnova no puede procesarlo ahora (feriado, sin retiro disponible, sin saldo…), se crea igual sin procesar:
   // queda "pendiente" en el panel de Zipnova y se procesa desde ahí cuando se pueda.
