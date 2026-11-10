@@ -120,6 +120,36 @@ module.exports = async function handler(req, res) {
       olvidarCache();
       return res.status(200).json({ ok: true, ajustes, pares: await db.leerPares() });
     }
+    // Volver a intentar crear el envío en Zipnova de un pedido pagado que falló (muestra el motivo real si vuelve a fallar)
+    if (body.accion === "reintentar-envio") {
+      const numero = String(body.numero);
+      const pedido = await db.buscarPedido(numero);
+      if (!pedido) return res.status(404).json({ error: "No encontré ese pedido." });
+      if (pedido.envio) return res.status(200).json({ ok: true, pedido, aviso: "Ese pedido ya tiene el envío creado." });
+      if (!(process.env.ZIPNOVA_API_TOKEN && process.env.ZIPNOVA_API_SECRET && process.env.ZIPNOVA_ACCOUNT_ID)) return res.status(400).json({ error: "Zipnova no está configurado en Vercel." });
+      let d = pedido.datos;
+      // Pedidos viejos pagados con Mercado Pago: los datos del envío están en el pago
+      if (!d && pedido.pagoId && process.env.MP_ACCESS_TOKEN) {
+        const r = await fetch(`https://api.mercadopago.com/v1/payments/${encodeURIComponent(pedido.pagoId)}`, { headers: { Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}` }, signal: AbortSignal.timeout(10000) });
+        const pago = await r.json().catch(() => ({}));
+        const m = pago.metadata || {};
+        if (m.entrega) d = { productos: m.productos, entrega: m.entrega, cliente: m.cliente, subtotal: m.subtotal };
+      }
+      if (!d || !d.entrega) return res.status(400).json({ error: "No encontré los datos de entrega del pedido: crealo desde el panel de Zipnova." });
+      if (d.entrega.tipo === "local") return res.status(400).json({ error: "Ese pedido es para retirar en persona: no lleva envío." });
+      if (!d.entrega.zipnova) return res.status(400).json({ error: "Ese pedido se cobró con el precio fijo por zona (sin cotización de Zipnova): crealo desde el panel de Zipnova eligiendo el correo." });
+      try {
+        const envio = await crearEnvioZipnova(numero, d);
+        const cambios = { envio, estado: "envio-creado", envioError: undefined, envioDetalle: undefined, datos: d };
+        await db.actualizarPedido(numero, cambios);
+        return res.status(200).json({ ok: true, pedido: { ...pedido, ...cambios }, aviso: "✅ Envío creado en Zipnova." });
+      } catch (err) {
+        const detalle = String(err.message || err).slice(0, 400);
+        console.error("Reintento de envío falló", numero, detalle);
+        await db.actualizarPedido(numero, { envioDetalle: detalle, datos: d });
+        return res.status(502).json({ error: "Zipnova no lo aceptó: " + detalle });
+      }
+    }
     if (body.accion === "estado") {
       if (!ESTADOS.includes(body.estado)) return res.status(400).json({ error: "Estado desconocido." });
       const numero = String(body.numero);

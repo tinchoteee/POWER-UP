@@ -119,9 +119,11 @@ async function procesarPagoAprobado(pago) {
       Object.assign(pedido, { estado: "envio-creado", envio });
     } catch (err) {
       console.error("No se pudo crear el envío en Zipnova", numero, err.message);
-      pedido.envioError = "No se pudo crear el envío automáticamente: crealo desde el panel de Zipnova.";
+      pedido.envioError = "No se pudo crear el envío automáticamente. Tocá \"Reintentar envío\" o crealo desde el panel de Zipnova.";
+      pedido.envioDetalle = String(err.message || err).slice(0, 400);   // el motivo real de Zipnova (solo lo ve el editor)
     }
   }
+  pedido.datos = { productos: m.productos, entrega, cliente, subtotal: m.subtotal };   // para poder reintentar el envío desde el editor
 
   if (db.hayDB()) {
     try { await db.agregarPedido(pedido); } catch (err) { console.error("No se pudo guardar el pedido", numero, err.message); }

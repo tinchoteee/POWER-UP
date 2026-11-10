@@ -278,7 +278,8 @@ function pintarPedidos() {
       ${p.metodo === "transferencia" ? `<div>💸 <b>Pago por transferencia</b>${p.estado === "esperando-transferencia" ? " · cuando veas la plata en tu cuenta, pasalo a <b>Pagado</b> (se crea el envío). Si no paga, pasalo a <b>Cancelado</b> y las unidades vuelven al stock." : ""}</div>` : ""}
       <div><b>Entrega:</b> ${entrega}</div>
       ${p.envio ? `<div>✅ Envío creado en Zipnova${p.envio.seguimiento ? ` · seguimiento <b>${esc(p.envio.seguimiento)}</b>` : ""}. Imprimí la etiqueta desde el panel de Zipnova.</div>` : ""}
-      ${p.envioError ? `<div class="aviso-error">⚠️ ${esc(p.envioError)}</div>` : ""}
+      ${p.envioError ? `<div class="aviso-error">⚠️ ${esc(p.envioError)}${p.envioDetalle ? `<br><small>Motivo de Zipnova: ${esc(p.envioDetalle)}</small>` : ""}
+        <br><button class="btn btn-borde" data-reintentar="${esc(p.numero)}" style="width:auto;margin-top:8px">Reintentar envío</button></div>` : ""}
       <div class="acc">
         <select class="in" data-estado="${esc(p.numero)}" aria-label="Estado del pedido">${Object.entries(ESTADOS).map(([k, v]) => `<option value="${k}"${k === p.estado ? " selected" : ""}>${v}</option>`).join("")}</select>
         <a class="btn btn-wa" href="https://wa.me/${telWa(c.telefono)}?text=${encodeURIComponent(msj)}" target="_blank" rel="noopener">Avisar al cliente</a>
@@ -286,6 +287,16 @@ function pintarPedidos() {
     </article>`;
   }).join("");
 }
+$("#listaPedidos").addEventListener("click", async e => {
+  const b = e.target.closest("[data-reintentar]"); if (!b) return;
+  b.disabled = true; b.textContent = "Creando el envío…";
+  try {
+    const d = await api("POST", { accion: "reintentar-envio", numero: b.dataset.reintentar });
+    const i = pedidos.findIndex(x => x.numero === b.dataset.reintentar);
+    if (i >= 0 && d.pedido) pedidos[i] = d.pedido;
+    pintarPedidos(); avisar(d.aviso || "✓ Listo");
+  } catch (err) { alert(err.message); b.disabled = false; b.textContent = "Reintentar envío"; }
+});
 $("#listaPedidos").addEventListener("change", async e => {
   const s = e.target.closest("[data-estado]"); if (!s) return;
   try {
