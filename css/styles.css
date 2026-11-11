@@ -256,8 +256,10 @@ section { padding: clamp(80px, 12vw, 160px) var(--gutter); }
 
 /* ---------- Manifiesto ---------- */
 .manifesto { background: var(--white); color: var(--black); }
-.manifesto__text { font-family: var(--display); font-size: clamp(40px, 7.5vw, 124px); line-height: 1.02; }
-.manifesto .invert { background: var(--black); color: var(--white); padding: 0 .12em; }
+.manifesto__text { font-family: var(--display); font-size: clamp(40px, 7.5vw, 124px); line-height: 1.16; }
+/* el recuadro negro no pisa las líneas de arriba y abajo (antes, con line-height 1.02, se tapaban) */
+.manifesto .invert { color: var(--white); padding: 0 .12em; -webkit-box-decoration-break: clone; box-decoration-break: clone;
+  background: linear-gradient(var(--black), var(--black)) 0 58% / 100% 1.04em no-repeat; }
 .manifesto .outline { color: transparent; -webkit-text-stroke: 2px var(--black); }
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 80px; border-top: 2px solid var(--black); }
 .stat { padding: 28px 20px 0 0; }

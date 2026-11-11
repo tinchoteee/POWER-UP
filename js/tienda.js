@@ -1076,7 +1076,8 @@ function toast(text) {
 }
 
 // ---------- Animaciones al scrollear ----------
-const valoresContar = () => ({ modelos: PRODUCTOS.length, lineas: lineasActivas().length });
+// Solo lo que se puede comprar hoy (antes contaba los 40 modelos, agotados y no-conjuntos incluidos, y decía "40 conjuntos")
+const valoresContar = () => ({ modelos: PRODUCTOS.filter(p => !p.agotado).length, lineas: lineasActivas().length });
 function countUp(el) {
   const fin = valoresContar()[el.dataset.count] ?? Number(el.dataset.count);
   if (SIN_MOVIMIENTO) { el.textContent = fin; return; }
