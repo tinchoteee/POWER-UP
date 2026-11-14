@@ -71,7 +71,7 @@
     corteiz: "Corteiz",
     syna: "Syna World",
     bape: "Bape",
-    guess: "Guess", diesel: "Diesel", nike: "Nike", adidas: "Adidas"
+    guess: "Guess", nike: "Nike", adidas: "Adidas"
   },
 
   // Secciones de la tienda por tipo de prenda (el orden de acá es el orden de los filtros).
@@ -194,10 +194,6 @@
       desc: "Short negro de algodón con cintura elastizada, bolsillos y el logo Jumpman bordado en blanco.",
       precio: 12000, antes: 17000, talles: ["S", "M", "L", "XL"],
       colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/short-jordan-negro.jpg" }] },
-    { id: 24, cat: "diesel", caja: "conjunto", nombre: "Remera Diesel", detalle: "Remera", etiqueta: "NUEVO",
-      desc: "Remera negra con el logo DIESEL en azul tipo denim y la leyenda EST · SINCE debajo.",
-      precio: 11000, antes: 17000, talles: ["S", "M", "L", "XL"],
-      colores: [{ id: "negro", nombre: "Negro", hex: "#111111", foto: "img/remera-diesel.jpg" }] },
     { id: 25, cat: "jordan", caja: "conjunto", nombre: "Remera Jordan Jumpman", detalle: "Remera", etiqueta: "NUEVO",
       desc: "Remera con el logo Jumpman grande al frente: negra o roja con Jumpman blanco, o blanca con Jumpman negro.",
       precio: 11000, talles: ["S", "M", "L", "XL"],
