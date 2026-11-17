@@ -1055,15 +1055,17 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
 const burger = $("#burger");
 function cerrarMenu() {
   burger.classList.remove("is-open"); $("#nav").classList.remove("is-open"); $("#header").classList.remove("menu-open");
+  burger.setAttribute("aria-expanded", "false");
   document.body.style.overflow = "";
 }
 burger.addEventListener("click", () => {
   const open = burger.classList.toggle("is-open");
   $("#nav").classList.toggle("is-open", open);
   $("#header").classList.toggle("menu-open", open);
+  burger.setAttribute("aria-expanded", open ? "true" : "false");
   document.body.style.overflow = open ? "hidden" : "";
 });
-$$("#nav a").forEach(a => a.addEventListener("click", cerrarMenu));
+$$("#nav a, #header .logo").forEach(a => a.addEventListener("click", cerrarMenu));
 
 // ---------- Aviso chiquito ----------
 let toastTimer;
