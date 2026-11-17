@@ -43,7 +43,11 @@ module.exports = async function handler(req, res) {
     if (!(process.env.ZIPNOVA_API_TOKEN && process.env.ZIPNOVA_API_SECRET && process.env.ZIPNOVA_ACCOUNT_ID)) throw new Error("Zipnova no está configurado: se cobran los precios fijos por zona");
     const producto = productos.find(p => !p.agotado) || productos[0];
     if (!producto) throw new Error("No hay productos para cotizar");
-    const opciones = await cotizarZipnova({ cp: "1704", provincia: "Buenos Aires", localidad: "Ramos Mejía", lineas: [{ producto, cant: 1 }], valor: 10000 });
+    // Zipnova a veces tarda o se cae unos segundos: se prueba dos veces antes de dar la alarma
+    const pedir = () => cotizarZipnova({ cp: "1704", provincia: "Buenos Aires", localidad: "Ramos Mejía", lineas: [{ producto, cant: 1 }], valor: 10000 });
+    let opciones;
+    try { opciones = await pedir(); }
+    catch (e) { await new Promise(r => setTimeout(r, 4000)); opciones = await pedir(); }
     if (!opciones.length) throw new Error("Zipnova no devolvió ningún correo para Ramos Mejía");
     return `${opciones.length} opciones, desde $${Math.min(...opciones.map(o => o.precio))}`;
   }));

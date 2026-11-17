@@ -43,3 +43,4 @@ Tienda online de ropa (conjuntos remera + short) del mismo dueño que Nací Rein
 
 - 2026-10-28 (pulido de diseño con impeccable/taste-skill): tipografía de texto pasa de Space Grotesk a Archivo; se sacó la etiqueta "SS/26 COLLECTION" de la portada; animaciones sin rebote; textos mínimos de 11px; borde visible al navegar con teclado; selección y barra de scroll en blanco y negro; chispas del carrito dibujadas en SVG. Solo estética.
 - 2026-11-14: el dueño pidió eliminar definitivamente la **Remera Diesel** (id 24): se sacó de `productos.js`, se borró `img/remera-diesel.jpg` y se quitó la línea `diesel` de `lineas`. El id 24 queda libre (no reutilizarlo, por pedidos viejos).
+- 2026-11-16: llegó un aviso "Envíos (Zipnova): No pudimos conectar con el correo" (corte momentáneo de Zipnova, a los minutos andaba). `api/salud.js` ahora prueba la cotización dos veces (espera 4 s) antes de avisar, para no mandar emails por cortes de segundos.
