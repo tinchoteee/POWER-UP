@@ -58,13 +58,15 @@ img { display: block; max-width: 100%; }
 /* ---------- Header ---------- */
 .header {
   position: sticky; top: 0; z-index: 100;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 18px var(--gutter);
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+  padding: 8px var(--gutter);
   background: var(--black); border-bottom: 1px solid var(--line);
 }
-.logo { font-family: var(--display); font-size: 28px; letter-spacing: .02em; }
-.logo span { -webkit-text-stroke: 1.5px var(--white); color: transparent; margin-left: 4px; }
-.nav { display: flex; gap: 36px; font-size: 13px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; }
+/* Logo "pu" de rayos en el medio, girando sobre su eje (solo transform: lo mueve la placa de video, no traba) */
+.logo { grid-column: 2; display: block; perspective: 400px; line-height: 0; }
+.logo__pu { display: block; height: 48px; width: auto; animation: puGira 4.5s linear infinite; backface-visibility: visible; will-change: transform; }
+@keyframes puGira { to { transform: rotateY(360deg); } }
+.nav { grid-column: 1; grid-row: 1; justify-self: start; display: flex; gap: 28px; font-size: 13px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; }
 .nav a { position: relative; }
 .nav a::after {
   content: ""; position: absolute; left: 0; bottom: -4px; width: 100%; height: 2px;
@@ -72,7 +74,7 @@ img { display: block; max-width: 100%; }
   transition: transform .4s var(--ease);
 }
 .nav a:hover::after { transform: scaleX(1); transform-origin: left; }
-.header__actions { display: flex; align-items: center; gap: 18px; }
+.header__actions { grid-column: 3; justify-self: end; display: flex; align-items: center; gap: 18px; }
 .cart-btn { position: relative; display: flex; }
 .cart-count {
   position: absolute; top: -8px; right: -10px;
@@ -81,12 +83,15 @@ img { display: block; max-width: 100%; }
   font-size: 11px; font-weight: 700; display: grid; place-items: center;
 }
 .cart-count.bump { animation: bump .4s var(--ease); }
-.burger { display: none; width: 28px; height: 20px; position: relative; }
-.burger span { position: absolute; left: 0; width: 100%; height: 2px; background: var(--white); transition: transform .4s var(--ease), top .4s var(--ease); }
-.burger span:first-child { top: 5px; }
-.burger span:last-child { top: 13px; }
-.burger.is-open span:first-child { top: 9px; transform: rotate(45deg); }
-.burger.is-open span:last-child { top: 9px; transform: rotate(-45deg); }
+.burger { display: none; grid-column: 1; grid-row: 1; justify-self: start; width: 28px; height: 20px; position: relative; }
+.burger::before { content: ""; position: absolute; inset: -12px; }   /* zona de toque más grande */
+.burger span { position: absolute; left: 0; width: 100%; height: 2px; background: var(--white); transition: transform .3s var(--ease), opacity .2s; }
+.burger span:nth-child(1) { top: 2px; }
+.burger span:nth-child(2) { top: 9px; }
+.burger span:nth-child(3) { top: 16px; }
+.burger.is-open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.burger.is-open span:nth-child(2) { opacity: 0; }
+.burger.is-open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
 /* ---------- Botones ---------- */
 .btn {
@@ -602,12 +607,16 @@ button.link { font-size: inherit; padding: 0; }
   .burger { display: block; }
   .nav {
     position: fixed; inset: 0; z-index: -1; background: var(--black);
+    justify-self: stretch; width: 100%;
     flex-direction: column; justify-content: center; align-items: flex-start; gap: 8px; padding: 0 var(--gutter);
     clip-path: inset(0 0 100% 0); transition: clip-path .6s var(--ease);
   }
   .nav.is-open { clip-path: inset(0 0 0 0); }
   .nav a { font-family: var(--display); font-size: 56px; letter-spacing: 0; }
   .header.menu-open { mix-blend-mode: normal; }
+  /* Fluidez: en el celular, sin desenfoques ni grano animado (son lo que más frena al scrollear) */
+  .overlay, .modal { backdrop-filter: none; }
+  .hero__noise { animation: none; }
   /* Drop: en el celular se desliza de costado (se ve un pedacito de la siguiente) */
   .drop__grid { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; border: 0; margin-right: calc(-1 * var(--gutter)); padding-right: var(--gutter); gap: 10px; }
   .drop__grid::-webkit-scrollbar { display: none; }
