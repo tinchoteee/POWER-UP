@@ -941,3 +941,13 @@ html:not(.sin-intro) .hero__title .line:nth-child(2) .word { animation-delay: 1.
 .hero--3d .hero__title { mix-blend-mode: normal; }   /* la marca va en blanco con borde negro: se lee sobre cualquier foto */
 .footer__big { line-height: 0; -webkit-text-stroke: 0; }
 .footer__marca { display: block; margin: 0 auto; width: min(1100px, 92vw); height: auto; opacity: .9; }
+/* La marca va abajo de todo de la portada y el anillo 3D ocupa solo la parte de arriba: así el carrusel de prendas se ve entero */
+.hero--3d { --zona-marca: 215px; min-height: clamp(540px, 76vh, 780px); }
+.hero--3d .hero__3d { height: calc(100% - var(--zona-marca)); bottom: auto;
+  -webkit-mask-image: linear-gradient(#000 82%, transparent); mask-image: linear-gradient(#000 82%, transparent); }
+.hero--3d .hero__marca { width: min(440px, 80vw); }
+.hero--3d .hero__ctas { margin-top: 10px; }
+@media (max-width: 600px) {
+  .hero--3d { --zona-marca: 170px; min-height: 570px; padding-bottom: 18px; }
+  .hero--3d .hero__marca { width: min(320px, 80vw); }
+}

@@ -204,7 +204,8 @@ function iniciar() {
   // ---- Tamaño (solo cuando cambia de verdad el tamaño de la portada, no en cada scroll del celular) ----
   let caja = lienzo.getBoundingClientRect(), anchoPrev = 0, altoPrev = 0, altoHero = hero.offsetHeight || 1;
   function medir() {
-    const w = hero.clientWidth, h = hero.clientHeight;
+    // El lienzo ocupa la parte de arriba de la portada (abajo va la marca): se mide el lienzo, no la portada entera
+    const w = lienzo.clientWidth || hero.clientWidth, h = lienzo.clientHeight || hero.clientHeight;
     altoHero = hero.offsetHeight || 1;
     caja = lienzo.getBoundingClientRect();
     if (!w || !h || (w === anchoPrev && h === altoPrev)) return;
