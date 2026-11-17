@@ -928,3 +928,16 @@ html:not(.sin-intro) .hero__title .line:nth-child(2) .word { animation-delay: 1.
   .card:active { transform: scale(.97); }
   .btn:active, .filter:active, .swatch:active, .sizes button:active, .comprar-fijo:active, .cart-btn:active { transform: scale(.95); }
 }
+
+/* =========================================================
+   MARCA (2026-11-16): "power up" con la letra gótica de rayos del logo.
+   Es una imagen (img/marca-power-up.webp): intro, portada y footer.
+   ========================================================= */
+.intro__logo { display: block; overflow: hidden; line-height: 0; }
+.intro__marca { display: block; width: min(560px, 78vw); height: auto; transform: translateY(105%); animation: rise .8s var(--ease) .1s forwards; }
+.hero__title { display: block; line-height: 0; font-size: 0; }
+.hero__title .line, .hero__title .word { display: block; }
+.hero__marca { display: block; margin: 0 auto; width: min(800px, 92vw); height: auto; }
+.hero--3d .hero__title { mix-blend-mode: normal; }   /* la marca va en blanco con borde negro: se lee sobre cualquier foto */
+.footer__big { line-height: 0; -webkit-text-stroke: 0; }
+.footer__marca { display: block; margin: 0 auto; width: min(1100px, 92vw); height: auto; opacity: .9; }

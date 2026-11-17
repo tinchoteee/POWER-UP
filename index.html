@@ -26,6 +26,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="preload" as="image" href="img/marca-power-up-portada.webp" type="image/webp" />
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="stylesheet" href="css/fx.css" />
   <link rel="stylesheet" href="css/futuro.css" />
@@ -37,7 +38,7 @@
 <body>
   <!-- Intro: pantalla negra con el logo al entrar (una vez por visita; se va sola aunque falle el JS) -->
   <div class="intro" aria-hidden="true">
-    <div class="intro__logo"><span>POWER</span><span class="intro__up">UP</span></div>
+    <div class="intro__logo"><img class="intro__marca" src="img/marca-power-up.webp" width="1400" height="544" alt="" fetchpriority="high"></div>
     <div class="intro__barra"><i></i></div>
     <p class="intro__txt">LOADING DRIP</p>
   </div>
@@ -79,8 +80,7 @@
         <div class="hero__grid" aria-hidden="true"></div>
         <div class="hero__luz" aria-hidden="true"></div>
         <h1 class="hero__title">
-          <span class="line"><span class="word glitch" data-text="POWER">POWER</span></span>
-          <span class="line"><span class="word word--outline">UP</span></span>
+          <span class="line"><span class="word"><img class="hero__marca" src="img/marca-power-up-portada.webp" width="1460" height="604" alt="POWER UP" fetchpriority="high"></span></span>
         </h1>
         <p class="hero__sub reveal">Ropa para los que no bajan el volumen.<br />Blanco. Negro. Sin grises.</p>
         <div class="hero__ctas reveal">
@@ -354,7 +354,7 @@
 
   <!-- FOOTER -->
   <footer class="footer">
-    <div class="footer__big" aria-hidden="true">POWER UP</div>
+    <div class="footer__big" aria-hidden="true"><img class="footer__marca" src="img/marca-power-up.webp" width="1400" height="544" alt="" loading="lazy" decoding="async"></div>
     <div class="footer__cols">
       <div>
         <h4>Tienda</h4>
