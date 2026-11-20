@@ -65,6 +65,7 @@
   // Líneas / marcas: el orden de acá es el orden de los filtros y categorías.
   // Solo se muestran las que tienen al menos un producto.
   lineas: {
+    powerup: "POWER UP",
     jordan: "Jordan",
     trapstar: "Trapstar",
     sp5der: "Sp5der",
@@ -95,6 +96,70 @@
   // detalle: texto chico debajo del nombre · drop: true = aparece en "El Drop" (los primeros 3) · etiqueta: cartelito sobre la foto
   // antes: precio anterior real que se muestra tachado (ver "ofertaHasta")
   productos: [
+    // DROP 01 de POWER UP (2026-11-19, pedido del dueño): diseños propios, remera $20.000, short $23.000, conjunto $35.000
+    { id: 41, cat: "powerup", caja: "conjunto", nombre: "Conjunto PU Rayos", detalle: "Remera + short", etiqueta: "DROP 01",
+      desc: "Conjunto de remera y short, negro o blanco, del DROP 01 de POWER UP. Remera con la \"pu\" de rayos de POWER UP chica en el pecho y grande en toda la espalda; short con la \"pu\" de rayos grande en el costado. Estampa DTF.",
+      precio: 35000, talles: ["S", "M", "L", "XL", "XXL"],
+      colores: [
+        { id: "negro", nombre: "Negro", hex: "#111111", foto: "img/pu-conjunto-rayos-negro-espalda.jpg", fotos: ["img/pu-conjunto-rayos-negro-frente.jpg"] },
+        { id: "blanco", nombre: "Blanco", hex: "#F4F4F4", foto: "img/pu-conjunto-rayos-blanco-espalda.jpg", fotos: ["img/pu-conjunto-rayos-blanco-frente.jpg"] }
+      ] },
+    { id: 42, cat: "powerup", caja: "conjunto", nombre: "Remera PU Rayos", detalle: "Remera", etiqueta: "DROP 01",
+      desc: "Remera negra o blanca del DROP 01 de POWER UP, con la \"pu\" de rayos de POWER UP chica en el pecho y grande en toda la espalda. Estampa DTF. También viene en conjunto con el short.",
+      precio: 20000, talles: ["S", "M", "L", "XL", "XXL"],
+      colores: [
+        { id: "negro", nombre: "Negro", hex: "#111111", foto: "img/pu-remera-rayos-negro-espalda.jpg", fotos: ["img/pu-remera-rayos-negro-frente.jpg"] },
+        { id: "blanco", nombre: "Blanco", hex: "#F4F4F4", foto: "img/pu-remera-rayos-blanco-espalda.jpg", fotos: ["img/pu-remera-rayos-blanco-frente.jpg"] }
+      ] },
+    { id: 43, cat: "powerup", caja: "conjunto", nombre: "Short PU Rayos", detalle: "Short", etiqueta: "DROP 01",
+      desc: "Short negro o blanco del DROP 01 de POWER UP, con la \"pu\" de rayos grande en el costado. Estampa DTF. También viene en conjunto con la remera.",
+      precio: 23000, talles: ["S", "M", "L", "XL", "XXL"],
+      colores: [
+        { id: "negro", nombre: "Negro", hex: "#111111", foto: "img/pu-short-rayos-negro-frente.jpg", fotos: ["img/pu-short-rayos-negro-espalda.jpg"] },
+        { id: "blanco", nombre: "Blanco", hex: "#F4F4F4", foto: "img/pu-short-rayos-blanco-frente.jpg", fotos: ["img/pu-short-rayos-blanco-espalda.jpg"] }
+      ] },
+    { id: 44, cat: "powerup", caja: "conjunto", nombre: "Conjunto PU Monograma", detalle: "Remera + short", etiqueta: "DROP 01",
+      desc: "Conjunto de remera y short, negro o blanco, del DROP 01 de POWER UP. Remera con la \"pu\" de rayos repetida por toda la prenda; short con la \"pu\" de rayos repetida por toda la prenda. Estampa DTF.",
+      precio: 35000, talles: ["S", "M", "L", "XL", "XXL"],
+      colores: [
+        { id: "negro", nombre: "Negro", hex: "#111111", foto: "img/pu-conjunto-monograma-negro-frente.jpg" },
+        { id: "blanco", nombre: "Blanco", hex: "#F4F4F4", foto: "img/pu-conjunto-monograma-blanco-frente.jpg" }
+      ] },
+    { id: 45, cat: "powerup", caja: "conjunto", nombre: "Remera PU Monograma", detalle: "Remera", etiqueta: "DROP 01",
+      desc: "Remera negra o blanca del DROP 01 de POWER UP, con la \"pu\" de rayos repetida por toda la prenda. Estampa DTF. También viene en conjunto con el short.",
+      precio: 20000, talles: ["S", "M", "L", "XL", "XXL"],
+      colores: [
+        { id: "negro", nombre: "Negro", hex: "#111111", foto: "img/pu-remera-monograma-negro-frente.jpg" },
+        { id: "blanco", nombre: "Blanco", hex: "#F4F4F4", foto: "img/pu-remera-monograma-blanco-frente.jpg" }
+      ] },
+    { id: 46, cat: "powerup", caja: "conjunto", nombre: "Short PU Monograma", detalle: "Short", etiqueta: "DROP 01",
+      desc: "Short negro o blanco del DROP 01 de POWER UP, con la \"pu\" de rayos repetida por toda la prenda. Estampa DTF. También viene en conjunto con la remera.",
+      precio: 23000, talles: ["S", "M", "L", "XL", "XXL"],
+      colores: [
+        { id: "negro", nombre: "Negro", hex: "#111111", foto: "img/pu-short-monograma-negro-frente.jpg" },
+        { id: "blanco", nombre: "Blanco", hex: "#F4F4F4", foto: "img/pu-short-monograma-blanco-frente.jpg" }
+      ] },
+    { id: 47, cat: "powerup", caja: "conjunto", nombre: "Conjunto Clothing Co.", detalle: "Remera + short", etiqueta: "DROP 01",
+      desc: "Conjunto de remera y short, negro o blanco, del DROP 01 de POWER UP. Remera con el diseño POWER UP Clothing Co. EST. 2026 en la espalda y el \"PU. STORE\" chiquito en el pecho; short con el \"PU. STORE\" chiquito abajo, al costado. Estampa DTF.",
+      precio: 35000, talles: ["S", "M", "L", "XL", "XXL"],
+      colores: [
+        { id: "negro", nombre: "Negro", hex: "#111111", foto: "img/pu-conjunto-clothing-negro-espalda.jpg", fotos: ["img/pu-conjunto-clothing-negro-frente.jpg"] },
+        { id: "blanco", nombre: "Blanco", hex: "#F4F4F4", foto: "img/pu-conjunto-clothing-blanco-espalda.jpg", fotos: ["img/pu-conjunto-clothing-blanco-frente.jpg"] }
+      ] },
+    { id: 48, cat: "powerup", caja: "conjunto", nombre: "Remera Clothing Co.", detalle: "Remera", etiqueta: "DROP 01",
+      desc: "Remera negra o blanca del DROP 01 de POWER UP, con el diseño POWER UP Clothing Co. EST. 2026 en la espalda y el \"PU. STORE\" chiquito en el pecho. Estampa DTF. También viene en conjunto con el short.",
+      precio: 20000, talles: ["S", "M", "L", "XL", "XXL"],
+      colores: [
+        { id: "negro", nombre: "Negro", hex: "#111111", foto: "img/pu-remera-clothing-negro-espalda.jpg", fotos: ["img/pu-remera-clothing-negro-frente.jpg"] },
+        { id: "blanco", nombre: "Blanco", hex: "#F4F4F4", foto: "img/pu-remera-clothing-blanco-espalda.jpg", fotos: ["img/pu-remera-clothing-blanco-frente.jpg"] }
+      ] },
+    { id: 49, cat: "powerup", caja: "conjunto", nombre: "Short Clothing Co.", detalle: "Short", etiqueta: "DROP 01",
+      desc: "Short negro o blanco del DROP 01 de POWER UP, con el \"PU. STORE\" chiquito abajo, al costado. Estampa DTF. También viene en conjunto con la remera.",
+      precio: 23000, talles: ["S", "M", "L", "XL", "XXL"],
+      colores: [
+        { id: "negro", nombre: "Negro", hex: "#111111", foto: "img/pu-short-clothing-negro-frente.jpg", fotos: ["img/pu-short-clothing-negro-espalda.jpg"] },
+        { id: "blanco", nombre: "Blanco", hex: "#F4F4F4", foto: "img/pu-short-clothing-blanco-frente.jpg", fotos: ["img/pu-short-clothing-blanco-espalda.jpg"] }
+      ] },
     { id: 1, cat: "jordan", caja: "conjunto", nombre: "Conjunto Jordan", detalle: "Remera + short", drop: true, etiqueta: "NUEVO",
       desc: "Remera con logo Jumpman estampado y short de básquet negro con paneles laterales blancos.",
       precio: 20000, antes: 29999, talles: ["S", "M", "L", "XL"],
