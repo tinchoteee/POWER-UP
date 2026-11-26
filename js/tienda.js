@@ -1189,11 +1189,7 @@ if (!SIN_MOVIMIENTO) {
 const medirHeader = () => document.documentElement.style.setProperty("--alto-header", $("#header").offsetHeight + "px");
 medirHeader(); addEventListener("resize", medirHeader);
 
-// Portada 3D (anillo de productos): se carga cuando la página ya terminó de cargar, para no frenarla
-if (!SIN_MOVIMIENTO && "WebGLRenderingContext" in window) {
-  const portada3d = () => import("./hero3d.js").catch(e => console.warn("Sin portada 3D", e));
-  if (document.readyState === "complete") setTimeout(portada3d, 300); else addEventListener("load", () => setTimeout(portada3d, 300));
-}
+// Portada 3D: reemplazada el 2026-11-26 por la portada "colección" (js/coleccion.js), más liviana y fluida.
 
 pintarCarrito();
 ruta();

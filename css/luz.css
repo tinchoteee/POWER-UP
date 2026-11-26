@@ -1,0 +1,150 @@
+/* =========================================================
+   ESTÉTICA LUZ (2026-11-26) — pedido del dueño: más luminosa y fluida, inspirada en souche.com.ar.
+   La paleta se invierte con las mismas variables: --black pasa a ser el "papel" claro y --white la "tinta".
+   Zonas que siguen oscuras (intro, barra de la portada, footer) vuelven a los valores de siempre localmente.
+   ========================================================= */
+:root {
+  --papel: #ecebe6;
+  --tinta: #0e0e0e;
+  --black: var(--papel);
+  --white: var(--tinta);
+  --gray: #6d6c67;
+  --line: rgba(14, 14, 14, 0.12);
+  --radio: 22px;
+}
+body {
+  background: var(--papel) url("../img/grano.png");
+  color: var(--tinta);
+}
+::selection { background: var(--tinta); color: var(--papel); }
+
+/* Zonas oscuras: valores originales */
+.intro, .footer, .col__barra, .topbar, .modal__box--oscuro { --black: #000; --white: #fff; --line: rgba(255,255,255,.14); --gray: #8a8a8a; }
+.topbar { background: var(--tinta); color: var(--papel); }
+
+/* ---------- Encabezado: cápsula flotante ---------- */
+.header {
+  top: 10px; margin: 10px 12px 0; padding: 8px 18px;
+  border-radius: 999px; border: 1px solid rgba(14,14,14,.08);
+  background: rgba(250, 250, 247, .96);
+  box-shadow: 0 8px 30px rgba(14,14,14,.08), inset 0 1px 0 rgba(255,255,255,.9);
+}
+.burger { width: 30px; height: 24px; }
+.burger span { height: 5px; border-radius: 6px; background: var(--tinta); box-shadow: 0 2px 0 rgba(0,0,0,.18); }
+.burger span:nth-child(1) { top: 0; }
+.burger span:nth-child(2) { top: 9.5px; }
+.burger span:nth-child(3) { top: 19px; }
+.burger.is-open span:nth-child(1) { transform: translateY(9.5px) rotate(45deg); }
+.burger.is-open span:nth-child(3) { transform: translateY(-9.5px) rotate(-45deg); }
+.logo__pu { height: 44px; }
+.cart-count { background: var(--tinta); color: var(--papel); }
+@media (max-width: 900px) {
+  .header.menu-open { border-radius: 26px; }
+  .nav { background: var(--papel); }
+}
+
+/* ---------- Portada colección ---------- */
+.col {
+  --c1: #dedcd5;
+  position: relative; overflow: hidden; isolation: isolate;
+  margin-top: -74px; padding: 96px var(--gutter) 18px;
+  min-height: min(100svh, 900px); display: flex; flex-direction: column;
+  background-color: var(--c1); transition: background-color .7s ease;
+}
+.col__fondo {
+  position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(90% 55% at 50% 64%, rgba(255,255,255,.75), rgba(255,255,255,0) 70%), url("../img/grano.png");
+}
+.col--blanco .col__fondo { background: radial-gradient(90% 55% at 50% 64%, rgba(255,255,255,.45), rgba(255,255,255,0) 70%), url("../img/grano.png"); }
+.col__meta { display: flex; align-items: center; gap: 14px; font-size: 13px; font-weight: 700; letter-spacing: .28em; }
+.col__meta i { flex: 1; height: 1.5px; background: currentColor; opacity: .35; }
+.col__meta b { font-weight: 700; }
+.col__titulo { margin-top: 14px; font-family: var(--display); font-weight: 400; font-size: clamp(44px, 12.5vw, 112px); line-height: .92; letter-spacing: -.005em; text-transform: uppercase; }
+
+.col__escena { position: relative; flex: 1; min-height: 420px; display: flex; flex-direction: column; justify-content: flex-end; }
+.col__arco {
+  position: absolute; left: 50%; top: 26%; width: max(150vw, 900px); aspect-ratio: 1; transform: translateX(-50%);
+  pointer-events: none; z-index: 0;
+}
+.col__arco svg { width: 100%; height: 100%; animation: colGira 70s linear infinite; }
+.col__disco { fill: rgba(255,255,255,.32); stroke: rgba(14,14,14,.14); stroke-width: 2; }
+.col__arco text { font-family: var(--display); font-size: 74px; letter-spacing: 6px; fill: rgba(14,14,14,.82); }
+.col--blanco .col__disco { fill: rgba(255,255,255,.18); }
+@keyframes colGira { to { transform: rotate(360deg); } }
+
+.col__sello { position: absolute; right: -4px; top: 2%; width: 128px; height: 128px; z-index: 3; color: var(--papel); display: grid; place-items: center; filter: drop-shadow(0 10px 18px rgba(0,0,0,.25)); }
+.col__sello svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.col__estrella { fill: var(--tinta); }
+.col__sello text { font-family: var(--body); font-weight: 700; font-size: 15px; letter-spacing: 2.4px; fill: var(--papel); }
+.col__sello svg text { transform-origin: 100px 100px; animation: colGira 16s linear infinite; }
+.col__sello span { position: relative; text-align: center; font-weight: 700; font-size: 11px; letter-spacing: .2em; line-height: 1; }
+.col__sello span b { display: block; font-family: var(--display); font-weight: 400; font-size: 40px; letter-spacing: 0; line-height: .95; }
+
+.col__pista {
+  position: relative; z-index: 2; flex: 1; display: flex; overflow-x: auto; overflow-y: hidden;
+  scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain;
+  margin: 0 calc(-1 * var(--gutter));
+}
+.col__pista::-webkit-scrollbar { display: none; }
+.col__slide { flex: 0 0 100%; scroll-snap-align: center; display: flex; align-items: flex-end; justify-content: center; position: relative; padding-bottom: 26px; outline: none; }
+.col__slide img {
+  height: clamp(300px, 52svh, 560px); width: auto; max-width: 88%; object-fit: contain; position: relative; z-index: 1;
+  transform: translateY(0) scale(.92); opacity: .6; transition: transform .7s var(--ease), opacity .5s;
+}
+.col__slide.on img { transform: translateY(0) scale(1); opacity: 1; animation: colFlota 4.5s ease-in-out .7s infinite; }
+@keyframes colFlota { 50% { transform: translateY(-10px) scale(1); } }
+.col__sombra { position: absolute; bottom: 12px; left: 50%; width: 46%; height: 26px; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(closest-side, rgba(0,0,0,.32), rgba(0,0,0,0)); }
+
+.col__ctrl { position: relative; z-index: 3; display: flex; align-items: center; gap: 14px; margin: 6px 0 16px; }
+.col__flecha { flex: none; width: 54px; height: 54px; border-radius: 50%; border: 2px solid var(--tinta); background: rgba(255,255,255,.45); color: var(--tinta); display: grid; place-items: center; transition: transform .2s var(--ease), background .2s; }
+.col__flecha:active { transform: scale(.92); }
+@media (hover: hover) { .col__flecha:hover { background: var(--tinta); color: var(--papel); } }
+.col__rayas { flex: 1; display: flex; gap: 6px; align-items: center; }
+.col__rayas button { flex: 1; height: 5px; border-radius: 4px; background: rgba(14,14,14,.18); transition: flex .45s var(--ease), background .3s; }
+.col__rayas button.on { flex: 3.2; background: var(--tinta); }
+
+.col__barra {
+  position: relative; z-index: 3; display: flex; align-items: center; gap: 14px;
+  background: #0b0b0b; color: #fff; border-radius: 999px; padding: 8px 8px 8px 8px;
+  box-shadow: 0 14px 34px rgba(0,0,0,.28);
+}
+.col__mini { flex: none; width: 58px; height: 58px; border-radius: 50%; background: #f2f2ee; display: grid; place-items: center; overflow: hidden; }
+.col__mini img { height: 50px; width: auto; }
+.col__nombre { flex: 1; min-width: 0; font-family: var(--display); font-size: clamp(19px, 5.4vw, 28px); line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.col__cta { flex: none; background: #fff; color: #0b0b0b; border-radius: 999px; padding: 16px 22px; font-family: var(--display); font-size: clamp(17px, 4.6vw, 22px); letter-spacing: .02em; box-shadow: 0 0 22px rgba(255,255,255,.35); transition: transform .2s var(--ease); }
+.col__barra:active .col__cta { transform: scale(.95); }
+
+@media (min-width: 900px) {
+  .col { padding-top: 110px; }
+  .col__head { display: grid; grid-template-columns: 1fr; max-width: 1200px; }
+  .col__sello { right: 6%; top: 4%; width: 160px; height: 160px; }
+  .col__arco { top: 30%; width: 1300px; }
+  .col__barra { max-width: 760px; width: 100%; margin: 0 auto; }
+  .col__ctrl { max-width: 760px; width: 100%; margin: 6px auto 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .col__arco svg, .col__sello svg text, .col__slide.on img { animation: none; }
+}
+
+/* ---------- Tienda clara ---------- */
+.card__media { border-radius: var(--radio); overflow: hidden; background: #f4f4f1; }
+.card { border-radius: var(--radio); }
+.filter { border-radius: 999px; }
+.btn { border-radius: 999px; }
+.section-head h2 { letter-spacing: -.005em; }
+
+/* Footer oscuro, como Souche */
+.footer { background: #0b0b0b; color: #fff; border-top: 0; border-radius: 28px 28px 0 0; margin-top: 40px; }
+/* Mientras se ve la barra negra de la portada, el botón de WhatsApp se corre (no la tapa) */
+.wa-float { transition: transform .4s var(--ease), opacity .3s; }
+.en-portada .wa-float { transform: translateY(160%); opacity: 0; pointer-events: none; }
+/* Que la portada entre en la primera pantalla del celular */
+.col { min-height: calc(100svh - 30px); }
+.col__slide img { height: clamp(250px, 41svh, 540px); }
+@media (max-width: 600px) { .col__titulo { font-size: clamp(40px, 11.4vw, 60px); } .col__escena { min-height: 360px; } }
+@media (min-width: 900px) {
+  .col { min-height: min(100vh, 980px); }
+  .col__slide img { height: min(60vh, 600px); }
+  .col__arco { top: 34%; width: 1150px; }
+  .col__arco text { font-size: 64px; }
+}
