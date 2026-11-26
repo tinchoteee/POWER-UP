@@ -32,7 +32,11 @@ const conTachado = (p, precio, txt) => { const a = antesDe(p, precio); return a 
 const colorDe = (p, cid) => (p.colores || []).find(c => c.id === cid);
 const nombreLinea = id => (CATALOGO.lineas || {})[id] || id;
 const fotoDe = (p, cid) => (colorDe(p, cid) || {}).foto || p.foto || ((p.colores || []).find(c => c.foto) || {}).foto || "";
-const img = (src, alt = "") => src ? `<img src="${esc(src)}" alt="${esc(alt)}" loading="lazy" decoding="async">` : "";
+// Fotos livianas: cada foto de producto tiene versiones WebP de 480 y 960 px en img/r/ (el navegador elige según la pantalla)
+const ligera = (src, w) => { const m = /^img\/([^/]+)\.(jpe?g|png)$/i.exec(src || ""); return m ? `img/r/${m[1]}-${w}.webp` : ""; };
+const srcset = (src, sizes) => ligera(src, 480) ? ` srcset="${ligera(src, 480)} 480w, ${ligera(src, 960)} 960w" sizes="${sizes}"` : "";
+const TAM = { card: "(max-width: 700px) 50vw, (max-width: 1100px) 33vw, 25vw", grande: "(max-width: 900px) 100vw, 50vw", chica: "120px" };
+const img = (src, alt = "", tam = "card") => src ? `<img src="${esc(src)}"${srcset(src, TAM[tam])} alt="${esc(alt)}" loading="lazy" decoding="async">` : "";
 const wa = texto => (WHATSAPP ? `https://wa.me/${WHATSAPP}` : "https://wa.me/") + (texto ? "?text=" + encodeURIComponent(texto) : "");
 const leer = (k, def) => { try { return JSON.parse(localStorage.getItem(k)) ?? def; } catch (e) { return def; } };
 const escribir = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
@@ -157,7 +161,7 @@ function pintarCarrito() {
   pintarAvisoTransf();
   $("#cartItems").innerHTML = carrito.length ? carrito.map((i, n) => { const p = producto(i.id); const prob = problemaItem(i); return `
     <div class="cart-item">
-      <a class="cart-item__img" href="#p/${p.id}">${img(fotoDe(p, i.color), p.nombre)}</a>
+      <a class="cart-item__img" href="#p/${p.id}">${img(fotoDe(p, i.color), p.nombre, "chica")}</a>
       <div>
         <p class="cart-item__name">${esc(p.nombre)}</p>
         <p class="cart-item__meta">${esc(detalleItem(i))}</p>
@@ -281,7 +285,7 @@ function tarjeta(p) {
   const fotos = [...new Set(cols.map(c => c.foto).filter(Boolean))];
   const carrusel = fotos.length > 1 && !p.agotado;
   const fotoHtml = carrusel
-    ? fotos.map((f, i) => `<img src="${esc(f)}" alt="${i ? "" : esc(p.nombre)}" loading="lazy"${i ? "" : ' class="on"'}>`).join("")
+    ? fotos.map((f, i) => `<img src="${esc(f)}"${srcset(f, TAM.card)} alt="${i ? "" : esc(p.nombre)}" loading="lazy" decoding="async"${i ? "" : ' class="on"'}>`).join("")
     : img(fotoDe(p), p.nombre);
   const tag = p.agotado ? "AGOTADO" : !rangoDe(p) ? "CONSULTAR" : p.etiqueta;
   const min = (rangoDe(p) || {}).min || 0, antes = p.agotado ? 0 : antesDe(p, min);
@@ -355,8 +359,8 @@ function pintarProducto() {
   });
   if (p.foto && !fotos.some(f => f.src === p.foto)) fotos.unshift({ src: p.foto, color: null });
   const actual = sel.foto || fotoDe(p, sel.color);
-  $("#fotoGrande").innerHTML = img(actual, p.nombre).replace(' loading="lazy"', "");
-  $("#miniaturas").innerHTML = fotos.length > 1 ? fotos.map(f => `<button data-foto="${esc(f.src)}" data-color="${esc(f.color || "")}" aria-pressed="${f.src === actual}" aria-label="Ver foto">${img(f.src).replace(' loading="lazy"', "")}</button>`).join("") : "";
+  $("#fotoGrande").innerHTML = img(actual, p.nombre, "grande").replace(' loading="lazy"', "");
+  $("#miniaturas").innerHTML = fotos.length > 1 ? fotos.map(f => `<button data-foto="${esc(f.src)}" data-color="${esc(f.color || "")}" aria-pressed="${f.src === actual}" aria-label="Ver foto">${img(f.src, "", "chica").replace(' loading="lazy"', "")}</button>`).join("") : "";
 
   const colSel = colorDe(p, sel.color);
   const colAgotado = c => c.agotado || p.talles.every(t => c.sinTalle.includes(t));
@@ -500,7 +504,7 @@ function mostrarCheckout() {
 function pintarCheckout() {
   // Resumen
   $("#resLineas").innerHTML = carrito.map(i => { const p = producto(i.id); return `
-    <div class="linea"><div class="linea__img">${img(fotoDe(p, i.color), p.nombre)}<span class="q">${i.cant}</span></div>
+    <div class="linea"><div class="linea__img">${img(fotoDe(p, i.color), p.nombre, "chica")}<span class="q">${i.cant}</span></div>
       <div><b>${esc(p.nombre)}</b><span>${esc(detalleItem(i))}</span></div><div class="m">${pesos(precioDe(p, i.color) * i.cant)}</div></div>`; }).join("");
   const envio = ck.opcion ? ck.opcion.precio : null;
   const cta = cuenta();
