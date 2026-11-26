@@ -63,8 +63,10 @@ const anchoTextura = flojo ? 480 : movil ? 640 : 900;
 async function texturaFoto(url) {
   const img = new Image();
   img.decoding = "async";
-  img.src = url;
-  await img.decode();
+  // versión WebP liviana de la misma foto (img/r/), si existe; si no, la original
+  const m = /^img\/([^/]+)\.(jpe?g|png)$/i.exec(url);
+  img.src = m ? `img/r/${m[1]}-${anchoTextura > 500 ? 960 : 480}.webp` : url;
+  try { await img.decode(); } catch (e) { img.src = url; await img.decode(); }
   try {
     const bmp = await createImageBitmap(img, { resizeWidth: anchoTextura, resizeHeight: Math.round(anchoTextura * img.naturalHeight / img.naturalWidth), resizeQuality: "high", imageOrientation: "flipY" });
     const t = new THREE.Texture(bmp);
